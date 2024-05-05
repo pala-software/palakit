@@ -1,20 +1,33 @@
 import type { Context } from "./Context";
 import type { Plugin } from "./Plugin";
-import { deepmerge } from "deepmerge-ts";
+import {
+  DeepMergeBuiltInMetaData,
+  DeepMergeHKT,
+  DeepMergeMergeFunctionsDefaultURIs,
+  deepmerge,
+} from "deepmerge-ts";
 
 export const createApplication = async <
-  Plugins extends Plugin<any>[],
-  T1 extends Context<Awaited<ReturnType<Plugins[number]>>>
+  T1 extends Context,
+  T2 extends Plugins extends [
+    Plugin<infer P, infer P>,
+    ...Plugin<infer P, infer P>[]
+  ]
+    ? Context<T1 & P>
+    : Context<T1>,
+  Plugins extends Plugin[] = []
 >(
-  application: {
-    plugins?: [...Plugins];
-  } & T1
+  application: DeepMergeHKT<
+    [T1, T2],
+    DeepMergeMergeFunctionsDefaultURIs,
+    DeepMergeBuiltInMetaData
+  >,
+  plugins?: [...Plugins]
 ) => {
-  const { plugins = [], ...context } = application;
   return deepmerge(
-    ...((await Promise.all((plugins as Plugins).map((plugin) => plugin()))) as {
+    ...((await Promise.all(plugins?.map((plugin) => plugin()) ?? [])) as {
       [K in keyof Plugins]: Awaited<ReturnType<Plugins[K]>>;
     }),
-    context
+    application
   );
 };
