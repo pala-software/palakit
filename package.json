@@ -1,7 +1,6 @@
 {
   "dependencies": {},
   "devDependencies": {
-    "deepmerge-ts": "^5.1.0",
-    "zod": "^3.23.4"
+    "deepmerge-ts": "^5.1.0"
   }
 }

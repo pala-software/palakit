@@ -1,5 +1,3 @@
-import type { Schema } from "zod";
-
-export type FieldType = {
-  schema: Schema;
-};
+export interface FieldType {
+  valueType: () => any;
+}
