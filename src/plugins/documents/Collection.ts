@@ -1,8 +1,7 @@
 import type { Field } from "./Field";
-import type { Context } from "./Context";
 import type { Operation } from "./Operation";
 
-export type Collection<T extends Context> = {
-  fields: Record<string, Field<T>>;
+export type Collection = {
+  fields: Record<string, Field>;
   operations?: Record<string, Operation>;
 };
