@@ -1,5 +1,4 @@
 import type {
-  DeepPartial,
   MergeExclusive,
   MergeInclusive,
   MergeTwoExclusive,
@@ -15,34 +14,41 @@ export type Plugin = {
 export type ContextFromInclusive<Plugins extends Plugin[]> = MergeInclusive<{
   [K in keyof Plugins]: Plugins[K] extends {
     factory: (
-      input: infer In extends Record<string, unknown>
-    ) => infer Out extends Record<string, unknown>;
+      input: infer Input extends Record<string, unknown>
+    ) => infer Output extends Record<string, unknown>;
   }
-    ? MergeTwoInclusive<In, Out>
+    ? MergeTwoInclusive<Input, Output>
     : never;
 }>;
 
 export type ContextFromExclusive<Plugins extends Plugin[]> = MergeExclusive<{
   [K in keyof Plugins]: Plugins[K] extends {
     factory: (
-      input: infer In extends Record<string, unknown>
-    ) => infer Out extends Record<string, unknown>;
+      input: infer Input extends Record<string, unknown>
+    ) => infer Output extends Record<string, unknown>;
   }
-    ? MergeTwoExclusive<In, Out>
+    ? MergeTwoExclusive<Input, Output>
     : never;
 }>;
 
-const createPluginBuilder = <Dependencies extends Plugin[]>(
+const createPluginBuilder = <
+  Dependencies extends Plugin[],
+  OutputType extends ContextFromInclusive<Dependencies>
+>(
   dependencies: [...Dependencies]
 ) => ({
   dependencies,
-  with<P extends Plugin>(plugin: P) {
+  withDependency<P extends Plugin>(plugin: P) {
     return createPluginBuilder([...this.dependencies, plugin]);
   },
-  build<Output extends DeepPartial<ContextFromInclusive<Dependencies>>>(
+  withOutputType<O extends OutputType>() {
+    return createPluginBuilder<Dependencies, O>(this.dependencies);
+  },
+  build<Output extends OutputType>(
     name: string,
-    factory: (input: ContextFromExclusive<Dependencies>) => Output = () =>
-      ({} as Output)
+    factory: (
+      input: ContextFromExclusive<Dependencies>
+    ) => MergeTwoExclusive<OutputType, Output>
   ) {
     return {
       name,
@@ -53,9 +59,12 @@ const createPluginBuilder = <Dependencies extends Plugin[]>(
 });
 
 export const Plugin = {
-  with: <P extends Plugin>(plugin: P) => createPluginBuilder([plugin]),
+  withDependency: <P extends Plugin>(plugin: P) =>
+    createPluginBuilder([plugin]),
+  withOutputType: <OutputType extends Record<string, unknown>>() =>
+    createPluginBuilder<[], OutputType>([]),
   build: <Output extends Record<string, unknown>>(
     name: string,
-    factory: (input: {}) => Output = () => ({} as Output)
+    factory: (input: {}) => Output
   ) => createPluginBuilder([]).build(name, factory),
 } as const;

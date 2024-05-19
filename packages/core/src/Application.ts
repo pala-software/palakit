@@ -1,4 +1,9 @@
-import type { ContextFromExclusive, Plugin } from "./Plugin";
+import type {
+  ContextFromExclusive,
+  ContextFromInclusive,
+  Plugin,
+} from "./Plugin";
+import { DeepPartial, LastOf, MergeTwoExclusive } from "./utils";
 
 const merge = (a: any, b: any) => {
   if (a && b && typeof a === "object" && typeof b === "object") {
@@ -27,13 +32,17 @@ const checkDependencies = (plugins: Plugin[], dependencies: Plugin[]): void => {
   }
 };
 
-export const createApplication = async <Plugins extends Plugin[]>(
-  plugins: [...Plugins]
-): Promise<ContextFromExclusive<Plugins>> => {
+export const createApplication = <
+  Plugins extends Plugin[],
+  Override extends DeepPartial<ContextFromInclusive<Plugins>>
+>(
+  plugins: [...Plugins],
+  override: Override
+): MergeTwoExclusive<ContextFromExclusive<Plugins>, Override> => {
   checkDependencies(plugins, plugins);
   let context: any = {};
   for (const plugin of plugins ?? []) {
-    context = merge(context, await plugin.factory(context));
+    context = plugin.factory(context);
   }
-  return context;
+  return merge(context, override);
 };

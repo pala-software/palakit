@@ -4,13 +4,29 @@ export type DeepPartial<T> = T extends Record<string, unknown>
     }
   : T;
 
+export type DeepReadonly<T> = T extends Record<string, unknown> | unknown[]
+  ? {
+      readonly [P in keyof T]: DeepReadonly<T[P]>;
+    }
+  : T;
+
+export type LastOf<T extends unknown[]> = T extends [infer Item]
+  ? Item
+  : T extends [unknown, ...infer Rest]
+  ? LastOf<Rest>
+  : never;
+
 export type MergeTwoInclusive<
   T1 extends Record<string, unknown>,
   T2 extends Record<string, unknown>
 > = {
   [K in keyof T1 | keyof T2]: K extends keyof T1
     ? K extends keyof T2
-      ? T1[K] extends (...args: any[]) => any
+      ? T1[K] extends unknown[]
+        ? T2[K] extends unknown[]
+          ? [...T1[K], ...T2[K]]
+          : T1[K] | T2[K]
+        : T1[K] extends (...args: any[]) => any
         ? T1[K] | T2[K]
         : T1[K] extends Record<string, unknown>
         ? T2[K] extends (...args: any[]) => any
@@ -31,7 +47,11 @@ export type MergeTwoExclusive<
 > = {
   [K in keyof T1 | keyof T2]: K extends keyof T1
     ? K extends keyof T2
-      ? T1[K] extends (...args: any[]) => any
+      ? T1[K] extends unknown[]
+        ? T2[K] extends unknown[]
+          ? [...T1[K], ...T2[K]]
+          : T2[K]
+        : T1[K] extends (...args: any[]) => any
         ? T2[K]
         : T1[K] extends Record<string, unknown>
         ? T2[K] extends (...args: any[]) => any

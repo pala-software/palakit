@@ -1,5 +1,4 @@
-import type { FieldType } from "./FieldType";
-
 export type Field = {
+  name: string;
   valueType: () => any;
 };
