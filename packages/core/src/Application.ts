@@ -3,7 +3,7 @@ import type {
   ContextFromInclusive,
   Plugin,
 } from "./Plugin";
-import { DeepPartial, LastOf, MergeTwoExclusive } from "./utils";
+import { MergeTwoExclusive } from "./utils";
 
 const merge = (a: any, b: any) => {
   if (a && b && typeof a === "object" && typeof b === "object") {
@@ -34,7 +34,7 @@ const checkDependencies = (plugins: Plugin[], dependencies: Plugin[]): void => {
 
 export const createApplication = <
   Plugins extends Plugin[],
-  Override extends DeepPartial<ContextFromInclusive<Plugins>>
+  Override extends ContextFromInclusive<Plugins>
 >(
   plugins: [...Plugins],
   override: Override

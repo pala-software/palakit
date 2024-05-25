@@ -4,5 +4,5 @@ import { DocumentsPluginContext } from "./Context";
 export const DocumentsPlugin =
   Plugin.withOutputType<DocumentsPluginContext>().build(
     "DocumentsPlugin",
-    (input) => ({ ...input, collections: [] })
+    (input) => ({ ...input, collections: {} })
   );

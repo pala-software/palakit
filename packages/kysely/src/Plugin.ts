@@ -4,4 +4,4 @@ import type { KyselyPluginContext } from "./Context";
 
 export const KyselyPlugin = Plugin.withDependency(DocumentsPlugin)
   .withOutputType<KyselyPluginContext>()
-  .build("KyselyPlugin", (input) => ({ ...input, collections: [] }));
+  .build("KyselyPlugin", (input) => ({ ...input, collections: {} }));

@@ -22,11 +22,7 @@ export type MergeTwoInclusive<
 > = {
   [K in keyof T1 | keyof T2]: K extends keyof T1
     ? K extends keyof T2
-      ? T1[K] extends unknown[]
-        ? T2[K] extends unknown[]
-          ? [...T1[K], ...T2[K]]
-          : T1[K] | T2[K]
-        : T1[K] extends (...args: any[]) => any
+      ? T1[K] extends (...args: any[]) => any
         ? T1[K] | T2[K]
         : T1[K] extends Record<string, unknown>
         ? T2[K] extends (...args: any[]) => any
@@ -47,11 +43,7 @@ export type MergeTwoExclusive<
 > = {
   [K in keyof T1 | keyof T2]: K extends keyof T1
     ? K extends keyof T2
-      ? T1[K] extends unknown[]
-        ? T2[K] extends unknown[]
-          ? [...T1[K], ...T2[K]]
-          : T2[K]
-        : T1[K] extends (...args: any[]) => any
+      ? T1[K] extends (...args: any[]) => any
         ? T2[K]
         : T1[K] extends Record<string, unknown>
         ? T2[K] extends (...args: any[]) => any

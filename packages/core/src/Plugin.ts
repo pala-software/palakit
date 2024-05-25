@@ -25,7 +25,7 @@ export type ContextFromExclusive<Plugins extends Plugin[]> = MergeExclusive<{
   [K in keyof Plugins]: Plugins[K] extends {
     factory: (
       input: infer Input extends Record<string, unknown>
-    ) => infer Output extends Record<string, unknown>;
+    ) => MergeTwoInclusive<any, infer Output extends Record<string, unknown>>;
   }
     ? MergeTwoExclusive<Input, Output>
     : never;
@@ -48,7 +48,7 @@ const createPluginBuilder = <
     name: string,
     factory: (
       input: ContextFromExclusive<Dependencies>
-    ) => MergeTwoExclusive<OutputType, Output>
+    ) => MergeTwoInclusive<OutputType, Output>
   ) {
     return {
       name,

@@ -5,24 +5,38 @@ import type {
 } from "@pala/documents";
 
 const dataTypes = {
-  serial: {
-    selectType: Number,
-    insertType: Number,
-    updateType: Number,
-  },
-} satisfies Record<
-  string,
-  {
-    selectType: new () => any;
-    insertType: new () => any;
-    updateType: new () => any;
-  }
->;
+  smallint: Number,
+  integer: Number,
+  bigint: Number,
+  decimal: Number,
+  numeric: Number,
+  real: Number,
+  double: Number,
+  smallserial: Number,
+  serial: Number,
+  bigserial: Number,
+  varchar: String,
+  char: String,
+  text: String,
+  bytea: ArrayBuffer,
+  timestamp: Date,
+  timestamptz: Date,
+  boolean: Boolean,
+} satisfies Record<string, (() => any) | (new (...args: any[]) => any)>;
 
-export type KyselyPluginContext = DocumentsPluginContext & {
-  collections: (Collection & {
-    fields: (Field & {
-      dataType: keyof typeof dataTypes;
-    })[];
-  })[];
+export type KyselyPluginContext = Omit<
+  DocumentsPluginContext,
+  "collections"
+> & {
+  collections: Record<
+    string,
+    Omit<Collection, "fields"> & {
+      fields: Record<
+        string,
+        Field & {
+          dataType: keyof typeof dataTypes;
+        }
+      >;
+    }
+  >;
 };
