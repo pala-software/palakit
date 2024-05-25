@@ -24,13 +24,10 @@ const dataTypes = {
   boolean: Boolean,
 } satisfies Record<string, (() => any) | (new (...args: any[]) => any)>;
 
-export type KyselyPluginContext = Omit<
-  DocumentsPluginContext,
-  "collections"
-> & {
+export type KyselyPluginContext = DocumentsPluginContext & {
   collections: Record<
     string,
-    Omit<Collection, "fields"> & {
+    Collection & {
       fields: Record<
         string,
         Field & {

@@ -1,21 +1,3 @@
-export type DeepPartial<T> = T extends Record<string, unknown>
-  ? {
-      [P in keyof T]?: DeepPartial<T[P]>;
-    }
-  : T;
-
-export type DeepReadonly<T> = T extends Record<string, unknown> | unknown[]
-  ? {
-      readonly [P in keyof T]: DeepReadonly<T[P]>;
-    }
-  : T;
-
-export type LastOf<T extends unknown[]> = T extends [infer Item]
-  ? Item
-  : T extends [unknown, ...infer Rest]
-  ? LastOf<Rest>
-  : never;
-
 export type MergeTwoInclusive<
   T1 extends Record<string, unknown>,
   T2 extends Record<string, unknown>
