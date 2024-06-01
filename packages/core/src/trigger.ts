@@ -1,9 +1,9 @@
-import { createMethod } from "./method";
+import { createFunction } from "./function";
 import { createRegistry } from "./registry";
 
-export const createEvent = <Arguments extends unknown[] = []>() => {
+export const createTrigger = <Arguments extends unknown[] = []>() => {
   const listeners = createRegistry(
-    (fn: (...args: Arguments) => Promise<void> | void) => createMethod(fn)
+    (fn: (...args: Arguments) => Promise<void> | void) => createFunction(fn)
   );
   return Object.assign(
     async (...args: Arguments) => {
@@ -13,7 +13,8 @@ export const createEvent = <Arguments extends unknown[] = []>() => {
     },
     {
       listeners: listeners.registry,
-      on: (fn: () => Promise<void> | void) => listeners.register(fn),
+      on: (fn: (...args: Arguments) => Promise<void> | void) =>
+        listeners.register(fn),
     }
   );
 };

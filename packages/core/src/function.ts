@@ -1,6 +1,6 @@
 import { createRegistry } from "./registry";
 
-export const createMethod = <Arguments extends unknown[], Return>(
+export const createFunction = <Arguments extends unknown[], Return>(
   fn: (...args: Arguments) => Return
 ) => {
   const beforeHook = createRegistry(
@@ -22,10 +22,10 @@ export const createMethod = <Arguments extends unknown[], Return>(
     },
     {
       before: (fn: (...args: Arguments) => Promise<Arguments> | Arguments) =>
-        beforeHook.register(createMethod(fn)),
+        beforeHook.register(createFunction(fn)),
       after: (
         fn: (value: Return, ...args: Arguments) => Promise<Return> | Return
-      ) => afterHook.register(createMethod(fn)),
+      ) => afterHook.register(createFunction(fn)),
     }
   );
 };
