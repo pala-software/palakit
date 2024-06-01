@@ -1,10 +1,6 @@
-import type {
-  Collection,
-  DocumentsPluginContext,
-  Field,
-} from "@pala/documents";
+import { createPart, createRegistry } from "@pala/core";
 
-const dataTypes = {
+const fieldTypes = {
   smallint: Number,
   integer: Number,
   bigint: Number,
@@ -24,16 +20,14 @@ const dataTypes = {
   boolean: Boolean,
 } satisfies Record<string, (() => any) | (new (...args: any[]) => any)>;
 
-export type KyselyPluginContext = DocumentsPluginContext & {
-  collections: Record<
-    string,
-    Collection & {
-      fields: Record<
-        string,
-        Field & {
-          dataType: keyof typeof dataTypes;
-        }
-      >;
-    }
-  >;
+export type Collection = {
+  name: string;
+  fields: {
+    name: string;
+    type: keyof typeof fieldTypes;
+  }[];
 };
+
+export const DatabasePlugin = createPart("DatabasePlugin", [], () => ({
+  collections: createRegistry((collection: Collection) => collection),
+}));
