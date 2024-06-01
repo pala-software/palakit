@@ -1,0 +1,9 @@
+{
+  "name": "@pala/nats",
+  "version": "0.1.0",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@pala/core": "workspace:*",
+    "nats": "^2.26.0"
+  }
+}
