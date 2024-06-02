@@ -1,4 +1,5 @@
-import { createPart, EventBus } from "@pala/core";
+import { createPart } from "@pala/core";
+import { EventBus } from "./EventBus";
 
 export const LocalEventBus = createPart(EventBus, [], () => {
   const eventSubscriptions: Record<string, ((payload?: Uint8Array) => void)[]> =

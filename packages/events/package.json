@@ -1,8 +1,8 @@
 {
-  "name": "@pala/core",
+  "name": "@pala/events",
   "version": "0.1.0",
   "main": "src/index.ts",
   "dependencies": {
-    "part-di": "^1.0.7"
+    "@pala/core": "workspace:*"
   }
 }

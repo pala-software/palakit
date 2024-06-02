@@ -1,4 +1,4 @@
-import { createPart } from "part-di";
+import { createPart } from "@pala/core";
 
 export type Subscription = {
   unsubscribe: () => void;
