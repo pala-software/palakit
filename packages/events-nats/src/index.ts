@@ -17,7 +17,7 @@ export const createNatsEventBus = (options: ConnectionOptions) =>
         connected.then((connection) =>
           connection.publish(
             `${runtime.appName}.${options.subject}`,
-            options.payload ? new Uint8Array(options.payload) : undefined
+            options.payload
           )
         );
       },

@@ -5,12 +5,10 @@ const RuntimeConfiguration = createPart<{ appName: string }>(
   "RuntimeConfiguration"
 );
 
-const PartContainer = createPart<Map<Part, unknown>>("PartContainer");
-
 export const Runtime = createPart(
-  "Application",
-  [RuntimeConfiguration, PartContainer, EventBus],
-  ([config, parts, eventBus]) => {
+  "Runtime",
+  [RuntimeConfiguration, EventBus],
+  ([config, eventBus]) => {
     const textEncoder = new TextEncoder();
     const textDecoder = new TextDecoder();
     const encode = (payload: unknown) =>
@@ -94,14 +92,9 @@ export const Runtime = createPart(
 
     return {
       appName: config.appName,
-      init: async () => {
+      init: createFunction("runtime.init", async () => {
         await eventBus.connect();
-      },
-      get<T extends Part>(part: T) {
-        return parts.get(part) as
-          | (T extends Part<infer Type> ? Type : never)
-          | undefined;
-      },
+      }),
       createTrigger,
       createFunction,
     };
@@ -115,17 +108,15 @@ export type RuntimeOptions = {
 
 export const resolveRuntime = (options: RuntimeOptions) =>
   resolvePart(
-    createPart("RuntimeResolver", [Runtime], ([runtime]) => runtime),
+    createPart(
+      "RuntimeResolver",
+      [Runtime, ...options.parts],
+      ([runtime]) => runtime
+    ),
     [
       createPart(RuntimeConfiguration, [], () => ({
         appName: options.appName,
       })),
-      createPart(PartContainer, options.parts, (implementations) => {
-        const parts = new Map<Part, unknown>();
-        for (const [index, part] of options.parts.entries()) {
-          parts.set(part, implementations[index]);
-        }
-        return parts;
-      }),
+      ...options.parts,
     ]
   );
