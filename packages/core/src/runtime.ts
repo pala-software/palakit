@@ -92,9 +92,7 @@ export const Runtime = createPart(
 
     return {
       appName: config.appName,
-      init: createFunction("runtime.init", async () => {
-        await eventBus.connect();
-      }),
+      init: createTrigger("runtime.init"),
       createTrigger,
       createFunction,
     };

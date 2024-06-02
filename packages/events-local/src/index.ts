@@ -9,7 +9,6 @@ export const LocalEventBus = createPart(EventBus, [], () => {
   > = {};
 
   return {
-    connect: () => Promise.resolve(),
     publish: (options) => {
       for (const fn of eventSubscriptions[options.subject] ?? []) {
         fn(options.payload);

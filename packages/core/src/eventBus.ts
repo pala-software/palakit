@@ -5,7 +5,6 @@ export type Subscription = {
 };
 
 export type EventBus = {
-  connect: () => Promise<void>;
   publish: (options: { subject: string; payload?: Uint8Array }) => void;
   subscribe: (options: {
     subject: string;

@@ -9,10 +9,10 @@ export const createNatsEventBus = (options: ConnectionOptions) =>
     });
 
     return {
-      connect: async () => {
+      connect: runtime.init.on("events-nats.connect", async () => {
         const connection = await connect({ name: runtime.appName, ...options });
         setConnection(connection);
-      },
+      }),
       publish: (options) => {
         connected.then((connection) =>
           connection.publish(
