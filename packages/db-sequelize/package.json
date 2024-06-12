@@ -1,0 +1,10 @@
+{
+  "name": "@pala/db-sequelize",
+  "version": "0.1.0",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@pala/core": "workspace:*",
+    "@pala/db": "workspace:*",
+    "sequelize": "^6.37.3"
+  }
+}

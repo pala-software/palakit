@@ -1,0 +1,1 @@
+export { createSequelizeDocumentStore } from "./SequelizeDocumentStore";
