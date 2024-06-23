@@ -33,6 +33,7 @@ export const createSequelizeDocumentStore = (options: Options) =>
             ...obj,
             [key]: {
               get: () => {
+                if (key === "id") return String(instance.get(key));
                 return instance.get(key);
               },
               set: (value: unknown) => {
