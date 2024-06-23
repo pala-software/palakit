@@ -1,5 +1,11 @@
+import { AdapterResolver, Schema } from "@typeschema/main";
+import { OutputFrom } from "@typeschema/core";
+
+type AnyIfNever<T> = [T] extends [never] ? any : T;
+type FromSchema<T extends Schema> = AnyIfNever<OutputFrom<AdapterResolver, T>>;
+
 export type Request<Input = unknown> = {
-  input?: Input;
+  input: Input;
 };
 
 export type BaseResponse = {
@@ -36,42 +42,47 @@ export type Response<Output = unknown> =
 export const isResponse = (value: unknown): value is Response =>
   isOkResponse(value) || isErrorResponse(value);
 
-export type OperationOptions<Input = unknown, Output = unknown> = {
+export type OperationOptions<
+  InputSchema extends Schema,
+  OutputSchema extends Schema,
+> = {
   handler: (
-    request: Request<Input>
-  ) => Response<Output> | Promise<Response<Output>>;
-  validateInput?: (input: Input) => true | string;
-  validateOutput?: (output: Output) => boolean;
+    request: Request<FromSchema<InputSchema>>
+  ) =>
+    | Response<FromSchema<OutputSchema>>
+    | Promise<Response<FromSchema<OutputSchema>>>;
+  input?: InputSchema;
+  output?: OutputSchema;
 };
 
-export type Operation<Input = any, Output = any> = OperationOptions<
-  Input,
-  Output
-> & { type: string };
+export type Operation<
+  InputSchema extends Schema = Schema,
+  OutputSchema extends Schema = Schema,
+> = OperationOptions<InputSchema, OutputSchema> & { type: string };
 
 export type QueryOperationOptions<
-  Input = unknown,
-  Output = unknown
-> = OperationOptions<Input, Output>;
+  InputSchema extends Schema,
+  OutputSchema extends Schema,
+> = OperationOptions<InputSchema, OutputSchema>;
 
-export type QueryOperation<Input = any, Output = any> = QueryOperationOptions<
-  Input,
-  Output
-> & { type: "query" };
+export type QueryOperation<
+  InputSchema extends Schema = Schema,
+  OutputSchema extends Schema = Schema,
+> = QueryOperationOptions<InputSchema, OutputSchema> & { type: "query" };
 
 export const isQueryOperation = (
   operation: Operation
 ): operation is QueryOperation => operation.type === "query";
 
 export type MutationOperationOptions<
-  Input = unknown,
-  Output = unknown
-> = OperationOptions<Input, Output>;
+  InputSchema extends Schema,
+  OutputSchema extends Schema,
+> = OperationOptions<InputSchema, OutputSchema>;
 
 export type MutationOperation<
-  Input = any,
-  Output = any
-> = MutationOperationOptions<Input, Output> & { type: "mutation" };
+  InputSchema extends Schema = Schema,
+  OutputSchema extends Schema = Schema,
+> = MutationOperationOptions<InputSchema, OutputSchema> & { type: "mutation" };
 
 export const isMutationOperation = (
   operation: Operation
@@ -84,14 +95,24 @@ export type Observable<Output = unknown> = (observer: {
 }) => () => void;
 
 export type SubscriptionOperationOptions<
-  Input = unknown,
-  Output = unknown
-> = OperationOptions<Input, Observable<Output>>;
+  InputSchema extends Schema,
+  OutputSchema extends Schema,
+> = {
+  handler: (
+    request: Request<FromSchema<InputSchema>>
+  ) =>
+    | Response<Observable<FromSchema<OutputSchema>>>
+    | Promise<Response<Observable<FromSchema<OutputSchema>>>>;
+  input?: InputSchema;
+  output?: OutputSchema;
+};
 
 export type SubscriptionOperation<
-  Input = any,
-  Output = any
-> = SubscriptionOperationOptions<Input, Output> & { type: "subscription" };
+  InputSchema extends Schema = any,
+  OutputSchema extends Schema = any,
+> = SubscriptionOperationOptions<InputSchema, OutputSchema> & {
+  type: "subscription";
+};
 
 export const isSubscriptionOperation = (
   operation: Operation
@@ -106,7 +127,7 @@ export type OperationRecord = {
 };
 
 export type ResourceEndpoint<
-  Operations extends OperationRecord = OperationRecord
+  Operations extends OperationRecord = OperationRecord,
 > = {
   name: string;
   operations: Operations;

@@ -10,6 +10,7 @@ import {
   SubscriptionOperation,
   SubscriptionOperationOptions,
 } from "./types";
+import { Schema } from "@typeschema/main";
 
 export const ResourceServer = createPart(
   "ResourceServer",
@@ -19,13 +20,20 @@ export const ResourceServer = createPart(
     const adapters: ResourceServerAdapter[] = [];
     const endpoints: ResourceEndpoint[] = [];
 
+    const initialize = () => {
+      if (initialized) return;
+      initialized = true;
+      for (const adapter of adapters) {
+        for (const endpoint of endpoints) {
+          adapter.addEndpoint(endpoint);
+        }
+      }
+    };
+
     return {
       start: application.start.on("ResourceServer.start", () => {
-        initialized = true;
+        initialize();
         for (const adapter of adapters) {
-          for (const endpoint of endpoints) {
-            adapter.addEndpoint(endpoint);
-          }
           adapter.start();
         }
       }),
@@ -47,25 +55,29 @@ export const ResourceServer = createPart(
         return endpoint;
       },
 
-      createQuery: <Input, Output>(
-        query: QueryOperationOptions<Input, Output>
-      ): QueryOperation<Input, Output> => {
+      createQuery: <InputSchema extends Schema, OutputSchema extends Schema>(
+        query: QueryOperationOptions<InputSchema, OutputSchema>
+      ): QueryOperation<InputSchema, OutputSchema> => {
         return { ...query, type: "query" };
       },
 
-      createMutation: <Input, Output>(
-        query: MutationOperationOptions<Input, Output>
-      ): MutationOperation<Input, Output> => {
+      createMutation: <InputSchema extends Schema, OutputSchema extends Schema>(
+        query: MutationOperationOptions<InputSchema, OutputSchema>
+      ): MutationOperation<InputSchema, OutputSchema> => {
         return { ...query, type: "mutation" };
       },
 
-      createSubscription: <Input, Output>(
-        query: SubscriptionOperationOptions<Input, Output>
-      ): SubscriptionOperation<Input, Output> => {
+      createSubscription: <
+        InputSchema extends Schema,
+        OutputSchema extends Schema,
+      >(
+        query: SubscriptionOperationOptions<InputSchema, OutputSchema>
+      ): SubscriptionOperation<InputSchema, OutputSchema> => {
         return { ...query, type: "subscription" };
       },
 
       generateClients: async (): Promise<void> => {
+        initialize();
         for (const adapter of adapters) {
           await adapter.generateClient?.();
         }

@@ -4,6 +4,8 @@
   "main": "src/index.ts",
   "dependencies": {
     "@pala/core": "workspace:*",
-    "@trpc/server": "^10.45.2"
+    "@trpc/server": "^10.45.2",
+    "@typeschema/main": "^0.13.10",
+    "json-schema-to-typescript": "^14.0.5"
   }
 }
