@@ -16,7 +16,7 @@ import { observable } from "@trpc/server/observable";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import WebSocket from "ws";
 import { writeFile } from "fs/promises";
-import { Schema, toJSONSchema, validate } from "@typeschema/main";
+import { Schema, toJSONSchema, validate, wrap } from "@typeschema/main";
 import { JSONSchema, compile } from "json-schema-to-typescript";
 
 export type Options = {
@@ -37,7 +37,7 @@ export const createTrpcResourceServer = (options: Options) =>
       input,
     }: {
       operation: Operation;
-      input: unknown;
+      input: any;
     }): Promise<unknown> => {
       const { response } = await operation.handler({ input });
       if (response.type === "error") {
@@ -48,45 +48,73 @@ export const createTrpcResourceServer = (options: Options) =>
     };
 
     const createValidator =
-      <Input>(schema: Schema) =>
-      async (input: Input) => {
-        const result = await validate(schema, input);
+      (schema: Schema | undefined) => async (value: unknown) => {
+        if (!schema) {
+          if (value === undefined) {
+            return undefined;
+          } else {
+            throw new Error("Validation failed, expected nothing");
+          }
+        }
+
+        const result = await validate(schema, value);
         if (result.success) {
-          return input;
+          return value;
         } else {
-          throw new Error("Validation failed", { cause: result.issues });
+          throw new Error(
+            "Validation failed with following issues: \n" +
+              result.issues
+                .map(
+                  ({ message, path }) =>
+                    ` - ${message}` +
+                    (path?.length ? ` (at ${path.join(".")})` : "")
+                )
+                .join("\n")
+          );
         }
       };
-
-    const createProcedureBuilder = (operation: Operation) => {
-      if (operation.input && operation.output) {
-        return t.procedure
-          .input(createValidator(operation.input))
-          .output(createValidator(operation.output));
-      } else if (operation.input) {
-        return t.procedure.input(createValidator(operation.input));
-      } else if (operation.output) {
-        return t.procedure.output(createValidator(operation.output));
-      } else {
-        return t.procedure;
-      }
-    };
-
     const createQuery = (operation: QueryOperation) =>
-      createProcedureBuilder(operation).query(async ({ input }) =>
-        executeOperation({ operation, input })
-      );
+      t.procedure
+        .input(createValidator(operation.input))
+        .output(createValidator(operation.output))
+        .query(async ({ input }) => executeOperation({ operation, input }));
 
     const createMutation = (operation: MutationOperation) =>
-      createProcedureBuilder(operation).mutation(async ({ input }) =>
-        executeOperation({ operation, input })
-      );
+      t.procedure
+        .input(createValidator(operation.input))
+        .output(createValidator(operation.output))
+        .mutation(async ({ input }) => executeOperation({ operation, input }));
 
     const createSubscription = (operation: SubscriptionOperation) =>
-      createProcedureBuilder(operation).subscription(async ({ input }) => {
-        const output = await executeOperation({ operation, input });
-        return observable(output as Observable);
-      });
+      t.procedure
+        .input(createValidator(operation.input))
+        .subscription(async ({ input }) => {
+          const run = (await executeOperation({
+            operation,
+            input,
+          })) as Observable;
+          const validate = createValidator(operation.output);
+          return observable(({ next, complete, error }) =>
+            run({
+              next: async (value) => {
+                if (!operation.output) {
+                  // No validation, allow anything.
+                  next(value);
+                  return;
+                }
+
+                try {
+                  await validate(value);
+                  next(value);
+                } catch (_err) {
+                  error("Output validation failed");
+                }
+              },
+              complete,
+              error,
+            })
+          );
+        });
 
     const createProcedure = (operation: Operation) => {
       if (isQueryOperation(operation)) return createQuery(operation);
@@ -147,16 +175,16 @@ export const createTrpcResourceServer = (options: Options) =>
             for (const [name, operation] of Object.entries(operations)) {
               if (!operation) continue;
               contents += await compile(
-                operation.input
-                  ? ((await toJSONSchema(operation.input)) as JSONSchema)
-                  : { tsType: "undefined" },
+                (operation.input
+                  ? await toJSONSchema(operation.input)
+                  : { tsType: "void" }) as JSONSchema,
                 createTypeName(["InputOf", endpointName, name]),
                 { bannerComment: "" }
               );
               contents += await compile(
-                operation.output
-                  ? ((await toJSONSchema(operation.output)) as JSONSchema)
-                  : { tsType: "undefined" },
+                (operation.output
+                  ? await toJSONSchema(operation.output)
+                  : { tsType: "unknown" }) as JSONSchema,
                 createTypeName(["OutputOf", endpointName, name]),
                 { bannerComment: "" }
               );

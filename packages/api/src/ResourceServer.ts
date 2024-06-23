@@ -55,21 +55,27 @@ export const ResourceServer = createPart(
         return endpoint;
       },
 
-      createQuery: <InputSchema extends Schema, OutputSchema extends Schema>(
+      createQuery: <
+        InputSchema extends Schema | null,
+        OutputSchema extends Schema | null,
+      >(
         query: QueryOperationOptions<InputSchema, OutputSchema>
       ): QueryOperation<InputSchema, OutputSchema> => {
         return { ...query, type: "query" };
       },
 
-      createMutation: <InputSchema extends Schema, OutputSchema extends Schema>(
+      createMutation: <
+        InputSchema extends Schema | null,
+        OutputSchema extends Schema | null,
+      >(
         query: MutationOperationOptions<InputSchema, OutputSchema>
       ): MutationOperation<InputSchema, OutputSchema> => {
         return { ...query, type: "mutation" };
       },
 
       createSubscription: <
-        InputSchema extends Schema,
-        OutputSchema extends Schema,
+        InputSchema extends Schema | null,
+        OutputSchema extends Schema | null,
       >(
         query: SubscriptionOperationOptions<InputSchema, OutputSchema>
       ): SubscriptionOperation<InputSchema, OutputSchema> => {
