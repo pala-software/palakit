@@ -1,4 +1,10 @@
-import { NotImplementedError, Part, createPart, resolvePart } from "part-di";
+import {
+  NotImplementedError,
+  Part,
+  createPart,
+  getName,
+  resolvePart,
+} from "part-di";
 import { LocalRuntime } from "./LocalRuntime";
 
 type ApplicationConfiguration = {
@@ -12,10 +18,33 @@ const ApplicationConfiguration = createPart<ApplicationConfiguration>(
 export const Application = createPart(
   "Application",
   [LocalRuntime, ApplicationConfiguration],
-  ([local, config]) => ({
-    name: config.name,
-    init: local.createTrigger("application.init"),
-  })
+  ([local, config]) => {
+    let parts = new Map<Part, unknown>();
+
+    const hasDefinition = (part: Part, definition: Part): boolean =>
+      part === definition ||
+      (typeof part.definition !== "string" &&
+        hasDefinition(part.definition, definition));
+
+    return {
+      name: config.name,
+      start: local.createTrigger("Application.start"),
+      register: <T extends Part>(
+        definition: T,
+        implementation: ReturnType<T>
+      ) => {
+        parts.set(definition, implementation);
+      },
+      resolve: <T extends Part>(definition: T): ReturnType<T> => {
+        for (const [part, implementation] of parts.entries()) {
+          if (hasDefinition(part, definition)) {
+            return implementation as ReturnType<T>;
+          }
+        }
+        throw new Error("Could not find part: " + getName(definition));
+      },
+    };
+  }
 );
 
 export type ApplicationOptions = {
@@ -29,7 +58,12 @@ export const resolveApplication = (options: ApplicationOptions) => {
       createPart(
         "ApplicationResolver",
         [Application, ...options.parts],
-        ([application]) => application
+        ([application, ...implementations]) => {
+          for (let index = 0; index < options.parts.length; index++) {
+            application.register(options.parts[index], implementations[index]);
+          }
+          return application;
+        }
       ),
       [
         createPart(ApplicationConfiguration, [], () => ({

@@ -1,0 +1,8 @@
+{
+  "name": "@pala/api",
+  "version": "0.1.0",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@pala/core": "workspace:*"
+  }
+}

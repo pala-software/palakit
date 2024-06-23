@@ -1,0 +1,9 @@
+{
+  "name": "@pala/api-trpc",
+  "version": "0.1.0",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@pala/core": "workspace:*",
+    "@trpc/server": "^10.45.2"
+  }
+}

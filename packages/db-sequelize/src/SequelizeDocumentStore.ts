@@ -102,10 +102,13 @@ export const createSequelizeDocumentStore = (options: Options) =>
     };
 
     return {
-      connect: application.init.on("sequelizeDocumentStore.init", async () => {
-        await sequelize.sync();
-        setSynchronized();
-      }),
+      connect: application.start.on(
+        "SequelizeDocumentStore.connect",
+        async () => {
+          await sequelize.sync();
+          setSynchronized();
+        }
+      ),
       createCollection: (options) => {
         let columns = Object.entries(options.fields).reduce(
           (obj, [name, field]) => ({
