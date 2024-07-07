@@ -1,5 +1,6 @@
 import { Application, createPart } from "@pala/core";
-import { DocumentStore, Document, Collection, Where } from "@pala/db";
+import { DocumentStore, Document, Collection, Where, DataType } from "@pala/db";
+import { validate } from "@typeschema/main";
 import {
   DataTypes,
   Model,
@@ -115,18 +116,70 @@ export const createSequelizeDocumentStore = (options: Options) =>
           (obj, [name, field]) => ({
             ...obj,
             [name]: {
-              type: (() => {
-                switch (field.type) {
-                  case "text":
-                    return DataTypes.STRING;
-                  case "number":
-                    return DataTypes.NUMBER;
-                  case "boolean":
-                    return DataTypes.BOOLEAN;
+              ...(() => {
+                switch (field.dataType) {
+                  case DataType.STRING:
+                    if (field.length === undefined) {
+                      return { type: DataTypes.TEXT };
+                    }
+                    return { type: DataTypes.STRING(field.length) };
+                  case DataType.BOOLEAN:
+                    return { type: DataTypes.BOOLEAN };
+                  case DataType.INTEGER:
+                    return {
+                      type: (() => {
+                        switch (field.size) {
+                          case 8:
+                            return DataTypes.TINYINT;
+                          case 16:
+                            return DataTypes.SMALLINT;
+                          case 24:
+                            return DataTypes.MEDIUMINT;
+                          default:
+                          case 32:
+                            return DataTypes.INTEGER;
+                          case 64:
+                            return DataTypes.BIGINT;
+                        }
+                      })(),
+                    };
+                  case DataType.FLOAT:
+                    return {
+                      type: (() => {
+                        switch (field.size) {
+                          default:
+                          case 32:
+                            return DataTypes.FLOAT;
+                          case 64:
+                            return DataTypes.DOUBLE;
+                        }
+                      })(),
+                    };
+                  case DataType.BLOB:
+                    return { type: DataTypes.BLOB };
                 }
               })(),
               allowNull: field.nullable ?? true,
               unique: field.unique ?? false,
+              validate: {
+                ...(field.schema && {
+                  isValid: async (input: unknown) => {
+                    const result = await validate(field.schema, input);
+                    if (!result.success) {
+                      throw new Error(
+                        "Validation failed with following issues: \n" +
+                          result.issues
+                            .map(
+                              ({ message, path }) =>
+                                ` - ${message}` +
+                                (path?.length ? ` (at ${path.join(".")})` : "")
+                            )
+                            .join("\n")
+                      );
+                    }
+                  },
+                }),
+              },
             } satisfies ModelAttributes[string],
           }),
           {}
