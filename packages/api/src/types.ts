@@ -1,4 +1,4 @@
-import { Infer, Schema, AdapterResolver } from "@typeschema/main";
+import { Schema, AdapterResolver } from "@typeschema/main";
 import { OutputFrom } from "@typeschema/core";
 
 type FallbackToAny<T> = [T] extends [never] ? any : T;
