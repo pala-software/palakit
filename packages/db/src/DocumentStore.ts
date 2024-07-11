@@ -61,7 +61,7 @@ export type Field =
 export type Document<T extends Collection> =
   T extends Collection<infer Shape>
     ? { id: string } & Shape & {
-          update: (values: Partial<Shape>) => Promise<void>;
+          save: (values: Partial<Shape>) => Promise<void>;
           delete: () => Promise<void>;
         }
     : never;
