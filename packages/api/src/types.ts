@@ -138,8 +138,14 @@ export type ResourceEndpoint<
   operations: Operations;
 };
 
+export type ResourceModel = {
+  name: string;
+  schema: any;
+};
+
 export type ResourceServerAdapter = {
   start: () => void;
   addEndpoint: (endpoint: ResourceEndpoint) => void;
+  addModel: (model: ResourceModel) => void;
   generateClient?: () => Promise<void>;
 };

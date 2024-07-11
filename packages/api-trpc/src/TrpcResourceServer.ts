@@ -1,4 +1,3 @@
-import { createPart } from "@pala/core";
 import {
   MutationOperation,
   Observable,
@@ -11,13 +10,15 @@ import {
   isQueryOperation,
   isSubscriptionOperation,
 } from "@pala/api";
+import { ResourceModel } from "@pala/api/src/types";
+import { createPart } from "@pala/core";
 import { AnyRouter, initTRPC } from "@trpc/server";
-import { observable } from "@trpc/server/observable";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
-import WebSocket from "ws";
+import { observable } from "@trpc/server/observable";
+import { Schema, toJSONSchema, validate } from "@typeschema/main";
 import { writeFile } from "fs/promises";
-import { Schema, toJSONSchema, validate, wrap } from "@typeschema/main";
 import { JSONSchema, compile } from "json-schema-to-typescript";
+import WebSocket from "ws";
 
 export type Options = {
   /** Port where to host the tRPC WebSocket server. */
@@ -31,6 +32,7 @@ export const createTrpcResourceServer = (options: Options) =>
   createPart("TrpcServer", [ResourceServer], ([server]) => {
     const t = initTRPC.create();
     const endpoints: ResourceEndpoint[] = [];
+    const models: ResourceModel[] = [];
 
     const executeOperation = async ({
       operation,
@@ -136,6 +138,10 @@ export const createTrpcResourceServer = (options: Options) =>
           endpoints.push(endpoint);
         },
 
+        addModel: (model) => {
+          models.push(model);
+        },
+
         start: () => {
           const routers: Record<string, AnyRouter> = {};
           for (const endpoint of endpoints) {
@@ -171,22 +177,63 @@ export const createTrpcResourceServer = (options: Options) =>
 
           let contents = `import { BuildProcedure, BuildRouter } from "@pala/api-trpc";\n`;
           contents += `\n`;
+
+          const schemas: JSONSchema[] = [];
+          const typeAliases: Record<string, string> = {};
+          for (const model of models) {
+            const jsonSchema = (await toJSONSchema(model.schema)) as JSONSchema;
+            schemas.push(jsonSchema);
+            contents += await compile(
+              jsonSchema,
+              createTypeName([model.name]),
+              { bannerComment: "" }
+            );
+          }
+
+          const createSchema = async (source: any, typeName: string) => {
+            if (!source) {
+              typeAliases[typeName] = "void";
+              return;
+            }
+            const schema = (await toJSONSchema(source)) as JSONSchema;
+            if (
+              typeof schema.type === "string" &&
+              ["bigint", "boolean", "number", "string", "symbol"].includes(
+                schema.type
+              )
+            ) {
+              typeAliases[typeName] = schema.type;
+            } else {
+              const schemaString = JSON.stringify(
+                schema.type === "array"
+                  ? { ...schema.items, $schema: schema.$schema }
+                  : schema
+              );
+              const schemaIndex = schemas.findIndex(
+                (s) => JSON.stringify(s) === schemaString
+              );
+              if (schemaIndex === -1) {
+                contents += await compile(schema, typeName, {
+                  bannerComment: "",
+                });
+              } else {
+                const baseName = createTypeName([models[schemaIndex].name]);
+                typeAliases[typeName] =
+                  schema.type === "array" ? baseName + "[]" : baseName;
+              }
+            }
+          };
+
           for (const { name: endpointName, operations } of endpoints) {
             for (const [name, operation] of Object.entries(operations)) {
               if (!operation) continue;
-              contents += await compile(
-                (operation.input
-                  ? await toJSONSchema(operation.input)
-                  : { tsType: "void" }) as JSONSchema,
-                createTypeName(["InputOf", endpointName, name]),
-                { bannerComment: "" }
+              await createSchema(
+                operation.input,
+                createTypeName(["InputOf", endpointName, name])
               );
-              contents += await compile(
-                (operation.output
-                  ? await toJSONSchema(operation.output)
-                  : { tsType: "unknown" }) as JSONSchema,
-                createTypeName(["OutputOf", endpointName, name]),
-                { bannerComment: "" }
+              await createSchema(
+                operation.output,
+                createTypeName(["OutputOf", endpointName, name])
               );
             }
           }
@@ -203,6 +250,11 @@ export const createTrpcResourceServer = (options: Options) =>
                 throw new Error("Invalid operation type encountered");
               }
 
+              const getTypeName = (putOf: "InputOf" | "OutputOf") => {
+                const tName = createTypeName([putOf, endpointName, name]);
+                return tName in typeAliases ? typeAliases[tName] : tName;
+              };
+
               const jsonName = JSON.stringify(name);
               // TODO: I/O types
               contents += `    `;
@@ -210,9 +262,9 @@ export const createTrpcResourceServer = (options: Options) =>
               contents += `: BuildProcedure<"`;
               contents += type;
               contents += `", `;
-              contents += createTypeName(["InputOf", endpointName, name]);
+              contents += getTypeName("InputOf");
               contents += `, `;
-              contents += createTypeName(["OutputOf", endpointName, name]);
+              contents += getTypeName("OutputOf");
               contents += `>;\n`;
             }
             contents += `  }>;\n`;
