@@ -1,0 +1,10 @@
+{
+  "name": "@pala/db-mongodb",
+  "version": "0.1.0",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@pala/core": "workspace:*",
+    "@pala/db": "workspace:*",
+    "mongoose": "^8.4.3"
+  }
+}
