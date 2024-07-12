@@ -190,6 +190,18 @@ export const createTrpcResourceServer = (options: Options) =>
             );
           }
 
+          const findSchemaIndex = (schema: JSONSchema) => {
+            const schemaString = JSON.stringify(
+              schema.type === "array"
+                ? (() => {
+                    const { type, items, ...rest } = schema;
+                    return { ...items, ...rest };
+                  })()
+                : schema
+            );
+            return schemas.findIndex((s) => JSON.stringify(s) === schemaString);
+          };
+
           const createSchema = async (source: any, typeName: string) => {
             if (!source) {
               typeAliases[typeName] = "void";
@@ -204,22 +216,15 @@ export const createTrpcResourceServer = (options: Options) =>
             ) {
               typeAliases[typeName] = schema.type;
             } else {
-              const schemaString = JSON.stringify(
-                schema.type === "array"
-                  ? { ...schema.items, $schema: schema.$schema }
-                  : schema
-              );
-              const schemaIndex = schemas.findIndex(
-                (s) => JSON.stringify(s) === schemaString
-              );
+              const schemaIndex = findSchemaIndex(schema);
               if (schemaIndex === -1) {
                 contents += await compile(schema, typeName, {
                   bannerComment: "",
                 });
               } else {
-                const baseName = createTypeName([models[schemaIndex].name]);
+                const typeAlias = createTypeName([models[schemaIndex].name]);
                 typeAliases[typeName] =
-                  schema.type === "array" ? baseName + "[]" : baseName;
+                  schema.type === "array" ? typeAlias + "[]" : typeAlias;
               }
             }
           };
