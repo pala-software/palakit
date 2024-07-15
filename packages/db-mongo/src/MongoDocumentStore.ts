@@ -10,15 +10,15 @@ export const createMongoDocumentStore = ({
   connectOptions?: ConnectOptions;
 }) =>
   createPart(DocumentStore, [Application], ([application]) => {
-    let setSynchronized: () => void;
-    const synchronized = new Promise<void>((resolve) => {
-      setSynchronized = resolve;
+    let setConnected: () => void;
+    const connected = new Promise<void>((resolve) => {
+      setConnected = resolve;
     });
 
     return {
       connect: application.start.on("MongoDocumentStore.connect", async () => {
         await mongoose.connect(connectionString, connectOptions);
-        setSynchronized();
+        setConnected();
       }),
 
       createCollection: (options) => {
@@ -134,11 +134,11 @@ export const createMongoDocumentStore = ({
 
         return {
           create: async (values) => {
-            await synchronized;
+            await connected;
             return toDocument(await new Model(values).save());
           },
           find: async (options) => {
-            await synchronized;
+            await connected;
             return (
               await Model.find(
                 options && "where" in options && options.where
@@ -155,7 +155,7 @@ export const createMongoDocumentStore = ({
             ).map((i) => toDocument(i));
           },
           count: async (options) => {
-            await synchronized;
+            await connected;
             return await Model.countDocuments(
               options && "where" in options && options.where
                 ? transformWhere(options.where)
