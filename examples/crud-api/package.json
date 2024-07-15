@@ -1,0 +1,15 @@
+{
+  "name": "@pala/crud-api-example",
+  "version": "0.1.0",
+  "dependencies": {
+    "@pala/api": "workspace:*",
+    "@pala/api-trpc": "workspace:*",
+    "@pala/core": "workspace:*",
+    "@pala/db": "workspace:*",
+    "@pala/db-sequelize": "workspace:*",
+    "@trpc/client": "^10.45.2",
+    "@typeschema/zod": "^0.13.3",
+    "sqlite3": "^5.1.7",
+    "zod": "^3.23.8"
+  }
+}
