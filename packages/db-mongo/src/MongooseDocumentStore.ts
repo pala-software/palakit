@@ -2,7 +2,7 @@ import { Application, createPart } from "@pala/core";
 import { DataType, DocumentStore, Document, Collection, Where } from "@pala/db";
 import mongoose, { ConnectOptions } from "mongoose";
 
-export const createMongoDocumentStore = ({
+export const createMongooseDocumentStore = ({
   connectionString,
   connectOptions = {},
 }: {
@@ -16,10 +16,13 @@ export const createMongoDocumentStore = ({
     });
 
     return {
-      connect: application.start.on("MongoDocumentStore.connect", async () => {
-        await mongoose.connect(connectionString, connectOptions);
-        setConnected();
-      }),
+      connect: application.start.on(
+        "MongooseDocumentStore.connect",
+        async () => {
+          await mongoose.connect(connectionString, connectOptions);
+          setConnected();
+        }
+      ),
 
       createCollection: (options) => {
         const columns: Record<

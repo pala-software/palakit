@@ -1,1 +1,1 @@
-export { createMongoDocumentStore } from "./MongoDocumentStore";
+export { createMongooseDocumentStore } from "./MongooseDocumentStore";
