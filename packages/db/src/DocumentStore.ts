@@ -103,6 +103,7 @@ export type Collection<Shape extends Record<string, any> = any> = {
 };
 
 export type DocumentStore = {
+  connect: () => Promise<void> | void;
   createCollection: <Fields extends Record<string, Field>>(options: {
     name: string;
     fields: Fields;
