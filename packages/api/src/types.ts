@@ -140,7 +140,7 @@ export type ResourceEndpoint<
 
 export type ResourceModel = {
   name: string;
-  schema: any;
+  schema: Schema;
 };
 
 export type ResourceServerAdapter = {

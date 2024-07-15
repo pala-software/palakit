@@ -202,7 +202,7 @@ export const createTrpcResourceServer = (options: Options) =>
             return schemas.findIndex((s) => JSON.stringify(s) === schemaString);
           };
 
-          const createSchema = async (source: any, typeName: string) => {
+          const createSchema = async (source: Schema, typeName: string) => {
             if (!source) {
               typeAliases[typeName] = "void";
               return;
