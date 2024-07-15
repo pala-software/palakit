@@ -5,11 +5,9 @@ import mongoose, { ConnectOptions } from "mongoose";
 export const createMongoDocumentStore = ({
   connectionString,
   connectOptions = {},
-  onConnect,
 }: {
   connectionString: string;
   connectOptions?: ConnectOptions;
-  onConnect?: () => void;
 }) =>
   createPart(DocumentStore, [Application], ([application]) => {
     let setSynchronized: () => void;
@@ -19,11 +17,6 @@ export const createMongoDocumentStore = ({
 
     return {
       connect: application.start.on("MongoDocumentStore.connect", async () => {
-        const db = mongoose.connection;
-        db.on("error", console.error.bind(console, "connection error:"));
-        if (onConnect) {
-          db.once("open", onConnect);
-        }
         await mongoose.connect(connectionString, connectOptions);
         setSynchronized();
       }),
