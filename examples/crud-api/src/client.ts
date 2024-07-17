@@ -55,4 +55,4 @@ const loop = async () => {
   console.log("");
 };
 await loop();
-setInterval(loop, 5000);
+setInterval(loop, 2000);
