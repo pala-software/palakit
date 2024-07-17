@@ -5,6 +5,8 @@ import { LocalRuntime, createPart, resolveApplication } from "@pala/core";
 import { z } from "zod";
 import { DataType, DocumentStore } from "@pala/db";
 
+const PORT = 3000;
+
 const MyCrudApi = createPart(
   "MyCrudApi",
   [DocumentStore, ResourceServer],
@@ -25,6 +27,9 @@ const MyCrudApi = createPart(
     });
 
     return {
+      serverStarted: server.start.after("MyCrudApi.serverStarted", () => {
+        console.log(`Server running is running on port ${PORT}!`);
+      }),
       nameCollection,
       nameEndpoint: server.createEndpoint({
         name: "names",
@@ -71,7 +76,7 @@ export const app = resolveApplication({
     }),
     ResourceServer,
     createTrpcResourceServer({
-      port: 3000,
+      port: PORT,
       clientPath: __dirname + "/../generated/trpc.ts",
     }),
     MyCrudApi,
