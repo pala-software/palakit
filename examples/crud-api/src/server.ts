@@ -54,7 +54,9 @@ const MyCrudApi = createPart(
               return {
                 response: {
                   type: "ok",
-                  data: names.map(({ id, name }) => ({ id, name })),
+                  // TODO: It shouldn't be necessary to trigger the getters this
+                  // way. Hopefully we can fix it somehow.
+                  data: names.map((name) => storedNameSchema.parse(name)),
                 },
               };
             },
