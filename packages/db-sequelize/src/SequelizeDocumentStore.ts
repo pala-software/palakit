@@ -1,5 +1,11 @@
 import { Application, createPart } from "@pala/core";
-import { DocumentStore, Document, Collection, Where, DataType } from "@pala/db";
+import {
+  DocumentStore,
+  DocumentHandle,
+  Collection,
+  Where,
+  DataType,
+} from "@pala/db";
 import { validate } from "@typeschema/main";
 import {
   DataTypes,
@@ -20,31 +26,22 @@ export const createSequelizeDocumentStore = (options: Options) =>
     });
 
     const toDocument = <T extends Collection>(instance: Model) =>
-      Object.defineProperties(
-        {
-          save: async () => {
-            await instance.save();
-          },
-          delete: async () => {
-            await instance.destroy();
-          },
+      ({
+        get: async () =>
+          Object.entries(await instance.get()).reduce<Record<string, any>>(
+            (acc, [key, value]) => ({
+              ...acc,
+              [key]: key === "id" ? String(value) : value,
+            }),
+            {}
+          ) as T,
+        update: async (values: T) => {
+          await instance.update(values);
         },
-        Object.keys(instance.dataValues).reduce(
-          (obj, key) => ({
-            ...obj,
-            [key]: {
-              get: () => {
-                if (key === "id") return String(instance.get(key));
-                return instance.get(key);
-              },
-              set: (value: unknown) => {
-                instance.set(key, value);
-              },
-            },
-          }),
-          {}
-        )
-      ) as Document<T>;
+        delete: async () => {
+          await instance.destroy();
+        },
+      }) as DocumentHandle<T>;
 
     const transformWhere = <T extends Collection>(where: Where<T>) => {
       const transformed: WhereAttributeHash = {};
