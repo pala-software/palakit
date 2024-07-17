@@ -42,7 +42,6 @@ const listNames = async () => {
     console.log("- " + name);
   }
   console.groupEnd();
-  console.log("\n");
 };
 
 const wsClient = createWSClient({ url: "ws://localhost:3000/" });
@@ -53,6 +52,7 @@ const client = createTRPCProxyClient<Router>({
 const loop = async () => {
   await createName();
   await listNames();
+  console.log("");
 };
 await loop();
 setInterval(loop, 5000);
