@@ -4,5 +4,8 @@
   "workspaces": [
     "packages/*",
     "examples/*"
-  ]
+  ],
+  "devDependencies": {
+    "@types/bun": "^1.1.6"
+  }
 }

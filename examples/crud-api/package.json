@@ -1,6 +1,13 @@
 {
   "name": "@pala/crud-api-example",
   "version": "0.1.0",
+  "scripts": {
+    "generate-client": "bun run scripts/generate-client.ts",
+    "start-both": "bun run scripts/start-both.ts",
+    "start-client": "bun run scripts/start-client.ts",
+    "start-server": "bun run scripts/start-server.ts",
+    "start": "bun run generate-client && bun run start-both"
+  },
   "dependencies": {
     "@pala/api": "workspace:*",
     "@pala/api-trpc": "workspace:*",
