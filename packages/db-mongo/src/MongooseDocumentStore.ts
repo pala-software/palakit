@@ -77,9 +77,9 @@ export const createMongooseDocumentStore = ({
             },
           }) as DocumentHandle<T>;
 
-        const stringToRegex = (likeExpr: string) =>
+        const toRegex = (likeExpression: string) =>
           new RegExp(
-            `^${likeExpr
+            `^${likeExpression
               .replace(/[-/\\^$+?.()|[\]{}]/g, "\\$&")
               .replace(/%/g, ".*")
               .replace(/_/g, ".")}$`,
@@ -123,10 +123,10 @@ export const createMongooseDocumentStore = ({
               transformed[field]["$nin"] = condition.notIn;
             }
             if ("like" in condition && condition.like) {
-              transformed[field]["$regex"] = stringToRegex(condition.like);
+              transformed[field]["$regex"] = toRegex(condition.like);
             }
             if ("notLike" in condition && condition.notLike) {
-              transformed[field]["$not"] = stringToRegex(condition.notLike);
+              transformed[field]["$not"] = toRegex(condition.notLike);
             }
             if ("gt" in condition) {
               transformed[field]["$gt"] = condition.gt;
