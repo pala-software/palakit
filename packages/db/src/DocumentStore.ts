@@ -58,25 +58,26 @@ export type Field =
   | FloatField
   | BlobField;
 
-export type Document<T extends Collection> =
+export type DocumentHandle<T extends Collection> =
   T extends Collection<infer Shape>
     ? { id: string } & Shape & {
+          get: () => Promise<{ id: string } & Shape>;
           update: (values: Partial<Shape>) => Promise<void>;
           delete: () => Promise<void>;
         }
     : never;
 
 export type Where<T extends Collection> = {
-  [K in keyof Document<T>]?: {
-    equals?: Document<T>[K];
-    notEquals?: Document<T>[K];
+  [K in keyof DocumentHandle<T>]?: {
+    equals?: DocumentHandle<T>[K];
+    notEquals?: DocumentHandle<T>[K];
     is?: null;
     isNot?: null;
-    in?: Document<T>[K][];
-    notIn?: Document<T>[K][];
-  } & (Document<T>[K] extends string
+    in?: DocumentHandle<T>[K][];
+    notIn?: DocumentHandle<T>[K][];
+  } & (DocumentHandle<T>[K] extends string
     ? { like?: string; notLike?: string }
-    : Document<T>[K] extends number
+    : DocumentHandle<T>[K] extends number
       ? {
           gt?: number;
           gte?: number;
@@ -92,13 +93,13 @@ export type SortingRule<T extends Collection> =
     : never;
 
 export type Collection<Shape extends Record<string, any> = any> = {
-  create: (values: Shape) => Promise<Document<Collection<Shape>>>;
+  create: (values: Shape) => Promise<DocumentHandle<Collection<Shape>>>;
   find: (options?: {
     where?: Where<Collection<Shape>>;
     order?: SortingRule<Collection<Shape>>[];
     limit?: number;
     offset?: number;
-  }) => Promise<Document<Collection<Shape>>[]>;
+  }) => Promise<DocumentHandle<Collection<Shape>>[]>;
   count: (options?: { where?: Where<Collection<Shape>> }) => Promise<number>;
 };
 
