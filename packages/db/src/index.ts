@@ -2,7 +2,7 @@ export { DocumentStore, DataType } from "./DocumentStore";
 export type {
   BooleanField,
   Collection,
-  Document,
+  DocumentHandle,
   Field,
   Where,
   SortingRule,
