@@ -1,5 +1,11 @@
 import { Application, createPart } from "@pala/core";
-import { DataType, DocumentStore, Document, Collection, Where } from "@pala/db";
+import {
+  DataType,
+  DocumentStore,
+  Collection,
+  Where,
+  DocumentHandle,
+} from "@pala/db";
 import mongoose, { ConnectOptions } from "mongoose";
 
 export const createMongooseDocumentStore = ({
@@ -56,17 +62,20 @@ export const createMongooseDocumentStore = ({
           new mongoose.Schema(columns)
         );
 
-        const toDocument = <T extends Collection>(
-          m: mongoose.Document
-        ): Document<T> =>
+        const toDocument = <T extends Collection>(m: mongoose.Document) =>
           ({
-            ...m.toObject(),
-            id: String(m._id),
-            save: async (updated: Partial<T>) => {
+            get: async () =>
+              ({
+                ...m.toObject(),
+                id: String(m._id),
+              }) as T,
+            update: async (updated: Partial<T>) => {
               await m.updateOne(updated);
             },
-            delete: async () => await m.deleteOne(),
-          }) as Document<T>;
+            delete: async () => {
+              await m.deleteOne();
+            },
+          }) as DocumentHandle<T>;
 
         const stringToRegex = (likeExpr: string) =>
           new RegExp(
