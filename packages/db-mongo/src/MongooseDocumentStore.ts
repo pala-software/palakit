@@ -59,7 +59,7 @@ export const createMongooseDocumentStore = ({
         );
         const Model = mongoose.model(
           options.name,
-          new mongoose.Schema(columns)
+          new mongoose.Schema(columns, { timestamps: true })
         );
 
         const toDocument = <T extends Collection>(m: mongoose.Document) =>
