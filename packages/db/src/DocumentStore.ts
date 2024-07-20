@@ -58,14 +58,16 @@ export type Field =
   | FloatField
   | BlobField;
 
-export type DocumentHandle<T extends Collection> =
-  T extends Collection<infer Shape>
-    ? { id: string } & Shape & {
-          get: () => Promise<{ id: string } & Shape>;
-          update: (values: Partial<Shape>) => Promise<void>;
-          delete: () => Promise<void>;
-        }
-    : never;
+export type ShapeOf<T extends Collection> =
+  T extends Collection<infer Shape> ? Shape : never;
+
+export type Document<T extends Collection> = { id: string } & ShapeOf<T>;
+
+export type DocumentHandle<T extends Collection> = {
+  get: () => Promise<Document<T>>;
+  update: (values: Partial<ShapeOf<T>>) => Promise<void>;
+  delete: () => Promise<void>;
+};
 
 export type Where<T extends Collection> = {
   [K in keyof DocumentHandle<T>]?: {
@@ -87,10 +89,10 @@ export type Where<T extends Collection> = {
       : {});
 } & { and?: Where<T>[]; or?: Where<T>[] };
 
-export type SortingRule<T extends Collection> =
-  T extends Collection<infer Shape>
-    ? [keyof Shape extends string ? keyof Shape : never, "ASC" | "DESC"]
-    : never;
+export type SortingRule<T extends Collection> = [
+  keyof ShapeOf<T> extends string ? keyof ShapeOf<T> : never,
+  "ASC" | "DESC",
+];
 
 export type Collection<Shape extends Record<string, any> = any> = {
   create: (values: Shape) => Promise<DocumentHandle<Collection<Shape>>>;
