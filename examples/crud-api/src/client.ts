@@ -27,7 +27,7 @@ const lastNames = [
   "Järvinen",
 ];
 
-const pick = <T>(array: T[]): T =>
+const pick = <T>(array: T[]): T | undefined =>
   array[Math.round(Math.random() * (array.length - 1))];
 
 const createName = async () => {
@@ -35,6 +35,34 @@ const createName = async () => {
   await client.names.create.mutate({ name });
   console.log("Created a new name: " + name);
 };
+
+const updateName = async () => {
+  const documents = await client.names.read.query();
+  const oldDocument = pick(documents);
+  if (!oldDocument) return;
+  const { name: oldName } = oldDocument;
+  const [oldFirstName] = oldName.split(" ");
+  const newFirstName = pick(
+    firstNames.filter((firstName) => firstName !== oldFirstName)
+  );
+  let newName = [newFirstName, ...oldName.split(" ").slice(1)].join(" ");
+  const newDocument = await client.names.update.mutate({
+    ...oldDocument,
+    name: newName,
+  });
+  newName = newDocument.name;
+  console.log(`Updated ${oldName} to: ${newName}`);
+};
+
+const deleteName = async () => {
+  const documents = await client.names.read.query();
+  const document = pick(documents);
+  if (!document) return;
+  await client.names.delete.mutate(document);
+  console.log("Deleted: " + document.name);
+};
+
+const mutations = [createName, updateName, deleteName];
 
 const listNames = async () => {
   console.group("Current list of names:");
@@ -50,7 +78,17 @@ const client = createTRPCProxyClient<Router>({
 });
 
 const loop = async () => {
-  await createName();
+  const count = await client.names.count.query();
+  console.log("Current count of names: " + count);
+
+  if (count > 0) {
+    const mutateNames = pick(mutations);
+    if (!mutateNames) throw new Error("No mutation functions");
+    await mutateNames();
+  } else {
+    await createName();
+  }
+
   await listNames();
   console.log("");
 };

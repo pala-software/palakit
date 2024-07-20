@@ -47,6 +47,47 @@ const MyCrudApi = createPart(
               };
             },
           }),
+          update: server.createMutation({
+            input: storedNameSchema,
+            output: storedNameSchema,
+            handler: async ({ input }) => {
+              const { id, ...values } = input;
+              const [document] = await nameCollection.find({
+                where: { id: { equals: id } },
+                limit: 1,
+              });
+              if (!document) {
+                return { response: { type: "error", data: "Not found" } };
+              }
+              await document.update(values);
+              return {
+                response: {
+                  type: "ok",
+                  data: await document.get(),
+                },
+              };
+            },
+          }),
+          delete: server.createMutation({
+            input: storedNameSchema,
+            output: null,
+            handler: async ({ input }) => {
+              const { id } = input;
+              const [document] = await nameCollection.find({
+                where: { id: { equals: id } },
+                limit: 1,
+              });
+              if (!document) {
+                return { response: { type: "error", data: "Not found" } };
+              }
+              await document.delete();
+              return {
+                response: {
+                  type: "ok",
+                },
+              };
+            },
+          }),
           read: server.createQuery({
             input: null,
             output: z.array(storedNameSchema),
@@ -60,6 +101,18 @@ const MyCrudApi = createPart(
                   data: await Promise.all(
                     documents.map((document) => document.get())
                   ),
+                },
+              };
+            },
+          }),
+          count: server.createQuery({
+            input: null,
+            output: z.number().int().nonnegative(),
+            handler: async () => {
+              return {
+                response: {
+                  type: "ok",
+                  data: await nameCollection.count(),
                 },
               };
             },
