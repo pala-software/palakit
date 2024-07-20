@@ -37,26 +37,29 @@ const MyCrudApi = createPart(
           create: server.createMutation({
             input: nameSchema,
             output: storedNameSchema,
-            handler: async ({ input }) => ({
-              response: {
-                type: "ok",
-                data: await nameCollection.create(input),
-              },
-            }),
+            handler: async ({ input }) => {
+              const document = await nameCollection.create(input);
+              return {
+                response: {
+                  type: "ok",
+                  data: await document.get(),
+                },
+              };
+            },
           }),
           read: server.createQuery({
             input: null,
             output: z.array(storedNameSchema),
             handler: async () => {
-              const names = await nameCollection.find({
+              const documents = await nameCollection.find({
                 order: [["name", "ASC"]],
               });
               return {
                 response: {
                   type: "ok",
-                  // TODO: It shouldn't be necessary to trigger the getters this
-                  // way. Hopefully we can fix it somehow.
-                  data: names.map((name) => storedNameSchema.parse(name)),
+                  data: await Promise.all(
+                    documents.map((document) => document.get())
+                  ),
                 },
               };
             },
