@@ -27,15 +27,11 @@ export const createSequelizeDocumentStore = (options: Options) =>
 
     const toDocument = <T extends Collection>(instance: Model) =>
       ({
-        get: async () =>
-          Object.entries(await instance.get()).reduce<Record<string, any>>(
-            (acc, [key, value]) => ({
-              ...acc,
-              [key]: key === "id" ? String(value) : value,
-            }),
-            {}
-          ) as T,
-        update: async (values: T) => {
+        get: async () => {
+          const { id, ...values } = instance.get();
+          return { id: id.toString(), ...values };
+        },
+        update: async (values) => {
           await instance.update(values);
         },
         delete: async () => {
