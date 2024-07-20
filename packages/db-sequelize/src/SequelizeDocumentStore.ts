@@ -42,16 +42,16 @@ export const createSequelizeDocumentStore = (options: Options) =>
     const transformWhere = <T extends Collection>(where: Where<T>) => {
       const transformed: WhereAttributeHash = {};
       if (where.and) {
-        transformed.and = transformWhere<T>(where.and);
+        transformed.and = where.and.map((where) => transformWhere<T>(where));
       }
       if (where.or) {
-        transformed.or = transformWhere<T>(where.or);
+        transformed.or = where.or.map((where) => transformWhere<T>(where));
       }
       for (const field of Object.keys(where)) {
         if (["and", "or"].includes(field)) {
           continue;
         }
-        const condition = where[field];
+        const condition = where[field as Exclude<keyof Where<T>, "and" | "or">];
         if (!condition) {
           continue;
         }
