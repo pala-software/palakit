@@ -1,5 +1,11 @@
 import { Application, createPart } from "@pala/core";
-import { DocumentStore, Document, Collection, Where, DataType } from "@pala/db";
+import {
+  DocumentStore,
+  DocumentHandle,
+  Collection,
+  Where,
+  DataType,
+} from "@pala/db";
 import { validate } from "@typeschema/main";
 import {
   DataTypes,
@@ -20,45 +26,32 @@ export const createSequelizeDocumentStore = (options: Options) =>
     });
 
     const toDocument = <T extends Collection>(instance: Model) =>
-      Object.defineProperties(
-        {
-          save: async () => {
-            await instance.save();
-          },
-          delete: async () => {
-            await instance.destroy();
-          },
+      ({
+        get: async () => {
+          const { id, ...values } = instance.get();
+          return { id: id.toString(), ...values };
         },
-        Object.keys(instance.dataValues).reduce(
-          (obj, key) => ({
-            ...obj,
-            [key]: {
-              get: () => {
-                if (key === "id") return String(instance.get(key));
-                return instance.get(key);
-              },
-              set: (value: unknown) => {
-                instance.set(key, value);
-              },
-            },
-          }),
-          {}
-        )
-      ) as Document<T>;
+        update: async (values) => {
+          await instance.update(values);
+        },
+        delete: async () => {
+          await instance.destroy();
+        },
+      }) as DocumentHandle<T>;
 
     const transformWhere = <T extends Collection>(where: Where<T>) => {
       const transformed: WhereAttributeHash = {};
       if (where.and) {
-        transformed.and = transformWhere<T>(where.and);
+        transformed.and = where.and.map((where) => transformWhere<T>(where));
       }
       if (where.or) {
-        transformed.or = transformWhere<T>(where.or);
+        transformed.or = where.or.map((where) => transformWhere<T>(where));
       }
       for (const field of Object.keys(where)) {
         if (["and", "or"].includes(field)) {
           continue;
         }
-        const condition = where[field];
+        const condition = where[field as Exclude<keyof Where<T>, "and" | "or">];
         if (!condition) {
           continue;
         }
