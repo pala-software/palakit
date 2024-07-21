@@ -113,9 +113,9 @@ export const createSequelizeDocumentStore = (options: Options) =>
       ),
       createCollection: (options) => {
         let columns = Object.entries(options.fields).reduce(
-          (obj, [name, field]) => ({
+          (obj, [fieldName, field]) => ({
             ...obj,
-            [name]: {
+            [fieldName]: {
               ...(() => {
                 switch (field.dataType) {
                   case DataType.STRING:
@@ -163,6 +163,62 @@ export const createSequelizeDocumentStore = (options: Options) =>
               unique: field.unique ?? false,
               validate: {
                 ...(field.schema && {
+                  hasCorrectType: (input: unknown) => {
+                    switch (field.dataType) {
+                      case DataType.STRING:
+                        if (typeof input !== "string") {
+                          throw new Error(
+                            `Field value for ${fieldName} is not a string`
+                          );
+                        }
+                        if (
+                          field.length !== undefined &&
+                          input.length > field.length
+                        ) {
+                          throw new Error(
+                            `Field value for ${fieldName} has length more` +
+                              " than allowed maximum"
+                          );
+                        }
+                        break;
+                      case DataType.BOOLEAN:
+                        if (!(input instanceof Buffer)) {
+                          throw new Error(
+                            `Field value for ${fieldName} is not a Buffer`
+                          );
+                        }
+                        break;
+                      case DataType.INTEGER:
+                        if (typeof input !== "number" || Number.isNaN(input)) {
+                          throw new Error(
+                            `Field value for ${fieldName} is not a number`
+                          );
+                        }
+                        const maxInteger = (bits: number) =>
+                          2 ** (bits - 1) - 1;
+                        if (
+                          field.size !== undefined &&
+                          Math.abs(input) > maxInteger(field.size)
+                        ) {
+                          throw new Error(
+                            `Field value for ${fieldName} does not fit as a` +
+                              ` ${field.size} bit integer`
+                          );
+                        }
+                        break;
+                      case DataType.FLOAT:
+                        if (typeof input !== "number") {
+                          throw new Error(
+                            `Field value for ${fieldName} is not a number`
+                          );
+                        }
+
+                        // NOTE: I don't think there's a need to validate size
+                        // of floating point numbers as they usually aren't used
+                        // absolute precision in mind.
+                        break;
+                    }
+                  },
                   isValid: async (input: unknown) => {
                     const result = await validate(field.schema, input);
                     if (!result.success) {
