@@ -6,7 +6,6 @@ import {
   QueryOperation,
   QueryOperationOptions,
   ResourceEndpoint,
-  ResourceModel,
   ResourceServerAdapter,
   SubscriptionOperation,
   SubscriptionOperationOptions,
@@ -20,7 +19,6 @@ export const ResourceServer = createPart(
     let initialized = false;
     const adapters: ResourceServerAdapter[] = [];
     const endpoints: ResourceEndpoint[] = [];
-    const models: ResourceModel[] = [];
 
     const initialize = () => {
       if (initialized) return;
@@ -28,11 +26,6 @@ export const ResourceServer = createPart(
       for (const adapter of adapters) {
         for (const endpoint of endpoints) {
           adapter.addEndpoint(endpoint);
-        }
-        for (const model of models) {
-          if (adapter.addModel) {
-            adapter.addModel(model);
-          }
         }
       }
     };
@@ -60,17 +53,6 @@ export const ResourceServer = createPart(
           }
         }
         return endpoint;
-      },
-
-      createModel: (model: ResourceModel) => {
-        models.push(model);
-        if (initialized) {
-          for (const adapter of adapters) {
-            if (adapter.addModel) {
-              adapter.addModel(model);
-            }
-          }
-        }
       },
 
       createQuery: <

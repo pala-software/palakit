@@ -10,7 +10,7 @@ import {
   isQueryOperation,
   isSubscriptionOperation,
 } from "@pala/api";
-import { ResourceModel } from "@pala/api/src/types";
+import { ResourceSchema } from "@pala/api/src/types";
 import { createPart } from "@pala/core";
 import { AnyRouter, initTRPC } from "@trpc/server";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
@@ -32,7 +32,6 @@ export const createTrpcResourceServer = (options: Options) =>
   createPart("TrpcServer", [ResourceServer], ([server]) => {
     const t = initTRPC.create();
     const endpoints: ResourceEndpoint[] = [];
-    const models: ResourceModel[] = [];
 
     const executeOperation = async ({
       operation,
@@ -126,20 +125,19 @@ export const createTrpcResourceServer = (options: Options) =>
       throw new Error("Invalid operation type encountered");
     };
 
+    const capitalize = (str: string) =>
+      str.length < 1 ? str : str[0].toUpperCase() + str.slice(1);
+
     const createTypeName = (parts: string[]) =>
       parts
         .map((part) => part.replace(/[^a-zA-Z0-9]/g, ""))
-        .map((part) => part[0].toUpperCase() + part.slice(1))
+        .map(capitalize)
         .join("");
 
     return {
       trpcResourceServerAdapter: server.createAdapter({
         addEndpoint: (endpoint) => {
           endpoints.push(endpoint);
-        },
-
-        addModel: (model) => {
-          models.push(model);
         },
 
         start: () => {
@@ -178,55 +176,50 @@ export const createTrpcResourceServer = (options: Options) =>
           let contents = `import { BuildProcedure, BuildRouter } from "@pala/api-trpc";\n`;
           contents += `\n`;
 
-          const schemas: JSONSchema[] = [];
+          const schemas: Record<string, JSONSchema> = {};
           const typeAliases: Record<string, string> = {};
-          for (const model of models) {
-            const jsonSchema = (await toJSONSchema(model.schema)) as JSONSchema;
-            schemas.push(jsonSchema);
-            contents += await compile(
-              jsonSchema,
-              createTypeName([model.name]),
-              { bannerComment: "" }
-            );
-          }
 
-          const findSchemaIndex = (schema: JSONSchema) => {
-            const schemaString = JSON.stringify(
-              schema.type === "array"
-                ? (() => {
-                    const { type, items, ...rest } = schema;
-                    return { ...items, ...rest };
-                  })()
-                : schema
-            );
-            return schemas.findIndex((s) => JSON.stringify(s) === schemaString);
-          };
-
-          const createSchema = async (source: Schema, typeName: string) => {
-            if (!source) {
-              typeAliases[typeName] = "void";
+          const createSchema = async (
+            source: ResourceSchema,
+            defaultName: string
+          ) => {
+            if (
+              source === null ||
+              source.schema === null ||
+              source.schema === undefined
+            ) {
+              typeAliases[defaultName] = "void";
               return;
             }
-            const schema = (await toJSONSchema(source)) as JSONSchema;
+
+            const jsonSchema = (await toJSONSchema(
+              source.schema
+            )) as JSONSchema;
+            const typeName = source.name
+              ? capitalize(source.name)
+              : defaultName;
             if (
-              typeof schema.type === "string" &&
-              ["bigint", "boolean", "number", "string", "symbol"].includes(
-                schema.type
+              jsonSchema.type &&
+              typeof jsonSchema.type === "string" &&
+              ["boolean", "bigint", "number", "string", "symbol"].includes(
+                jsonSchema.type
               )
             ) {
-              typeAliases[typeName] = schema.type;
-            } else {
-              const schemaIndex = findSchemaIndex(schema);
-              if (schemaIndex === -1) {
-                contents += await compile(schema, typeName, {
-                  bannerComment: "",
-                });
-              } else {
-                const typeAlias = createTypeName([models[schemaIndex].name]);
-                typeAliases[typeName] =
-                  schema.type === "array" ? typeAlias + "[]" : typeAlias;
-              }
+              typeAliases[defaultName] =
+                jsonSchema.type === "array"
+                  ? jsonSchema.type + "[]"
+                  : jsonSchema.type;
+              return;
             }
+
+            if (!(typeName in schemas)) {
+              schemas[typeName] = jsonSchema;
+              contents += await compile(jsonSchema, typeName, {
+                bannerComment: "",
+              });
+            }
+            typeAliases[defaultName] =
+              jsonSchema.type === "array" ? typeName + "[]" : typeName;
           };
 
           for (const { name: endpointName, operations } of endpoints) {
