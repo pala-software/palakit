@@ -134,6 +134,13 @@ export const createTrpcResourceServer = (options: Options) =>
         .map(capitalize)
         .join("");
 
+    const toTypeName = (str: string) => {
+      if (!((str: string) => /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(str))(str)) {
+        throw new Error(`${str} is not valid TypeScript type name`);
+      }
+      return capitalize(str);
+    };
+
     return {
       trpcResourceServerAdapter: server.createAdapter({
         addEndpoint: (endpoint) => {
@@ -195,9 +202,9 @@ export const createTrpcResourceServer = (options: Options) =>
             const jsonSchema = (await toJSONSchema(
               source.schema
             )) as JSONSchema;
-            const typeName = source.name
-              ? capitalize(source.name)
-              : defaultName;
+            const typeName = toTypeName(
+              source.name ? source.name : defaultName
+            );
             if (
               jsonSchema.type &&
               typeof jsonSchema.type === "string" &&
