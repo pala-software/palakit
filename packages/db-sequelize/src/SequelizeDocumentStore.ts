@@ -182,9 +182,9 @@ export const createSequelizeDocumentStore = (options: Options) =>
                         }
                         break;
                       case DataType.BOOLEAN:
-                        if (!(input instanceof Buffer)) {
+                        if (typeof input !== "boolean") {
                           throw new Error(
-                            `Field value for ${fieldName} is not a Buffer`
+                            `Field value for ${fieldName} is not a boolean`
                           );
                         }
                         break;
@@ -216,6 +216,13 @@ export const createSequelizeDocumentStore = (options: Options) =>
                         // NOTE: I don't think there's a need to validate size
                         // of floating point numbers as they usually aren't used
                         // absolute precision in mind.
+                        break;
+                      case DataType.BLOB:
+                        if (!(input instanceof Buffer)) {
+                          throw new Error(
+                            `Field value for ${fieldName} is not a Buffer`
+                          );
+                        }
                         break;
                     }
                   },
