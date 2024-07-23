@@ -27,15 +27,11 @@ export const createSequelizeDocumentStore = (options: Options) =>
 
     const toDocument = <T extends Collection>(instance: Model) =>
       ({
-        get: async () =>
-          Object.entries(await instance.get()).reduce<Record<string, any>>(
-            (acc, [key, value]) => ({
-              ...acc,
-              [key]: key === "id" ? String(value) : value,
-            }),
-            {}
-          ) as T,
-        update: async (values: T) => {
+        get: async () => {
+          const { id, ...values } = instance.get();
+          return { id: id.toString(), ...values };
+        },
+        update: async (values) => {
           await instance.update(values);
         },
         delete: async () => {
@@ -46,16 +42,16 @@ export const createSequelizeDocumentStore = (options: Options) =>
     const transformWhere = <T extends Collection>(where: Where<T>) => {
       const transformed: WhereAttributeHash = {};
       if (where.and) {
-        transformed.and = transformWhere<T>(where.and);
+        transformed.and = where.and.map((where) => transformWhere<T>(where));
       }
       if (where.or) {
-        transformed.or = transformWhere<T>(where.or);
+        transformed.or = where.or.map((where) => transformWhere<T>(where));
       }
       for (const field of Object.keys(where)) {
         if (["and", "or"].includes(field)) {
           continue;
         }
-        const condition = where[field];
+        const condition = where[field as Exclude<keyof Where<T>, "and" | "or">];
         if (!condition) {
           continue;
         }

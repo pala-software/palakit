@@ -10,4 +10,6 @@ export type {
   FloatField,
   IntegerField,
   StringField,
+  Document,
+  ShapeOf,
 } from "./DocumentStore";
