@@ -194,6 +194,11 @@ export const createSequelizeDocumentStore = (options: Options) =>
                             `Field value for ${fieldName} is not a number`
                           );
                         }
+                        if (input % 1 !== 0) {
+                          throw new Error(
+                            `Field value for ${fieldName} is not an integer`
+                          );
+                        }
                         const maxInteger = (bits: number) =>
                           2 ** (bits - 1) - 1;
                         if (
