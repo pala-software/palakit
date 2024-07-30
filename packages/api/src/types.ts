@@ -139,8 +139,9 @@ export type ResourceEndpoint<
 };
 
 export type ResourceSchema = {
-  name?: string;
   schema: Schema;
+  name?: string;
+  isArray?: boolean;
 } | null;
 
 export type ResourceServerAdapter = {
