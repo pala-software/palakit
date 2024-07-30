@@ -125,20 +125,20 @@ export const createTrpcResourceServer = (options: Options) =>
       throw new Error("Invalid operation type encountered");
     };
 
-    const capitalize = (str: string) =>
-      str.length < 1 ? str : str[0].toUpperCase() + str.slice(1);
-
-    const createTypeName = (parts: string[]) =>
-      parts
+    const createTypeName = (parts: string[]) => {
+      const typeName = parts
         .map((part) => part.replace(/[^a-zA-Z0-9]/g, ""))
-        .map(capitalize)
+        .map((part) => part.replace(/^[0-9]+/, ""))
+        .map((part) =>
+          part.length < 1 ? part : part[0].toUpperCase() + part.slice(1)
+        )
         .join("");
-
-    const toTypeName = (str: string) => {
-      if (!((str: string) => /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(str))(str)) {
-        throw new Error(`${str} is not valid TypeScript type name`);
+      if (typeName.length < 1) {
+        throw new Error(
+          `Type name ${parts.join(",")} is converted to empty string which is not valid TypeScript type name`
+        );
       }
-      return capitalize(str);
+      return typeName;
     };
 
     return {
@@ -191,7 +191,7 @@ export const createTrpcResourceServer = (options: Options) =>
             defaultName: string
           ) => {
             if (
-              source === null ||
+              !source ||
               source.schema === null ||
               source.schema === undefined
             ) {
@@ -202,9 +202,9 @@ export const createTrpcResourceServer = (options: Options) =>
             const jsonSchema = (await toJSONSchema(
               source.schema
             )) as JSONSchema;
-            const typeName = toTypeName(
-              source.name ? source.name : defaultName
-            );
+            const typeName = createTypeName([
+              source.name ? source.name : defaultName,
+            ]);
             if (
               jsonSchema.type &&
               typeof jsonSchema.type === "string" &&
@@ -212,10 +212,7 @@ export const createTrpcResourceServer = (options: Options) =>
                 jsonSchema.type
               )
             ) {
-              typeAliases[defaultName] =
-                jsonSchema.type === "array"
-                  ? jsonSchema.type + "[]"
-                  : jsonSchema.type;
+              typeAliases[defaultName] = jsonSchema.type;
               return;
             }
 
@@ -261,7 +258,6 @@ export const createTrpcResourceServer = (options: Options) =>
               };
 
               const jsonName = JSON.stringify(name);
-              // TODO: I/O types
               contents += `    `;
               contents += jsonName;
               contents += `: BuildProcedure<"`;
