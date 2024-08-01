@@ -6,4 +6,5 @@ export default ts.config(
   js.configs.recommended,
   ...ts.configs.recommended,
   prettierRecommended,
+  { ignores: ["examples/*/generated"] },
 );
