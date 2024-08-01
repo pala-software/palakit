@@ -70,16 +70,16 @@ export type DocumentHandle<T extends Collection> = {
 };
 
 export type Where<T extends Collection> = {
-  [K in keyof DocumentHandle<T>]?: {
-    equals?: DocumentHandle<T>[K];
-    notEquals?: DocumentHandle<T>[K];
+  [K in keyof ShapeOf<T>]?: {
+    equals?: ShapeOf<T>[K];
+    notEquals?: ShapeOf<T>[K];
     is?: null;
     isNot?: null;
-    in?: DocumentHandle<T>[K][];
-    notIn?: DocumentHandle<T>[K][];
-  } & (DocumentHandle<T>[K] extends string
+    in?: ShapeOf<T>[K][];
+    notIn?: ShapeOf<T>[K][];
+  } & (ShapeOf<T>[K] extends string
     ? { like?: string; notLike?: string }
-    : DocumentHandle<T>[K] extends number
+    : ShapeOf<T>[K] extends number
       ? {
           gt?: number;
           gte?: number;
@@ -105,21 +105,35 @@ export type Collection<Shape extends Record<string, any> = any> = {
   count: (options?: { where?: Where<Collection<Shape>> }) => Promise<number>;
 };
 
+type TypeOfField<T extends Field> = T extends StringField
+  ? string
+  : T extends BooleanField
+    ? boolean
+    : T extends IntegerField | FloatField
+      ? number
+      : T extends BlobField
+        ? Buffer
+        : never;
+
+type NullableFieldKey<T extends Record<string, Field>> = {
+  [K in keyof T]: T[K]["nullable"] extends true ? K : never;
+}[keyof T];
+
+type NonNullableFieldKey<T extends Record<string, Field>> = {
+  [K in keyof T]: T[K]["nullable"] extends true ? never : K;
+}[keyof T];
+
 export type DocumentStore = {
   createCollection: <Fields extends Record<string, Field>>(options: {
     name: string;
     fields: Fields;
-  }) => Collection<{
-    [K in keyof Fields]: Fields[K] extends StringField
-      ? string
-      : Fields[K] extends BooleanField
-        ? boolean
-        : Fields[K] extends IntegerField | FloatField
-          ? number
-          : Fields[K] extends BlobField
-            ? Buffer
-            : never;
-  }>;
+  }) => Collection<
+    {
+      [K in NonNullableFieldKey<Fields>]: TypeOfField<Fields[K]>;
+    } & {
+      [K in NullableFieldKey<Fields>]?: TypeOfField<Fields[K]>;
+    }
+  >;
 };
 
 export const DocumentStore = createPart<DocumentStore>("DocumentStore");
