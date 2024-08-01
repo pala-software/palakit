@@ -70,16 +70,16 @@ export type DocumentHandle<T extends Collection> = {
 };
 
 export type Where<T extends Collection> = {
-  [K in keyof DocumentHandle<T>]?: {
-    equals?: DocumentHandle<T>[K];
-    notEquals?: DocumentHandle<T>[K];
+  [K in keyof ShapeOf<T>]?: {
+    equals?: ShapeOf<T>[K];
+    notEquals?: ShapeOf<T>[K];
     is?: null;
     isNot?: null;
-    in?: DocumentHandle<T>[K][];
-    notIn?: DocumentHandle<T>[K][];
-  } & (DocumentHandle<T>[K] extends string
+    in?: ShapeOf<T>[K][];
+    notIn?: ShapeOf<T>[K][];
+  } & (ShapeOf<T>[K] extends string
     ? { like?: string; notLike?: string }
-    : DocumentHandle<T>[K] extends number
+    : ShapeOf<T>[K] extends number
       ? {
           gt?: number;
           gte?: number;
