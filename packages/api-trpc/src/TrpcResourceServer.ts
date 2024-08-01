@@ -16,7 +16,7 @@ import { observable } from "@trpc/server/observable";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import WebSocket from "ws";
 import { writeFile } from "fs/promises";
-import { Schema, toJSONSchema, validate, wrap } from "@typeschema/main";
+import { Schema, toJSONSchema, validate } from "@typeschema/main";
 import { JSONSchema, compile } from "json-schema-to-typescript";
 
 export type Options = {
@@ -37,7 +37,7 @@ export const createTrpcResourceServer = (options: Options) =>
       input,
     }: {
       operation: Operation;
-      input: any;
+      input: unknown;
     }): Promise<unknown> => {
       const { response } = await operation.handler({ input });
       if (response.type === "error") {
@@ -67,9 +67,9 @@ export const createTrpcResourceServer = (options: Options) =>
                 .map(
                   ({ message, path }) =>
                     ` - ${message}` +
-                    (path?.length ? ` (at ${path.join(".")})` : "")
+                    (path?.length ? ` (at ${path.join(".")})` : ""),
                 )
-                .join("\n")
+                .join("\n"),
           );
         }
       };
@@ -106,13 +106,15 @@ export const createTrpcResourceServer = (options: Options) =>
                 try {
                   await validate(value);
                   next(value);
-                } catch (_err) {
+                  // TODO: Log error in server log.
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                } catch (err) {
                   error("Output validation failed");
                 }
               },
               complete,
               error,
-            })
+            }),
           );
         });
 
@@ -144,16 +146,16 @@ export const createTrpcResourceServer = (options: Options) =>
                 Object.entries(endpoint.operations)
                   .filter(
                     (
-                      entry
+                      entry,
                     ): entry is [
                       (typeof entry)[0],
                       Exclude<(typeof entry)[1], undefined>,
-                    ] => entry[1] !== undefined
+                    ] => entry[1] !== undefined,
                   )
                   .map(([name, operation]) => [
                     name,
                     createProcedure(operation),
-                  ])
+                  ]),
               ),
             });
           }
@@ -165,7 +167,7 @@ export const createTrpcResourceServer = (options: Options) =>
         generateClient: async () => {
           if (!options.clientPath) {
             throw new Error(
-              "Cannot generate client, because option 'clientPath' was not provided."
+              "Cannot generate client, because option 'clientPath' was not provided.",
             );
           }
 
@@ -179,14 +181,14 @@ export const createTrpcResourceServer = (options: Options) =>
                   ? await toJSONSchema(operation.input)
                   : { tsType: "void" }) as JSONSchema,
                 createTypeName(["InputOf", endpointName, name]),
-                { bannerComment: "" }
+                { bannerComment: "" },
               );
               contents += await compile(
                 (operation.output
                   ? await toJSONSchema(operation.output)
                   : { tsType: "unknown" }) as JSONSchema,
                 createTypeName(["OutputOf", endpointName, name]),
-                { bannerComment: "" }
+                { bannerComment: "" },
               );
             }
           }

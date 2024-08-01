@@ -14,7 +14,8 @@ while (true) {
     });
     socket.terminate();
     break;
-  } catch (_error) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
     // Ignore error.
   }
 }

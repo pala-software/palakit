@@ -19,9 +19,7 @@ type BaseField = {
 export type StringField = BaseField & {
   dataType: DataType.STRING;
 
-  /**
-   * @default unlimited
-   */
+  /** @default unlimited */
   length?: number;
 };
 
@@ -32,18 +30,14 @@ export type BooleanField = BaseField & {
 export type IntegerField = BaseField & {
   dataType: DataType.INTEGER;
 
-  /**
-   * @default 32
-   */
+  /** @default 32 */
   size?: 8 | 16 | 24 | 32 | 64;
 };
 
 export type FloatField = BaseField & {
   dataType: DataType.FLOAT;
 
-  /**
-   * @default 32
-   */
+  /** @default 32 */
   size?: 32 | 64;
 };
 
@@ -86,7 +80,7 @@ export type Where<T extends Collection> = {
           lt?: number;
           lte?: number;
         }
-      : {});
+      : object);
 } & { and?: Where<T>[]; or?: Where<T>[] };
 
 export type SortingRule<T extends Collection> = [
@@ -94,7 +88,8 @@ export type SortingRule<T extends Collection> = [
   "ASC" | "DESC",
 ];
 
-export type Collection<Shape extends Record<string, any> = any> = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Collection<Shape extends Record<string, unknown> = any> = {
   create: (values: Shape) => Promise<DocumentHandle<Collection<Shape>>>;
   find: (options?: {
     where?: Where<Collection<Shape>>;

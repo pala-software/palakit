@@ -11,7 +11,7 @@ export const EventRuntime = createPart(Runtime, [EventBus], ([eventBus]) => {
 
   const createFunction = <Arguments extends unknown[], Return>(
     functionName: string,
-    fn: (...args: Arguments) => Return
+    fn: (...args: Arguments) => Return,
   ): Function<Arguments, Return> => {
     const beforeHooks: Function<Arguments, Arguments>[] = [];
     const afterHooks: Function<[Awaited<Return>, ...Arguments], Return>[] = [];
@@ -20,7 +20,8 @@ export const EventRuntime = createPart(Runtime, [EventBus], ([eventBus]) => {
       subject: functionName,
       callback: async (payload) => {
         if (!payload) return;
-        let [{ replySubject }, ...args] = decode(payload);
+        const [{ replySubject }, ...decodedArgs] = decode(payload);
+        let args = decodedArgs;
         for (const hook of beforeHooks) {
           args = await hook(...args);
         }
@@ -36,29 +37,36 @@ export const EventRuntime = createPart(Runtime, [EventBus], ([eventBus]) => {
     });
 
     return Object.assign(
-      (...args: Arguments) =>
-        new Promise<Awaited<Return>>(async (resolve) => {
-          const replySubject = crypto.randomUUID();
-          const { unsubscribe } = await eventBus.subscribe({
-            subject: replySubject,
-            callback: (payload) => {
-              unsubscribe();
-              resolve(
-                payload !== undefined && payload.length > 0
-                  ? decode(payload)
-                  : undefined
-              );
-            },
-          });
-          eventBus.publish({
-            subject: functionName,
-            payload: encode([{ replySubject }, ...args]),
-          });
-        }),
+      async (...args: Arguments): Promise<Awaited<Return>> => {
+        const replySubject = crypto.randomUUID();
+        let unsubscribe: () => void;
+        const promise = new Promise<Awaited<Return>>((resolve) =>
+          eventBus
+            .subscribe({
+              subject: replySubject,
+              callback: (payload) => {
+                unsubscribe();
+                resolve(
+                  payload !== undefined && payload.length > 0
+                    ? decode(payload)
+                    : undefined,
+                );
+              },
+            })
+            .then((subscription) => {
+              unsubscribe = subscription.unsubscribe;
+            }),
+        );
+        eventBus.publish({
+          subject: functionName,
+          payload: encode([{ replySubject }, ...args]),
+        });
+        return promise;
+      },
       {
         before: (
           hookName: string,
-          hook: (...args: Arguments) => Arguments | Promise<Arguments>
+          hook: (...args: Arguments) => Arguments | Promise<Arguments>,
         ) => {
           const fn = createFunction(hookName, hook);
           beforeHooks.push(fn);
@@ -66,18 +74,18 @@ export const EventRuntime = createPart(Runtime, [EventBus], ([eventBus]) => {
         },
         after: (
           hookName: string,
-          hook: (value: Awaited<Return>, ...args: Arguments) => Return
+          hook: (value: Awaited<Return>, ...args: Arguments) => Return,
         ) => {
           const fn = createFunction(hookName, hook);
           afterHooks.push(fn);
           return fn;
         },
-      }
+      },
     );
   };
 
   const createTrigger = <Arguments extends unknown[] = []>(
-    triggerName: string
+    triggerName: string,
   ): Trigger<Arguments> =>
     Object.assign(
       (...args: Arguments) =>
@@ -88,7 +96,7 @@ export const EventRuntime = createPart(Runtime, [EventBus], ([eventBus]) => {
       {
         on: (
           listenerName: string,
-          listener: (...args: Arguments) => void | Promise<void>
+          listener: (...args: Arguments) => void | Promise<void>,
         ): Function<Arguments, void> => {
           const fn = createFunction(listenerName, listener);
           eventBus
@@ -99,14 +107,14 @@ export const EventRuntime = createPart(Runtime, [EventBus], ([eventBus]) => {
                 fn(
                   ...(payload !== undefined && payload.length > 0
                     ? decode(payload)
-                    : [])
+                    : []),
                 );
               },
             })
             .then((subscription) => subscription.unsubscribe);
           return fn;
         },
-      }
+      },
     );
 
   return {

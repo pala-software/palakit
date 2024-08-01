@@ -99,7 +99,7 @@ const MyCrudApi = createPart(
                 response: {
                   type: "ok",
                   data: await Promise.all(
-                    documents.map((document) => document.get())
+                    documents.map((document) => document.get()),
                   ),
                 },
               };
@@ -120,7 +120,7 @@ const MyCrudApi = createPart(
         },
       }),
     };
-  }
+  },
 );
 
 export const app = resolveApplication({

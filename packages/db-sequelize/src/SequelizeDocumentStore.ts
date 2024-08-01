@@ -96,16 +96,18 @@ export const createSequelizeDocumentStore = (options: Options) =>
       return transformed;
     };
 
+    const maxInteger = (bits: number) => 2 ** (bits - 1) - 1;
+
     return {
       connect: application.start.on(
         "SequelizeDocumentStore.connect",
         async () => {
           await sequelize.sync();
           setSynchronized();
-        }
+        },
       ),
       createCollection: (options) => {
-        let columns = Object.entries(options.fields).reduce(
+        const columns = Object.entries(options.fields).reduce(
           (obj, [fieldName, field]) => ({
             ...obj,
             [fieldName]: {
@@ -161,7 +163,7 @@ export const createSequelizeDocumentStore = (options: Options) =>
                       case DataType.STRING:
                         if (typeof input !== "string") {
                           throw new Error(
-                            `Field value for ${fieldName} is not a string`
+                            `Field value for ${fieldName} is not a string`,
                           );
                         }
                         if (
@@ -170,44 +172,44 @@ export const createSequelizeDocumentStore = (options: Options) =>
                         ) {
                           throw new Error(
                             `Field value for ${fieldName} has length more` +
-                              " than allowed maximum"
+                              " than allowed maximum",
                           );
                         }
                         break;
                       case DataType.BOOLEAN:
                         if (typeof input !== "boolean") {
                           throw new Error(
-                            `Field value for ${fieldName} is not a boolean`
+                            `Field value for ${fieldName} is not a boolean`,
                           );
                         }
                         break;
-                      case DataType.INTEGER:
+                      case DataType.INTEGER: {
                         if (typeof input !== "number" || Number.isNaN(input)) {
                           throw new Error(
-                            `Field value for ${fieldName} is not a number`
+                            `Field value for ${fieldName} is not a number`,
                           );
                         }
                         if (input % 1 !== 0) {
                           throw new Error(
-                            `Field value for ${fieldName} is not an integer`
+                            `Field value for ${fieldName} is not an integer`,
                           );
                         }
-                        const maxInteger = (bits: number) =>
-                          2 ** (bits - 1) - 1;
+
                         if (
                           field.size !== undefined &&
                           Math.abs(input) > maxInteger(field.size)
                         ) {
                           throw new Error(
                             `Field value for ${fieldName} does not fit as a` +
-                              ` ${field.size} bit integer`
+                              ` ${field.size} bit integer`,
                           );
                         }
                         break;
+                      }
                       case DataType.FLOAT:
                         if (typeof input !== "number") {
                           throw new Error(
-                            `Field value for ${fieldName} is not a number`
+                            `Field value for ${fieldName} is not a number`,
                           );
                         }
 
@@ -218,7 +220,7 @@ export const createSequelizeDocumentStore = (options: Options) =>
                       case DataType.BLOB:
                         if (!(input instanceof Buffer)) {
                           throw new Error(
-                            `Field value for ${fieldName} is not a Buffer`
+                            `Field value for ${fieldName} is not a Buffer`,
                           );
                         }
                         break;
@@ -233,9 +235,9 @@ export const createSequelizeDocumentStore = (options: Options) =>
                             .map(
                               ({ message, path }) =>
                                 ` - ${message}` +
-                                (path?.length ? ` (at ${path.join(".")})` : "")
+                                (path?.length ? ` (at ${path.join(".")})` : ""),
                             )
-                            .join("\n")
+                            .join("\n"),
                       );
                     }
                   },
@@ -243,7 +245,7 @@ export const createSequelizeDocumentStore = (options: Options) =>
               },
             } satisfies ModelAttributes[string],
           }),
-          {}
+          {},
         );
         const model = sequelize.define(options.name, columns);
 

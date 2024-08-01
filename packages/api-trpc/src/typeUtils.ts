@@ -9,8 +9,8 @@ import {
 import { Observable } from "@trpc/server/observable";
 
 type EmptyConfig = RootConfig<{
-  ctx: {};
-  meta: {};
+  ctx: object;
+  meta: object;
   errorShape: unknown;
   transformer: unknown;
 }>;
@@ -18,17 +18,17 @@ type EmptyConfig = RootConfig<{
 export type BuildProcedure<
   Type extends ProcedureType,
   Input,
-  Output
+  Output,
 > = Procedure<
   Type,
   ProcedureParams<
     EmptyConfig,
-    {},
+    object,
     Input,
     Input,
     Type extends "subscription" ? Observable<Output, never> : Output,
     Type extends "subscription" ? Observable<Output, never> : Output,
-    {}
+    object
   >
 >;
 
@@ -37,7 +37,7 @@ export type BuildRouter<Procedures extends ProcedureRouterRecord> = Router<{
   router: true;
   procedures: Procedures;
   record: Procedures;
-  queries: {};
-  mutations: {};
-  subscriptions: {};
+  queries: object;
+  mutations: object;
+  subscriptions: object;
 }>;
