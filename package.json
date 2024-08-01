@@ -2,7 +2,7 @@
   "name": "@pala/monorepo",
   "private": true,
   "scripts": {
-    "lint": "eslint ."
+    "lint": "bunx --bun eslint ."
   },
   "workspaces": [
     "packages/*",
