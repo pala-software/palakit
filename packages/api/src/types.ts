@@ -27,7 +27,9 @@ export const isBaseResponse = (value: unknown): value is BaseResponse =>
   typeof value.response.type === "string";
 
 export type OkResponse<Output = unknown> = {
-  response: { type: "ok"; data: Output };
+  response: Output extends unknown | undefined
+    ? { type: "ok"; data?: Output }
+    : { type: "ok"; data: Output };
 };
 
 export const isOkResponse = (value: unknown): value is OkResponse =>
