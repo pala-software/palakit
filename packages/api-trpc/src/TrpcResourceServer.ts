@@ -180,63 +180,51 @@ export const createTrpcResourceServer = (options: Options) =>
             );
           }
 
-          let contents = `import { BuildProcedure, BuildRouter } from "@pala/api-trpc";\n`;
-          contents += `\n`;
-
-          const schemas: Record<string, JSONSchema> = {};
-          const typeAliases: Record<string, string> = {};
-
-          const createSchema = async (
-            source: ResourceSchema,
-            defaultName: string
+          const generatedTypes: string[] = [];
+          const typeAliases = {
+            input: new Map<Operation, string>(),
+            output: new Map<Operation, string>(),
+          };
+          const generateType = async (
+            endpointName: string,
+            operationName: string,
+            operation: Operation,
+            target: "input" | "output"
           ) => {
-            if (
-              !source ||
-              source.schema === null ||
-              source.schema === undefined
-            ) {
-              typeAliases[defaultName] = "void";
+            if (!operation[target]) {
+              if (target === "input") {
+                typeAliases[target].set(operation, "void");
+              } else if (target === "output") {
+                typeAliases[target].set(operation, "unknown");
+              }
               return;
             }
 
             const jsonSchema = (await toJSONSchema(
-              source.schema
+              operation[target].schema
             )) as JSONSchema;
-            const typeName = createTypeName([
-              source.name ? source.name : defaultName,
-            ]);
-            if (
-              jsonSchema.type &&
-              typeof jsonSchema.type === "string" &&
-              ["boolean", "bigint", "number", "string", "symbol"].includes(
-                jsonSchema.type
-              )
-            ) {
-              typeAliases[defaultName] = jsonSchema.type;
-              return;
-            }
+            const typeName = operation[target].name
+              ? createTypeName([operation[target].name])
+              : createTypeName([target, "of", endpointName, operationName]);
 
-            if (!(typeName in schemas)) {
-              schemas[typeName] = jsonSchema;
+            // Do not create multiple types with the same name.
+            if (!generatedTypes.includes(typeName)) {
               contents += await compile(jsonSchema, typeName, {
                 bannerComment: "",
               });
+              generatedTypes.push(typeName);
             }
 
-            typeAliases[defaultName] = typeName;
+            typeAliases[target].set(operation, typeName);
           };
 
+          let contents = `import { BuildProcedure, BuildRouter } from "@pala/api-trpc";\n`;
+          contents += `\n`;
           for (const { name: endpointName, operations } of endpoints) {
             for (const [name, operation] of Object.entries(operations)) {
               if (!operation) continue;
-              await createSchema(
-                operation.input,
-                createTypeName(["InputOf", endpointName, name])
-              );
-              await createSchema(
-                operation.output,
-                createTypeName(["OutputOf", endpointName, name])
-              );
+              await generateType(endpointName, name, operation, "input");
+              await generateType(endpointName, name, operation, "output");
             }
           }
           contents += `\n`;
@@ -252,20 +240,15 @@ export const createTrpcResourceServer = (options: Options) =>
                 throw new Error("Invalid operation type encountered");
               }
 
-              const getTypeName = (putOf: "InputOf" | "OutputOf") => {
-                const tName = createTypeName([putOf, endpointName, name]);
-                return tName in typeAliases ? typeAliases[tName] : tName;
-              };
-
               const jsonName = JSON.stringify(name);
               contents += `    `;
               contents += jsonName;
               contents += `: BuildProcedure<"`;
               contents += type;
               contents += `", `;
-              contents += getTypeName("InputOf");
+              contents += typeAliases.input.get(operation);
               contents += `, `;
-              contents += getTypeName("OutputOf");
+              contents += typeAliases.output.get(operation);
               contents += `>;\n`;
             }
             contents += `  }>;\n`;
