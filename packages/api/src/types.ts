@@ -2,12 +2,13 @@ import { Schema, AdapterResolver } from "@typeschema/main";
 import { OutputFrom } from "@typeschema/core";
 
 type FallbackToAny<T> = [T] extends [never] ? any : T;
-type FromInputSchema<T extends Schema | null> = T extends Schema
-  ? FallbackToAny<OutputFrom<AdapterResolver, T>>
+type FromInputSchema<T extends ResourceSchema | null> = T extends ResourceSchema
+  ? FallbackToAny<OutputFrom<AdapterResolver, T["schema"]>>
   : void;
-type FromOutputSchema<T extends Schema | null> = T extends Schema
-  ? FallbackToAny<OutputFrom<AdapterResolver, T>>
-  : unknown;
+type FromOutputSchema<T extends ResourceSchema | null> =
+  T extends ResourceSchema
+    ? FallbackToAny<OutputFrom<AdapterResolver, T["schema"]>>
+    : unknown;
 
 export type Request<Input> = {
   input: Input;
@@ -50,8 +51,8 @@ export const isResponse = (value: unknown): value is Response =>
   isOkResponse(value) || isErrorResponse(value);
 
 export type OperationOptions<
-  InputSchema extends Schema | null,
-  OutputSchema extends Schema | null,
+  InputSchema extends ResourceSchema | null,
+  OutputSchema extends ResourceSchema | null,
 > = {
   input: InputSchema;
   output: OutputSchema;
@@ -63,18 +64,18 @@ export type OperationOptions<
 };
 
 export type Operation<
-  InputSchema extends Schema | null = any,
-  OutputSchema extends Schema | null = any,
+  InputSchema extends ResourceSchema | null = ResourceSchema | null,
+  OutputSchema extends ResourceSchema | null = ResourceSchema | null,
 > = OperationOptions<InputSchema, OutputSchema> & { type: string };
 
 export type QueryOperationOptions<
-  InputSchema extends Schema | null,
-  OutputSchema extends Schema | null,
+  InputSchema extends ResourceSchema | null,
+  OutputSchema extends ResourceSchema | null,
 > = OperationOptions<InputSchema, OutputSchema>;
 
 export type QueryOperation<
-  InputSchema extends Schema | null = any,
-  OutputSchema extends Schema | null = any,
+  InputSchema extends ResourceSchema | null = ResourceSchema | null,
+  OutputSchema extends ResourceSchema | null = ResourceSchema | null,
 > = QueryOperationOptions<InputSchema, OutputSchema> & { type: "query" };
 
 export const isQueryOperation = (
@@ -82,13 +83,13 @@ export const isQueryOperation = (
 ): operation is QueryOperation => operation.type === "query";
 
 export type MutationOperationOptions<
-  InputSchema extends Schema | null,
-  OutputSchema extends Schema | null,
+  InputSchema extends ResourceSchema | null,
+  OutputSchema extends ResourceSchema | null,
 > = OperationOptions<InputSchema, OutputSchema>;
 
 export type MutationOperation<
-  InputSchema extends Schema | null = any,
-  OutputSchema extends Schema | null = any,
+  InputSchema extends ResourceSchema | null = ResourceSchema | null,
+  OutputSchema extends ResourceSchema | null = ResourceSchema | null,
 > = MutationOperationOptions<InputSchema, OutputSchema> & { type: "mutation" };
 
 export const isMutationOperation = (
@@ -102,8 +103,8 @@ export type Observable<Output = unknown> = (observer: {
 }) => () => void;
 
 export type SubscriptionOperationOptions<
-  InputSchema extends Schema | null,
-  OutputSchema extends Schema | null,
+  InputSchema extends ResourceSchema | null,
+  OutputSchema extends ResourceSchema | null,
 > = {
   input: InputSchema | null;
   output: OutputSchema | null;
@@ -115,8 +116,8 @@ export type SubscriptionOperationOptions<
 };
 
 export type SubscriptionOperation<
-  InputSchema extends Schema | null = any,
-  OutputSchema extends Schema | null = any,
+  InputSchema extends ResourceSchema | null = ResourceSchema | null,
+  OutputSchema extends ResourceSchema | null = ResourceSchema | null,
 > = SubscriptionOperationOptions<InputSchema, OutputSchema> & {
   type: "subscription";
 };
