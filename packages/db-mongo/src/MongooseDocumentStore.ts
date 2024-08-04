@@ -82,8 +82,7 @@ export const createMongooseDocumentStore = ({
             },
           }),
               {}
-            ),
-            { timestamps: true }
+            )
           )
         );
 
