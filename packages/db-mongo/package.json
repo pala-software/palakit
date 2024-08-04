@@ -5,6 +5,7 @@
   "dependencies": {
     "@pala/core": "workspace:*",
     "@pala/db": "workspace:*",
+    "@typeschema/main": "^0.13.10",
     "mongoose": "^8.4.3"
   }
 }
