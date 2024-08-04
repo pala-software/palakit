@@ -2,6 +2,10 @@
   "name": "@pala/monorepo",
   "private": true,
   "workspaces": [
-    "packages/*"
-  ]
+    "packages/*",
+    "examples/*"
+  ],
+  "devDependencies": {
+    "@types/bun": "^1.1.6"
+  }
 }
