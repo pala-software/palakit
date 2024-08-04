@@ -40,24 +40,24 @@ export const createMongooseDocumentStore = ({
           options.name,
           new mongoose.Schema(
             Object.entries(options.fields).reduce<SchemaDefinition>(
-          (obj, [name, field]) => ({
-            ...obj,
-            [name]: {
-              type: (() => {
-                switch (field.dataType) {
-                  case DataType.STRING:
-                    return String;
-                  case DataType.INTEGER:
-                  case DataType.FLOAT:
-                    return Number;
-                  case DataType.BOOLEAN:
-                    return Boolean;
-                  case DataType.BLOB:
-                    return Blob;
-                }
-              })(),
-              allowNull: field.nullable ?? true,
-              unique: field.unique ?? false,
+              (obj, [name, field]) => ({
+                ...obj,
+                [name]: {
+                  type: (() => {
+                    switch (field.dataType) {
+                      case DataType.STRING:
+                        return String;
+                      case DataType.INTEGER:
+                      case DataType.FLOAT:
+                        return Number;
+                      case DataType.BOOLEAN:
+                        return Boolean;
+                      case DataType.BLOB:
+                        return Blob;
+                    }
+                  })(),
+                  allowNull: field.nullable ?? true,
+                  unique: field.unique ?? false,
                   validate: async (value: unknown) => {
                     if (!field.schema) {
                       return true;
@@ -79,8 +79,8 @@ export const createMongooseDocumentStore = ({
 
                     return true;
                   },
-            },
-          }),
+                },
+              }),
               {}
             )
           )
@@ -93,8 +93,16 @@ export const createMongooseDocumentStore = ({
                 ...m.toObject(),
                 id: String(m._id),
               }) as T,
-            update: async (updated: Partial<T>) => {
-              await m.updateOne(updated);
+            update: async (values: Partial<T>) => {
+              const updatedDocument = await Model.findOneAndUpdate(
+                { _id: m._id },
+                values,
+                { runValidators: true, new: true }
+              );
+              if (!updatedDocument) {
+                throw new Error("Could not find update document");
+              }
+              m = updatedDocument;
             },
             delete: async () => {
               await m.deleteOne();
