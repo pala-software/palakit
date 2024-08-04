@@ -222,9 +222,8 @@ export const createTrpcResourceServer = (options: Options) =>
                 bannerComment: "",
               });
             }
-            typeAliases[defaultName] = source?.isArray
-              ? typeName + "[]"
-              : typeName;
+
+            typeAliases[defaultName] = typeName;
           };
 
           for (const { name: endpointName, operations } of endpoints) {
