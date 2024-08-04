@@ -6,7 +6,12 @@ import {
   Where,
   DocumentHandle,
 } from "@pala/db";
-import mongoose, { ConnectOptions } from "mongoose";
+import { validate } from "@typeschema/main";
+import mongoose, {
+  ConnectOptions,
+  FilterQuery,
+  SchemaDefinition,
+} from "mongoose";
 
 export const createMongooseDocumentStore = ({
   connectionString,
@@ -31,10 +36,10 @@ export const createMongooseDocumentStore = ({
       ),
 
       createCollection: (options) => {
-        const columns: Record<
-          string,
-          { type: StringConstructor | NumberConstructor | BooleanConstructor }
-        > = Object.entries(options.fields).reduce(
+        const Model = mongoose.model(
+          options.name,
+          new mongoose.Schema(
+            Object.entries(options.fields).reduce<SchemaDefinition>(
           (obj, [name, field]) => ({
             ...obj,
             [name]: {
@@ -53,13 +58,33 @@ export const createMongooseDocumentStore = ({
               })(),
               allowNull: field.nullable ?? true,
               unique: field.unique ?? false,
+                  validate: async (value: unknown) => {
+                    if (!field.schema) {
+                      return true;
+                    }
+
+                    const result = await validate(field.schema, value);
+                    if (!result.success) {
+                      throw new Error(
+                        "issues:\n" +
+                          result.issues
+                            .map(
+                              ({ message, path }) =>
+                                ` - ${message}` +
+                                (path?.length ? ` (at ${path.join(".")})` : "")
+                            )
+                            .join("\n")
+                      );
+                    }
+
+                    return true;
+                  },
             },
           }),
-          { id: { type: String } }
-        );
-        const Model = mongoose.model(
-          options.name,
-          new mongoose.Schema(columns, { timestamps: true })
+              {}
+            ),
+            { timestamps: true }
+          )
         );
 
         const toDocument = <T extends Collection>(m: mongoose.Document) =>
@@ -87,7 +112,7 @@ export const createMongooseDocumentStore = ({
           );
 
         const transformWhere = <T extends Collection>(where: Where<T>) => {
-          const transformed: any = {};
+          const transformed: FilterQuery<object> = {};
           if (where.and) {
             transformed.and = transformWhere<T>(where.and);
           }
