@@ -10,7 +10,7 @@ import {
   isQueryOperation,
   isSubscriptionOperation,
 } from "@pala/api";
-import { ResourceSchema } from "@pala/api/src/types";
+import { ResourceSchema } from "@pala/api";
 import { createPart } from "@pala/core";
 import { AnyRouter, initTRPC } from "@trpc/server";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
