@@ -49,7 +49,7 @@ export const createTrpcResourceServer = (options: Options) =>
     };
 
     const createValidator =
-      (schema: Schema | undefined) => async (value: unknown) => {
+      (schema: ResourceSchema | null) => async (value: unknown) => {
         if (!schema) {
           if (value === undefined) {
             return undefined;
@@ -58,7 +58,7 @@ export const createTrpcResourceServer = (options: Options) =>
           }
         }
 
-        const result = await validate(schema, value);
+        const result = await validate(schema.schema, value);
         if (result.success) {
           return value;
         } else {
