@@ -33,16 +33,14 @@ export type OkResponse<Output = unknown> = {
 export const isOkResponse = (value: unknown): value is OkResponse =>
   isBaseResponse(value) && value.response.type === "ok";
 
-export type ErrorResponse<Output = unknown> = {
-  response: { type: "error"; data: Output };
+export type ErrorResponse = {
+  response: { type: "error"; data?: string };
 };
 
 export const isErrorResponse = (value: unknown): value is ErrorResponse =>
   isBaseResponse(value) && value.response.type === "error";
 
-export type Response<Output = unknown> =
-  | OkResponse<Output>
-  | ErrorResponse<Output>;
+export type Response<Output = unknown> = OkResponse<Output> | ErrorResponse;
 
 export const isResponse = (value: unknown): value is Response =>
   isOkResponse(value) || isErrorResponse(value);
