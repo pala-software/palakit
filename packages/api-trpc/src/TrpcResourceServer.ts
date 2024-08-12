@@ -15,7 +15,7 @@ import { createPart } from "@pala/core";
 import { AnyRouter, initTRPC } from "@trpc/server";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { observable } from "@trpc/server/observable";
-import { Schema, toJSONSchema, validate } from "@typeschema/main";
+import { toJSONSchema, validate } from "@typeschema/main";
 import { writeFile } from "fs/promises";
 import { JSONSchema, compile } from "json-schema-to-typescript";
 import WebSocket from "ws";
