@@ -2,13 +2,10 @@ import { Schema, AdapterResolver } from "@typeschema/main";
 import { OutputFrom } from "@typeschema/core";
 
 type FallbackToAny<T> = [T] extends [never] ? any : T;
-type FromInputSchema<T extends ResourceSchema | null> = T extends ResourceSchema
-  ? FallbackToAny<OutputFrom<AdapterResolver, T["schema"]>>
-  : void;
-type FromOutputSchema<T extends ResourceSchema | null> =
+type FromResourceSchema<T extends ResourceSchema | null> =
   T extends ResourceSchema
     ? FallbackToAny<OutputFrom<AdapterResolver, T["schema"]>>
-    : unknown;
+    : void;
 
 export type Request<Input> = {
   input: Input;
@@ -57,10 +54,10 @@ export type OperationOptions<
   input: InputSchema;
   output: OutputSchema;
   handler: (
-    request: Request<FromInputSchema<InputSchema>>
+    request: Request<FromResourceSchema<InputSchema>>
   ) =>
-    | Response<FromOutputSchema<OutputSchema>>
-    | Promise<Response<FromOutputSchema<OutputSchema>>>;
+    | Response<FromResourceSchema<OutputSchema>>
+    | Promise<Response<FromResourceSchema<OutputSchema>>>;
 };
 
 export type Operation<
@@ -109,10 +106,10 @@ export type SubscriptionOperationOptions<
   input: InputSchema | null;
   output: OutputSchema | null;
   handler: (
-    request: Request<FromInputSchema<InputSchema>>
+    request: Request<FromResourceSchema<InputSchema>>
   ) =>
-    | Response<Observable<FromOutputSchema<OutputSchema>>>
-    | Promise<Response<Observable<FromOutputSchema<OutputSchema>>>>;
+    | Response<Observable<FromResourceSchema<OutputSchema>>>
+    | Promise<Response<Observable<FromResourceSchema<OutputSchema>>>>;
 };
 
 export type SubscriptionOperation<

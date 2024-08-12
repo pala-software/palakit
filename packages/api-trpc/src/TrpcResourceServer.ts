@@ -192,11 +192,7 @@ export const createTrpcResourceServer = (options: Options) =>
             target: "input" | "output"
           ) => {
             if (!operation[target]) {
-              if (target === "input") {
-                typeAliases[target].set(operation, "void");
-              } else if (target === "output") {
-                typeAliases[target].set(operation, "unknown");
-              }
+              typeAliases[target].set(operation, "void");
               return;
             }
 
