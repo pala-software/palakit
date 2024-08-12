@@ -11,6 +11,8 @@ lint:
           - bun.lockb
       paths:
         - node_modules
+  variables:
+    HUSKY: 0
   script:
     - bun install --frozen-lockfile
     - bun lint
