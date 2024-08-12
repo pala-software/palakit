@@ -43,7 +43,7 @@ const updateName = async () => {
   const { name: oldName } = oldDocument;
   const [oldFirstName] = oldName.split(" ");
   const newFirstName = pick(
-    firstNames.filter((firstName) => firstName !== oldFirstName)
+    firstNames.filter((firstName) => firstName !== oldFirstName),
   );
   let newName = [newFirstName, ...oldName.split(" ").slice(1)].join(" ");
   const newDocument = await client.names.update.mutate({

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Schema, AdapterResolver } from "@typeschema/main";
 import { OutputFrom } from "@typeschema/core";
 
@@ -52,7 +53,7 @@ export type OperationOptions<
   input: InputSchema;
   output: OutputSchema;
   handler: (
-    request: Request<FromResourceSchema<InputSchema>>
+    request: Request<FromResourceSchema<InputSchema>>,
   ) =>
     | Response<FromResourceSchema<OutputSchema>>
     | Promise<Response<FromResourceSchema<OutputSchema>>>;
@@ -74,7 +75,7 @@ export type QueryOperation<
 > = QueryOperationOptions<InputSchema, OutputSchema> & { type: "query" };
 
 export const isQueryOperation = (
-  operation: Operation
+  operation: Operation,
 ): operation is QueryOperation => operation.type === "query";
 
 export type MutationOperationOptions<
@@ -88,7 +89,7 @@ export type MutationOperation<
 > = MutationOperationOptions<InputSchema, OutputSchema> & { type: "mutation" };
 
 export const isMutationOperation = (
-  operation: Operation
+  operation: Operation,
 ): operation is MutationOperation => operation.type === "mutation";
 
 export type Observable<Output = unknown> = (observer: {
@@ -104,7 +105,7 @@ export type SubscriptionOperationOptions<
   input: InputSchema | null;
   output: OutputSchema | null;
   handler: (
-    request: Request<FromResourceSchema<InputSchema>>
+    request: Request<FromResourceSchema<InputSchema>>,
   ) =>
     | Response<Observable<FromResourceSchema<OutputSchema>>>
     | Promise<Response<Observable<FromResourceSchema<OutputSchema>>>>;
@@ -118,7 +119,7 @@ export type SubscriptionOperation<
 };
 
 export const isSubscriptionOperation = (
-  operation: Operation
+  operation: Operation,
 ): operation is SubscriptionOperation => operation.type === "subscription";
 
 export type OperationRecord = {

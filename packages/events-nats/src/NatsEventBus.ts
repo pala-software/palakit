@@ -5,7 +5,7 @@ import { connect, ConnectionOptions, NatsConnection } from "nats";
 export const createNatsEventBus = (options: ConnectionOptions) =>
   createPart(EventBus, [Application], ([application]) => {
     let setConnection: (connection: NatsConnection) => void;
-    let connected = new Promise<NatsConnection>((resolve) => {
+    const connected = new Promise<NatsConnection>((resolve) => {
       setConnection = resolve;
     });
 
@@ -21,8 +21,8 @@ export const createNatsEventBus = (options: ConnectionOptions) =>
         connected.then((connection) =>
           connection.publish(
             `${application.name}.${options.subject}`,
-            options.payload
-          )
+            options.payload,
+          ),
         );
       },
       subscribe: async (options) => {
@@ -34,7 +34,7 @@ export const createNatsEventBus = (options: ConnectionOptions) =>
             callback: (_error, message) => {
               options.callback(message.data);
             },
-          }
+          },
         );
         return {
           unsubscribe: () => subscription.unsubscribe(),

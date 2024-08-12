@@ -32,7 +32,7 @@ export const createMongooseDocumentStore = ({
         async () => {
           await mongoose.connect(connectionString, connectOptions);
           setConnected();
-        }
+        },
       ),
 
       createCollection: (options) => {
@@ -71,9 +71,9 @@ export const createMongooseDocumentStore = ({
                             .map(
                               ({ message, path }) =>
                                 ` - ${message}` +
-                                (path?.length ? ` (at ${path.join(".")})` : "")
+                                (path?.length ? ` (at ${path.join(".")})` : ""),
                             )
-                            .join("\n")
+                            .join("\n"),
                       );
                     }
 
@@ -81,9 +81,9 @@ export const createMongooseDocumentStore = ({
                   },
                 },
               }),
-              {}
-            )
-          )
+              {},
+            ),
+          ),
         );
 
         const toDocument = <T extends Collection>(m: mongoose.Document) =>
@@ -97,7 +97,7 @@ export const createMongooseDocumentStore = ({
               const updatedDocument = await Model.findOneAndUpdate(
                 { _id: m._id },
                 values,
-                { runValidators: true, new: true }
+                { runValidators: true, new: true },
               );
               if (!updatedDocument) {
                 throw new Error("Could not find update document");
@@ -115,7 +115,7 @@ export const createMongooseDocumentStore = ({
               .replace(/[-/\\^$+?.()|[\]{}]/g, "\\$&")
               .replace(/%/g, ".*")
               .replace(/_/g, ".")}$`,
-            "i"
+            "i",
           );
 
         const transformWhere = <T extends Collection>(where: Where<T>) => {
@@ -189,12 +189,12 @@ export const createMongooseDocumentStore = ({
                   ? transformWhere(options.where)
                   : {},
                 {},
-                { limit: options?.limit, skip: options?.offset }
+                { limit: options?.limit, skip: options?.offset },
               ).sort(
                 options?.order?.map((item) => [
                   item[0],
                   item[1].toLowerCase() as "asc" | "desc",
-                ])
+                ]),
               )
             ).map((i) => toDocument(i));
           },
@@ -203,7 +203,7 @@ export const createMongooseDocumentStore = ({
             return await Model.countDocuments(
               options && "where" in options && options.where
                 ? transformWhere(options.where)
-                : {}
+                : {},
             );
           },
         };

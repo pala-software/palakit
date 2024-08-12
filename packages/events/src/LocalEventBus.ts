@@ -15,7 +15,7 @@ export const LocalEventBus = createPart(EventBus, [], () => {
         fn(options.payload);
       }
       for (const fn of Object.values(
-        queueSubscriptions[options.subject] ?? {}
+        queueSubscriptions[options.subject] ?? {},
       )) {
         fn(options.payload);
       }

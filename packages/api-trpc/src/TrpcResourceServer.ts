@@ -15,7 +15,7 @@ import { createPart } from "@pala/core";
 import { AnyRouter, initTRPC } from "@trpc/server";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { observable } from "@trpc/server/observable";
-import { Schema, toJSONSchema, validate } from "@typeschema/main";
+import { toJSONSchema, validate } from "@typeschema/main";
 import { writeFile } from "fs/promises";
 import { JSONSchema, compile } from "json-schema-to-typescript";
 import WebSocket from "ws";
@@ -38,7 +38,7 @@ export const createTrpcResourceServer = (options: Options) =>
       input,
     }: {
       operation: Operation;
-      input: any;
+      input: unknown;
     }): Promise<unknown> => {
       const { response } = await operation.handler({ input });
       if (response.type === "error") {
@@ -68,9 +68,9 @@ export const createTrpcResourceServer = (options: Options) =>
                 .map(
                   ({ message, path }) =>
                     ` - ${message}` +
-                    (path?.length ? ` (at ${path.join(".")})` : "")
+                    (path?.length ? ` (at ${path.join(".")})` : ""),
                 )
-                .join("\n")
+                .join("\n"),
           );
         }
       };
@@ -107,13 +107,15 @@ export const createTrpcResourceServer = (options: Options) =>
                 try {
                   await validate(value);
                   next(value);
-                } catch (_err) {
+                  // TODO: Log error in server log.
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                } catch (err) {
                   error("Output validation failed");
                 }
               },
               complete,
               error,
-            })
+            }),
           );
         });
 
@@ -130,12 +132,12 @@ export const createTrpcResourceServer = (options: Options) =>
         .map((part) => part.replace(/[^a-zA-Z0-9]/g, ""))
         .map((part) => part.replace(/^[0-9]+/, ""))
         .map((part) =>
-          part.length < 1 ? part : part[0].toUpperCase() + part.slice(1)
+          part.length < 1 ? part : part[0].toUpperCase() + part.slice(1),
         )
         .join("");
       if (typeName.length < 1) {
         throw new Error(
-          `Type name ${parts.join(",")} is converted to empty string which is not valid TypeScript type name`
+          `Type name ${parts.join(",")} is converted to empty string which is not valid TypeScript type name`,
         );
       }
       return typeName;
@@ -155,16 +157,16 @@ export const createTrpcResourceServer = (options: Options) =>
                 Object.entries(endpoint.operations)
                   .filter(
                     (
-                      entry
+                      entry,
                     ): entry is [
                       (typeof entry)[0],
                       Exclude<(typeof entry)[1], undefined>,
-                    ] => entry[1] !== undefined
+                    ] => entry[1] !== undefined,
                   )
                   .map(([name, operation]) => [
                     name,
                     createProcedure(operation),
-                  ])
+                  ]),
               ),
             });
           }
@@ -176,7 +178,7 @@ export const createTrpcResourceServer = (options: Options) =>
         generateClient: async () => {
           if (!options.clientPath) {
             throw new Error(
-              "Cannot generate client, because option 'clientPath' was not provided."
+              "Cannot generate client, because option 'clientPath' was not provided.",
             );
           }
 
@@ -189,7 +191,7 @@ export const createTrpcResourceServer = (options: Options) =>
             endpointName: string,
             operationName: string,
             operation: Operation,
-            target: "input" | "output"
+            target: "input" | "output",
           ) => {
             if (!operation[target]) {
               typeAliases[target].set(operation, "void");
@@ -197,7 +199,7 @@ export const createTrpcResourceServer = (options: Options) =>
             }
 
             const jsonSchema = (await toJSONSchema(
-              operation[target].schema
+              operation[target].schema,
             )) as JSONSchema;
             const typeName = operation[target].name
               ? createTypeName([operation[target].name])

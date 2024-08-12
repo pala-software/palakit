@@ -39,7 +39,7 @@ export const ResourceServer = createPart(
       }),
 
       createAdapter: (
-        adapter: ResourceServerAdapter
+        adapter: ResourceServerAdapter,
       ): ResourceServerAdapter => {
         adapters.push(adapter);
         return adapter;
@@ -59,7 +59,7 @@ export const ResourceServer = createPart(
         InputSchema extends Schema | null,
         OutputSchema extends Schema | null,
       >(
-        query: QueryOperationOptions<InputSchema, OutputSchema>
+        query: QueryOperationOptions<InputSchema, OutputSchema>,
       ): QueryOperation<InputSchema, OutputSchema> => {
         return { ...query, type: "query" };
       },
@@ -68,7 +68,7 @@ export const ResourceServer = createPart(
         InputSchema extends Schema | null,
         OutputSchema extends Schema | null,
       >(
-        query: MutationOperationOptions<InputSchema, OutputSchema>
+        query: MutationOperationOptions<InputSchema, OutputSchema>,
       ): MutationOperation<InputSchema, OutputSchema> => {
         return { ...query, type: "mutation" };
       },
@@ -77,7 +77,7 @@ export const ResourceServer = createPart(
         InputSchema extends Schema | null,
         OutputSchema extends Schema | null,
       >(
-        query: SubscriptionOperationOptions<InputSchema, OutputSchema>
+        query: SubscriptionOperationOptions<InputSchema, OutputSchema>,
       ): SubscriptionOperation<InputSchema, OutputSchema> => {
         return { ...query, type: "subscription" };
       },
@@ -89,5 +89,5 @@ export const ResourceServer = createPart(
         }
       },
     };
-  }
+  },
 );

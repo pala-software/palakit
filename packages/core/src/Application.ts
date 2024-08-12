@@ -12,14 +12,14 @@ type ApplicationConfiguration = {
 };
 
 const ApplicationConfiguration = createPart<ApplicationConfiguration>(
-  "ApplicationConfiguration"
+  "ApplicationConfiguration",
 );
 
 export const Application = createPart(
   "Application",
   [LocalRuntime, ApplicationConfiguration],
   ([local, config]) => {
-    let parts = new Map<Part, unknown>();
+    const parts = new Map<Part, unknown>();
 
     const hasDefinition = (part: Part, definition: Part): boolean =>
       part === definition ||
@@ -31,7 +31,7 @@ export const Application = createPart(
       start: local.createTrigger("Application.start"),
       register: <T extends Part>(
         definition: T,
-        implementation: ReturnType<T>
+        implementation: ReturnType<T>,
       ) => {
         parts.set(definition, implementation);
       },
@@ -44,7 +44,7 @@ export const Application = createPart(
         throw new Error("Could not find part: " + getName(definition));
       },
     };
-  }
+  },
 );
 
 export type ApplicationOptions = {
@@ -63,21 +63,21 @@ export const resolveApplication = (options: ApplicationOptions) => {
             application.register(options.parts[index], implementations[index]);
           }
           return application;
-        }
+        },
       ),
       [
         createPart(ApplicationConfiguration, [], () => ({
           name: options.name,
         })),
         ...options.parts,
-      ]
+      ],
     );
   } catch (error) {
     if (error instanceof NotImplementedError) {
       console.error(
         error.message,
         "\nPlease append some implementation of the required dependency into" +
-          " the array of parts when calling resolveApplication."
+          " the array of parts when calling resolveApplication.",
       );
       process.exit(1);
     } else {

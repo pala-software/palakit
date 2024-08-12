@@ -4,7 +4,7 @@ import { Runtime, Function, Trigger } from "./Runtime";
 export const LocalRuntime = createPart(Runtime, [], () => {
   const createFunction = <Arguments extends unknown[], Return>(
     _functionName: string,
-    fn: (...args: Arguments) => Return
+    fn: (...args: Arguments) => Return,
   ): Function<Arguments, Return> => {
     const beforeHooks: Function<Arguments, Arguments>[] = [];
     const afterHooks: Function<[Awaited<Return>, ...Arguments], Return>[] = [];
@@ -23,7 +23,7 @@ export const LocalRuntime = createPart(Runtime, [], () => {
       {
         before: (
           hookName: string,
-          hook: (...args: Arguments) => Arguments | Promise<Arguments>
+          hook: (...args: Arguments) => Arguments | Promise<Arguments>,
         ) => {
           const fn = createFunction(hookName, hook);
           beforeHooks.push(fn);
@@ -31,18 +31,18 @@ export const LocalRuntime = createPart(Runtime, [], () => {
         },
         after: (
           hookName: string,
-          hook: (value: Awaited<Return>, ...args: Arguments) => Return
+          hook: (value: Awaited<Return>, ...args: Arguments) => Return,
         ) => {
           const fn = createFunction(hookName, hook);
           afterHooks.push(fn);
           return fn;
         },
-      }
+      },
     );
   };
 
   const createTrigger = <
-    Arguments extends unknown[] = []
+    Arguments extends unknown[] = [],
   >(): Trigger<Arguments> => {
     const listeners: Function<Arguments, void>[] = [];
 
@@ -55,13 +55,13 @@ export const LocalRuntime = createPart(Runtime, [], () => {
       {
         on: (
           listenerName: string,
-          listener: (...args: Arguments) => void | Promise<void>
+          listener: (...args: Arguments) => void | Promise<void>,
         ): Function<Arguments, void> => {
           const fn = createFunction(listenerName, listener);
           listeners.push(fn);
           return fn;
         },
-      }
+      },
     );
   };
 
