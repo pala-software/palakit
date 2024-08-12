@@ -1,4 +1,3 @@
-import { createPart } from "@pala/core";
 import {
   MutationOperation,
   Observable,
@@ -11,13 +10,15 @@ import {
   isQueryOperation,
   isSubscriptionOperation,
 } from "@pala/api";
+import { ResourceSchema } from "@pala/api";
+import { createPart } from "@pala/core";
 import { AnyRouter, initTRPC } from "@trpc/server";
-import { observable } from "@trpc/server/observable";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
-import WebSocket from "ws";
-import { writeFile } from "fs/promises";
+import { observable } from "@trpc/server/observable";
 import { Schema, toJSONSchema, validate } from "@typeschema/main";
+import { writeFile } from "fs/promises";
 import { JSONSchema, compile } from "json-schema-to-typescript";
+import WebSocket from "ws";
 
 export type Options = {
   /** Port where to host the tRPC WebSocket server. */
@@ -48,7 +49,7 @@ export const createTrpcResourceServer = (options: Options) =>
     };
 
     const createValidator =
-      (schema: Schema | undefined) => async (value: unknown) => {
+      (schema: ResourceSchema | null) => async (value: unknown) => {
         if (!schema) {
           if (value === undefined) {
             return undefined;
@@ -57,7 +58,7 @@ export const createTrpcResourceServer = (options: Options) =>
           }
         }
 
-        const result = await validate(schema, value);
+        const result = await validate(schema.schema, value);
         if (result.success) {
           return value;
         } else {
@@ -126,11 +127,21 @@ export const createTrpcResourceServer = (options: Options) =>
       throw new Error("Invalid operation type encountered");
     };
 
-    const createTypeName = (parts: string[]) =>
-      parts
+    const createTypeName = (parts: string[]) => {
+      const typeName = parts
         .map((part) => part.replace(/[^a-zA-Z0-9]/g, ""))
-        .map((part) => part[0].toUpperCase() + part.slice(1))
+        .map((part) => part.replace(/^[0-9]+/, ""))
+        .map((part) =>
+          part.length < 1 ? part : part[0].toUpperCase() + part.slice(1),
+        )
         .join("");
+      if (typeName.length < 1) {
+        throw new Error(
+          `Type name ${parts.join(",")} is converted to empty string which is not valid TypeScript type name`,
+        );
+      }
+      return typeName;
+    };
 
     return {
       trpcResourceServerAdapter: server.createAdapter({
@@ -171,25 +182,47 @@ export const createTrpcResourceServer = (options: Options) =>
             );
           }
 
+          const generatedTypes: string[] = [];
+          const typeAliases = {
+            input: new Map<Operation, string>(),
+            output: new Map<Operation, string>(),
+          };
+          const generateType = async (
+            endpointName: string,
+            operationName: string,
+            operation: Operation,
+            target: "input" | "output",
+          ) => {
+            if (!operation[target]) {
+              typeAliases[target].set(operation, "void");
+              return;
+            }
+
+            const jsonSchema = (await toJSONSchema(
+              operation[target].schema,
+            )) as JSONSchema;
+            const typeName = operation[target].name
+              ? createTypeName([operation[target].name])
+              : createTypeName([target, "of", endpointName, operationName]);
+
+            // Do not create multiple types with the same name.
+            if (!generatedTypes.includes(typeName)) {
+              contents += await compile(jsonSchema, typeName, {
+                bannerComment: "",
+              });
+              generatedTypes.push(typeName);
+            }
+
+            typeAliases[target].set(operation, typeName);
+          };
+
           let contents = `import { BuildProcedure, BuildRouter } from "@pala/api-trpc";\n`;
           contents += `\n`;
           for (const { name: endpointName, operations } of endpoints) {
             for (const [name, operation] of Object.entries(operations)) {
               if (!operation) continue;
-              contents += await compile(
-                (operation.input
-                  ? await toJSONSchema(operation.input)
-                  : { tsType: "void" }) as JSONSchema,
-                createTypeName(["InputOf", endpointName, name]),
-                { bannerComment: "" },
-              );
-              contents += await compile(
-                (operation.output
-                  ? await toJSONSchema(operation.output)
-                  : { tsType: "unknown" }) as JSONSchema,
-                createTypeName(["OutputOf", endpointName, name]),
-                { bannerComment: "" },
-              );
+              await generateType(endpointName, name, operation, "input");
+              await generateType(endpointName, name, operation, "output");
             }
           }
           contents += `\n`;
@@ -206,15 +239,14 @@ export const createTrpcResourceServer = (options: Options) =>
               }
 
               const jsonName = JSON.stringify(name);
-              // TODO: I/O types
               contents += `    `;
               contents += jsonName;
               contents += `: BuildProcedure<"`;
               contents += type;
               contents += `", `;
-              contents += createTypeName(["InputOf", endpointName, name]);
+              contents += typeAliases.input.get(operation);
               contents += `, `;
-              contents += createTypeName(["OutputOf", endpointName, name]);
+              contents += typeAliases.output.get(operation);
               contents += `>;\n`;
             }
             contents += `  }>;\n`;

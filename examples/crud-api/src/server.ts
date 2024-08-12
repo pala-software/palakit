@@ -1,5 +1,5 @@
 import { createSequelizeDocumentStore } from "@pala/db-sequelize";
-import { ResourceServer } from "@pala/api";
+import { ResourceSchema, ResourceServer } from "@pala/api";
 import { createTrpcResourceServer } from "@pala/api-trpc";
 import { LocalRuntime, createPart, resolveApplication } from "@pala/core";
 import { z } from "zod";
@@ -11,11 +11,24 @@ const MyCrudApi = createPart(
   "MyCrudApi",
   [DocumentStore, ResourceServer],
   ([db, server]) => {
-    const nameSchema = z.object({ name: z.string() });
-    const storedNameSchema = z.object({
-      id: z.string(),
-      name: z.string(),
-    });
+    const Name: ResourceSchema = {
+      name: "Name",
+      schema: z.object({ name: z.string() }),
+    };
+    const StoredName: ResourceSchema = {
+      name: "StoredName",
+      schema: Name.schema.extend({
+        id: z.string(),
+      }),
+    };
+    const StoredNameList: ResourceSchema = {
+      name: "StoredNameList",
+      schema: z.array(StoredName.schema),
+    };
+    const NameCount: ResourceSchema = {
+      name: "NameCount",
+      schema: z.number().int().nonnegative(),
+    };
     const nameCollection = db.createCollection({
       name: "names",
       fields: {
@@ -35,8 +48,8 @@ const MyCrudApi = createPart(
         name: "names",
         operations: {
           create: server.createMutation({
-            input: nameSchema,
-            output: storedNameSchema,
+            input: Name,
+            output: StoredName,
             handler: async ({ input }) => {
               const document = await nameCollection.create(input);
               return {
@@ -48,8 +61,8 @@ const MyCrudApi = createPart(
             },
           }),
           update: server.createMutation({
-            input: storedNameSchema,
-            output: storedNameSchema,
+            input: StoredName,
+            output: StoredName,
             handler: async ({ input }) => {
               const { id, ...values } = input;
               const [document] = await nameCollection.find({
@@ -69,7 +82,7 @@ const MyCrudApi = createPart(
             },
           }),
           delete: server.createMutation({
-            input: storedNameSchema,
+            input: StoredName,
             output: null,
             handler: async ({ input }) => {
               const { id } = input;
@@ -90,7 +103,7 @@ const MyCrudApi = createPart(
           }),
           read: server.createQuery({
             input: null,
-            output: z.array(storedNameSchema),
+            output: StoredNameList,
             handler: async () => {
               const documents = await nameCollection.find({
                 order: [["name", "ASC"]],
@@ -107,7 +120,7 @@ const MyCrudApi = createPart(
           }),
           count: server.createQuery({
             input: null,
-            output: z.number().int().nonnegative(),
+            output: NameCount,
             handler: async () => {
               return {
                 response: {
