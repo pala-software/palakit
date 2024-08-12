@@ -17,6 +17,7 @@ export {
   type OkResponse,
   type Observable,
   type OperationRecord,
+  type ResourceSchema,
   isBaseResponse,
   isErrorResponse,
   isOkResponse,
