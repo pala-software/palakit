@@ -124,6 +124,7 @@ type NonNullableFieldKey<T extends Record<string, Field>> = {
 }[keyof T];
 
 export type DocumentStore = {
+  connect: () => Promise<void> | void;
   createCollection: <Fields extends Record<string, Field>>(options: {
     name: string;
     fields: Fields;
