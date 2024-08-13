@@ -1,0 +1,11 @@
+{
+  "name": "@pala/crud",
+  "version": "0.1.0",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@pala/core": "workspace:*",
+    "@pala/api": "workspace:*",
+    "@pala/db": "workspace:*",
+    "@typeschema/json": "^0.13.3"
+  }
+}

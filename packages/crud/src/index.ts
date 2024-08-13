@@ -1,0 +1,1 @@
+export { CrudResourceRegistry } from "./CrudResourceRegistry";
