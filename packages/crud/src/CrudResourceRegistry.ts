@@ -4,6 +4,9 @@ import { DocumentStore, Field } from "@pala/db";
 import { toJSONSchema } from "@typeschema/main";
 import { JSONSchema7 } from "json-schema";
 
+const capitalize = (str: string) =>
+  str.length < 1 ? str : str[0].toUpperCase() + str.slice(1);
+
 export const CrudResourceRegistry = createPart(
   "CrudResourceRegistry",
   [Runtime, DocumentStore, ResourceServer],
@@ -19,7 +22,7 @@ export const CrudResourceRegistry = createPart(
           fields: Fields;
         }) => {
           const inputSchema = {
-            name, // TODO: Format name
+            name,
             schema: {
               type: "object",
               additionalProperties: false,
@@ -42,7 +45,7 @@ export const CrudResourceRegistry = createPart(
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
           const schemaWithId = {
-            name: "Stored" + name, // TODO: Format name
+            name: "Stored" + capitalize(name),
             schema: {
               ...inputSchema.schema,
               properties: {
@@ -53,7 +56,7 @@ export const CrudResourceRegistry = createPart(
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
           const listSchemaWithId = {
-            name: "Stored" + name + "List", // TODO: Format name
+            name: "Stored" + capitalize(name) + "List",
             schema: {
               type: "array",
               items: schemaWithId.schema,

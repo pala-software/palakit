@@ -17,7 +17,7 @@ const MyCrudApi = createPart(
         console.log(`Server running is running on port ${PORT}!`);
       }),
       Name: await crud.createResource({
-        name: "Name",
+        name: "name",
         fields: {
           name: {
             dataType: DataType.STRING,
