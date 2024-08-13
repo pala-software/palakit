@@ -37,7 +37,7 @@ const createName = async () => {
 };
 
 const updateName = async () => {
-  const documents = await client.name.read.query();
+  const documents = await client.name.find.query({});
   const oldDocument = pick(documents);
   if (!oldDocument) return;
   const { name: oldName } = oldDocument;
@@ -55,7 +55,7 @@ const updateName = async () => {
 };
 
 const deleteName = async () => {
-  const documents = await client.name.read.query();
+  const documents = await client.name.find.query({});
   const document = pick(documents);
   if (!document) return;
   await client.name.delete.mutate(document);
@@ -66,7 +66,7 @@ const mutations = [createName, updateName, deleteName];
 
 const listNames = async () => {
   console.group("Current list of names:");
-  for (const { name } of await client.name.read.query()) {
+  for (const { name } of await client.name.find.query({})) {
     console.log("- " + name);
   }
   console.groupEnd();
@@ -78,7 +78,7 @@ const client = createTRPCProxyClient<Router>({
 });
 
 const loop = async () => {
-  const count = await client.name.count.query();
+  const count = await client.name.count.query({});
   console.log("Current count of names: " + count);
 
   if (count > 0) {

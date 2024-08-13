@@ -21,24 +21,55 @@ export const CrudResourceRegistry = createPart(
           name: string;
           fields: Fields;
         }) => {
+          const fieldSchemas = Object.fromEntries(
+            await Promise.all(
+              Object.entries(fields).map(
+                ([key, field]) =>
+                  field.schema
+                    ? toJSONSchema(field.schema).then((schema) => [key, schema])
+                    : [key, {}], // TODO: Default schema based on data type
+              ),
+            ),
+          ) as Record<string, JSONSchema7>;
+          const filterSchemas = {
+            type: ["object"],
+            additionalProperties: false,
+            properties: Object.fromEntries(
+              Object.entries(fieldSchemas).map(([key, schema]) => [
+                key,
+                {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    equals: schema,
+                    notEquals: schema,
+                    is: { type: "null" },
+                    isNot: { type: "null" },
+                    in: { type: "array", items: schema },
+                    notIn: { type: "array", items: schema },
+                    ...(schema.type === "string" && {
+                      like: schema,
+                      notLike: schema,
+                    }),
+                    ...((schema.type === "number" ||
+                      schema.type === "integer") && {
+                      gt: schema,
+                      gte: schema,
+                      lt: schema,
+                      lte: schema,
+                    }),
+                  },
+                } satisfies JSONSchema7,
+              ]),
+            ),
+          } satisfies JSONSchema7;
+
           const inputSchema = {
             name,
             schema: {
               type: "object",
               additionalProperties: false,
-              properties: Object.fromEntries(
-                await Promise.all(
-                  Object.entries(fields).map(
-                    ([key, field]) =>
-                      field.schema
-                        ? toJSONSchema(field.schema).then((schema) => [
-                            key,
-                            schema,
-                          ])
-                        : [key, {}], // TODO: Default schema based on data type
-                  ),
-                ),
-              ),
+              properties: fieldSchemas,
               required: Object.entries(fields)
                 .filter(([, field]) => !field.nullable)
                 .map(([key]) => key),
@@ -67,6 +98,39 @@ export const CrudResourceRegistry = createPart(
             schema: {
               type: "integer",
               minimum: 0,
+            } satisfies JSONSchema7,
+          } satisfies ResourceSchema;
+          const findOptions = {
+            name: capitalize(name) + "FindOptions",
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                where: filterSchemas,
+                order: {
+                  type: "array",
+                  items: {
+                    type: "array",
+                    items: [
+                      { enum: Object.keys(fields) },
+                      { enum: ["ASC", "DESC"] },
+                    ],
+                    minItems: 2,
+                  },
+                },
+                limit: { type: "integer", minimum: 0 },
+                offset: { type: "integer", minimum: 0 },
+              },
+            } satisfies JSONSchema7,
+          } satisfies ResourceSchema;
+          const countOptions = {
+            name: capitalize(name) + "CountOptions",
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                where: filterSchemas,
+              },
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
 
@@ -128,11 +192,11 @@ export const CrudResourceRegistry = createPart(
                   };
                 },
               }),
-              read: server.createQuery({
-                input: null,
+              find: server.createQuery({
+                input: findOptions,
                 output: listSchemaWithId,
-                handler: async () => {
-                  const documents = await collection.find();
+                handler: async ({ input }) => {
+                  const documents = await collection.find(input);
                   return {
                     response: {
                       type: "ok",
@@ -144,13 +208,13 @@ export const CrudResourceRegistry = createPart(
                 },
               }),
               count: server.createQuery({
-                input: null,
+                input: countOptions,
                 output: countSchema,
-                handler: async () => {
+                handler: async ({ input }) => {
                   return {
                     response: {
                       type: "ok",
-                      data: await collection.count(),
+                      data: await collection.count(input),
                     },
                   };
                 },
