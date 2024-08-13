@@ -1,11 +1,39 @@
 import { ResourceSchema, ResourceServer } from "@pala/api";
 import { createPart, Runtime } from "@pala/core";
-import { DocumentStore, Field } from "@pala/db";
+import { DataType, DocumentStore, Field } from "@pala/db";
 import { toJSONSchema } from "@typeschema/main";
 import { JSONSchema7 } from "json-schema";
 
 const capitalize = (str: string) =>
   str.length < 1 ? str : str[0].toUpperCase() + str.slice(1);
+
+const maxInteger = (bits: number) => 2 ** (bits - 1) - 1;
+
+const schemaFromField = async (field: Field): Promise<JSONSchema7> => {
+  if (field.schema) {
+    return toJSONSchema(field.schema);
+  }
+
+  switch (field.dataType) {
+    case DataType.STRING:
+      return { type: "string", maxLength: field.length };
+    case DataType.BOOLEAN:
+      return { type: "boolean" };
+    case DataType.INTEGER:
+      return {
+        type: "integer",
+        ...(field.size && {
+          minimum: -maxInteger(field.size),
+          maximum: maxInteger(field.size),
+        }),
+      };
+    case DataType.FLOAT:
+      return { type: "number" };
+    case DataType.BLOB:
+      // TODO: Support blobs
+      return { type: "null" };
+  }
+};
 
 export const CrudResourceRegistry = createPart(
   "CrudResourceRegistry",
@@ -23,11 +51,8 @@ export const CrudResourceRegistry = createPart(
         }) => {
           const fieldSchemas = Object.fromEntries(
             await Promise.all(
-              Object.entries(fields).map(
-                ([key, field]) =>
-                  field.schema
-                    ? toJSONSchema(field.schema).then((schema) => [key, schema])
-                    : [key, {}], // TODO: Default schema based on data type
+              Object.entries(fields).map(([key, field]) =>
+                schemaFromField(field).then((schema) => [key, schema]),
               ),
             ),
           ) as Record<string, JSONSchema7>;
