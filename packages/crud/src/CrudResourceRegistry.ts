@@ -63,7 +63,7 @@ export const CrudResourceRegistry = createPart(
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
           const countSchema = {
-            name: "Count",
+            name: "Stored" + capitalize(name) + "Count",
             schema: {
               type: "integer",
               minimum: 0,
