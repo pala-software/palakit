@@ -83,16 +83,22 @@ export const createMongooseDocumentStore = ({
               }),
               {},
             ),
+            { minimize: false },
           ),
         );
 
         const toDocument = <T extends Collection>(m: mongoose.Document) =>
           ({
-            get: async () =>
-              ({
-                ...m.toObject(),
-                id: String(m._id),
-              }) as T,
+            get: async () => {
+              const { _id, ...values } = m.toObject({
+                versionKey: false,
+                flattenObjectIds: true,
+              });
+              return {
+                ...values,
+                id: _id,
+              } as T;
+            },
             update: async (values: Partial<T>) => {
               const updatedDocument = await Model.findOneAndUpdate(
                 { _id: m._id },
