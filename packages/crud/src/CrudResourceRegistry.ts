@@ -90,7 +90,7 @@ export const CrudResourceRegistry = createPart(
           } satisfies JSONSchema7;
 
           const inputSchema = {
-            name,
+            name: "Input" + capitalize(name),
             schema: {
               type: "object",
               additionalProperties: false,
@@ -101,7 +101,7 @@ export const CrudResourceRegistry = createPart(
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
           const schemaWithId = {
-            name: "Stored" + capitalize(name),
+            name: capitalize(name),
             schema: {
               ...inputSchema.schema,
               properties: {
@@ -112,14 +112,14 @@ export const CrudResourceRegistry = createPart(
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
           const listSchemaWithId = {
-            name: "Stored" + capitalize(name) + "List",
+            name: capitalize(name) + "List",
             schema: {
               type: "array",
               items: schemaWithId.schema,
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
           const countSchema = {
-            name: "Stored" + capitalize(name) + "Count",
+            name: capitalize(name) + "Count",
             schema: {
               type: "integer",
               minimum: 0,
