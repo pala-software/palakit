@@ -65,11 +65,11 @@ const deleteName = async () => {
 const mutations = [createName, updateName, deleteName];
 
 const listNames = async () => {
-  console.group("Current list of names:");
-  for (const { name } of await client.name.find.query({})) {
+  for (const { name } of await client.name.find.query({
+    order: [["name", "ASC"]],
+  })) {
     console.log("- " + name);
   }
-  console.groupEnd();
 };
 
 const wsClient = createWSClient({ url: "ws://localhost:3000/" });
