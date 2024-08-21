@@ -77,68 +77,79 @@ export const CrudResourceRegistry = createPart(
             ...fieldSchemas,
             id: { type: "string", nullable: false },
           };
-          const filterSchemas = {
-            type: ["object"],
-            additionalProperties: false,
-            properties: Object.fromEntries(
-              Object.entries(fieldSchemasWithId).map(([key, schema]) => [
-                key,
-                {
-                  type: "object",
-                  additionalProperties: false,
-                  properties: {
-                    equals: schema,
-                    notEquals: schema,
-                    in: { type: "array", items: schema },
-                    notIn: { type: "array", items: schema },
-                    ...(schema.nullable && {
-                      is: { type: "null" },
-                      isNot: { type: "null" },
-                    }),
-                    ...(schema.type === "string" && {
-                      like: schema,
-                      notLike: schema,
-                    }),
-                    ...((schema.type === "number" ||
-                      schema.type === "integer") && {
-                      gt: schema,
-                      gte: schema,
-                      lt: schema,
-                      lte: schema,
-                    }),
-                  },
-                } satisfies JSONSchema7,
-              ]),
-            ),
-          } satisfies JSONSchema7;
 
-          const inputSchema = {
-            name: "Input" + capitalize(singularName),
+          const filterSchema = {
+            name: capitalize(singularName) + "Filter",
+            schema: {
+              type: ["object"],
+              additionalProperties: false,
+              properties: Object.fromEntries(
+                Object.entries(fieldSchemasWithId).map(([key, schema]) => [
+                  key,
+                  {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      equals: schema,
+                      notEquals: schema,
+                      in: { type: "array", items: schema },
+                      notIn: { type: "array", items: schema },
+                      ...(schema.nullable && {
+                        is: { type: "null" },
+                        isNot: { type: "null" },
+                      }),
+                      ...(schema.type === "string" && {
+                        like: schema,
+                        notLike: schema,
+                      }),
+                      ...((schema.type === "number" ||
+                        schema.type === "integer") && {
+                        gt: schema,
+                        gte: schema,
+                        lt: schema,
+                        lte: schema,
+                      }),
+                    },
+                  } satisfies JSONSchema7,
+                ]),
+              ),
+            } satisfies JSONSchema7,
+          } satisfies ResourceSchema;
+          const valueSchema = {
+            name: capitalize(singularName) + "Value",
             schema: {
               type: "object",
               additionalProperties: false,
               properties: fieldSchemas,
-              required: Object.entries(fields)
-                .filter(([, field]) => !field.nullable)
+              required: Object.entries(fieldSchemas)
+                .filter(([, schema]) => !schema.nullable)
                 .map(([key]) => key),
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
-          const schemaWithId = {
+          const documentSchema = {
             name: capitalize(singularName),
             schema: {
-              ...inputSchema.schema,
-              properties: {
-                id: { type: "string" },
-                ...inputSchema.schema.properties,
-              },
-              required: [...inputSchema.schema.required, "id"],
+              type: "object",
+              additionalProperties: false,
+              properties: fieldSchemasWithId,
+              required: Object.entries(fieldSchemasWithId)
+                .filter(([, schema]) => !schema.nullable)
+                .map(([key]) => key),
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
-          const listSchemaWithId = {
+          const partialValueSchema = {
+            name: "Partial" + capitalize(singularName) + "Value",
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              properties: fieldSchemas,
+            } satisfies JSONSchema7,
+          } satisfies ResourceSchema;
+          const listSchema = {
             name: capitalize(singularName) + "List",
             schema: {
               type: "array",
-              items: schemaWithId.schema,
+              items: documentSchema.schema,
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
           const countSchema = {
@@ -148,27 +159,66 @@ export const CrudResourceRegistry = createPart(
               minimum: 0,
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
+          const orderSchema = {
+            name: capitalize(singularName) + "Order",
+            schema: {
+              type: "array",
+              items: {
+                type: "array",
+                items: [
+                  { enum: Object.keys(fieldSchemasWithId) },
+                  { enum: ["ASC", "DESC"] },
+                ],
+                minItems: 2,
+              },
+            } satisfies JSONSchema7,
+          } satisfies ResourceSchema;
+
+          const createOptions = {
+            name: capitalize(singularName) + "CreateOptions",
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                data: valueSchema.schema,
+              },
+              required: ["data"],
+            } satisfies JSONSchema7,
+          } satisfies ResourceSchema;
           const findOptions = {
             name: capitalize(singularName) + "FindOptions",
             schema: {
               type: "object",
               additionalProperties: false,
               properties: {
-                where: filterSchemas,
-                order: {
-                  type: "array",
-                  items: {
-                    type: "array",
-                    items: [
-                      { enum: Object.keys(fieldSchemasWithId) },
-                      { enum: ["ASC", "DESC"] },
-                    ],
-                    minItems: 2,
-                  },
-                },
+                where: filterSchema.schema,
+                order: orderSchema.schema,
                 limit: { type: "integer", minimum: 0 },
                 offset: { type: "integer", minimum: 0 },
               },
+            } satisfies JSONSchema7,
+          } satisfies ResourceSchema;
+          const updateOptions = {
+            name: capitalize(singularName) + "UpdateOptions",
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                id: { type: "string" },
+                data: partialValueSchema.schema,
+              },
+              required: ["id", "data"],
+            } satisfies JSONSchema7,
+          } satisfies ResourceSchema;
+          const deleteOptions = {
+            name: capitalize(singularName) + "DeleteOptions",
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                id: { type: "string" },
+              },
+              required: ["id"],
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
           const countOptions = {
@@ -177,7 +227,7 @@ export const CrudResourceRegistry = createPart(
               type: "object",
               additionalProperties: false,
               properties: {
-                where: filterSchemas,
+                where: filterSchema.schema,
               },
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
@@ -187,10 +237,10 @@ export const CrudResourceRegistry = createPart(
             name: pluralName,
             operations: {
               create: server.createMutation({
-                input: inputSchema,
-                output: schemaWithId,
+                input: createOptions,
+                output: documentSchema,
                 handler: async ({ input }) => {
-                  const document = await collection.create(input);
+                  const document = await collection.create(input.data);
                   return {
                     response: {
                       type: "ok",
@@ -200,18 +250,17 @@ export const CrudResourceRegistry = createPart(
                 },
               }),
               update: server.createMutation({
-                input: schemaWithId,
-                output: schemaWithId,
+                input: updateOptions,
+                output: documentSchema,
                 handler: async ({ input }) => {
-                  const { id, ...values } = input;
                   const [document] = await collection.find({
-                    where: { id: { equals: id } },
+                    where: { id: { equals: input.id } },
                     limit: 1,
                   });
                   if (!document) {
                     return { response: { type: "error", data: "Not found" } };
                   }
-                  await document.update(values);
+                  await document.update(input.data);
                   return {
                     response: {
                       type: "ok",
@@ -221,12 +270,11 @@ export const CrudResourceRegistry = createPart(
                 },
               }),
               delete: server.createMutation({
-                input: schemaWithId,
+                input: deleteOptions,
                 output: null,
                 handler: async ({ input }) => {
-                  const { id } = input;
                   const [document] = await collection.find({
-                    where: { id: { equals: id } },
+                    where: { id: { equals: input.id } },
                     limit: 1,
                   });
                   if (!document) {
@@ -242,7 +290,7 @@ export const CrudResourceRegistry = createPart(
               }),
               find: server.createQuery({
                 input: findOptions,
-                output: listSchemaWithId,
+                output: listSchema,
                 handler: async ({ input }) => {
                   const documents = await collection.find(input);
                   return {

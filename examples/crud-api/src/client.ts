@@ -32,12 +32,12 @@ const pick = <T>(array: T[]): T | undefined =>
 
 const createName = async () => {
   const name = `${pick(firstNames)} ${pick(lastNames)}`;
-  await client.name.create.mutate({ name });
+  await client.names.create.mutate({ data: { name } });
   console.log("Created a new name: " + name);
 };
 
 const updateName = async () => {
-  const documents = await client.name.find.query({});
+  const documents = await client.names.find.query({});
   const oldDocument = pick(documents);
   if (!oldDocument) return;
   const { name: oldName } = oldDocument;
@@ -46,26 +46,28 @@ const updateName = async () => {
     firstNames.filter((firstName) => firstName !== oldFirstName),
   );
   let newName = [newFirstName, ...oldName.split(" ").slice(1)].join(" ");
-  const newDocument = await client.name.update.mutate({
-    ...oldDocument,
-    name: newName,
+  const newDocument = await client.names.update.mutate({
+    id: oldDocument.id,
+    data: {
+      name: newName,
+    },
   });
   newName = newDocument.name;
   console.log(`Updated ${oldName} to: ${newName}`);
 };
 
 const deleteName = async () => {
-  const documents = await client.name.find.query({});
+  const documents = await client.names.find.query({});
   const document = pick(documents);
   if (!document) return;
-  await client.name.delete.mutate(document);
+  await client.names.delete.mutate({ id: document.id });
   console.log("Deleted: " + document.name);
 };
 
 const mutations = [createName, updateName, deleteName];
 
 const listNames = async () => {
-  for (const { name } of await client.name.find.query({
+  for (const { name } of await client.names.find.query({
     order: [["name", "ASC"]],
   })) {
     console.log("- " + name);
@@ -78,7 +80,7 @@ const client = createTRPCProxyClient<Router>({
 });
 
 const loop = async () => {
-  const count = await client.name.count.query({});
+  const count = await client.names.count.query({});
   console.log("Current count of names: " + count);
 
   if (count > 0) {
