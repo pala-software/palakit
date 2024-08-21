@@ -175,6 +175,18 @@ importers:
         specifier: ^2.26.0
         version: 2.28.2
 
+  packages/oauth:
+    dependencies:
+      '@pala/core':
+        specifier: workspace:*
+        version: link:../core
+      jose:
+        specifier: ^5.7.0
+        version: 5.8.0
+      oauth4webapi:
+        specifier: ^2.12.0
+        version: 2.12.0
+
   packages/sequelize:
     dependencies:
       '@palakit/core':
@@ -1231,6 +1243,9 @@ packages:
   jackspeak@3.4.3:
     resolution: {integrity: sha512-OGlZQpz2yfahA/Rd1Y8Cd9SIEsqvXkLVoSw/cgwhnhFMDbsQFeZYoJJ7bIZBS9BcamUW96asq/npPWugM+RQBw==}
 
+  jose@5.8.0:
+    resolution: {integrity: sha512-E7CqYpL/t7MMnfGnK/eg416OsFCVUrU/Y3Vwe7QjKhu/BkS1Ms455+2xsqZQVN57/U2MHMBvEb5SrmAZWAIntA==}
+
   js-yaml@4.1.0:
     resolution: {integrity: sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==}
     hasBin: true
@@ -1580,6 +1595,9 @@ packages:
     resolution: {integrity: sha512-/vBvz5Jfr9dT/aFWd0FIRf+T/Q2WBsLENygUaFUqstqsycmZAP/t5BvFJTK0viFmSUxiUKTUplWy5vt+rvKIxg==}
     engines: {node: ^12.13.0 || ^14.15.0 || >=16.0.0}
     deprecated: This package is no longer supported.
+
+  oauth4webapi@2.12.0:
+    resolution: {integrity: sha512-WFmcHzhFtq2Ar91crpGQZUD8DS0SG7Zti1AgbansUAfdpIsoRXE+hcMNi8MW6bGNNObWis0x8BZRl6K+FR4oQg==}
 
   once@1.4.0:
     resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
@@ -3043,6 +3061,8 @@ snapshots:
     optionalDependencies:
       '@pkgjs/parseargs': 0.11.0
 
+  jose@5.8.0: {}
+
   js-yaml@4.1.0:
     dependencies:
       argparse: 2.0.1
@@ -3521,6 +3541,8 @@ snapshots:
       gauge: 4.0.4
       set-blocking: 2.0.0
     optional: true
+
+  oauth4webapi@2.12.0: {}
 
   once@1.4.0:
     dependencies:
