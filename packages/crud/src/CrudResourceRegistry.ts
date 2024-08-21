@@ -141,7 +141,7 @@ export const CrudResourceRegistry = createPart(
                   items: {
                     type: "array",
                     items: [
-                      { enum: Object.keys(fields) },
+                      { enum: Object.keys(fieldSchemasWithId) },
                       { enum: ["ASC", "DESC"] },
                     ],
                     minItems: 2,
