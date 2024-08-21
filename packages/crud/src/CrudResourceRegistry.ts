@@ -56,11 +56,15 @@ export const CrudResourceRegistry = createPart(
               ),
             ),
           ) as Record<string, JSONSchema7>;
+          const fieldSchemasWithId: Record<string, JSONSchema7> = {
+            id: { type: "string" },
+            ...fieldSchemas,
+          };
           const filterSchemas = {
             type: ["object"],
             additionalProperties: false,
             properties: Object.fromEntries(
-              Object.entries(fieldSchemas).map(([key, schema]) => [
+              Object.entries(fieldSchemasWithId).map(([key, schema]) => [
                 key,
                 {
                   type: "object",
