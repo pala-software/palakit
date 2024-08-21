@@ -109,8 +109,8 @@ export const CrudResourceRegistry = createPart(
             schema: {
               ...inputSchema.schema,
               properties: {
-                ...inputSchema.schema.properties,
                 id: { type: "string" },
+                ...inputSchema.schema.properties,
               },
               required: [...inputSchema.schema.required, "id"],
             } satisfies JSONSchema7,
