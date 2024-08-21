@@ -53,9 +53,19 @@ export const CrudResourceRegistry = createPart(
           name,
           fields,
         }: {
-          name: string;
+          name: string | { singular: string; plural: string };
           fields: Fields;
         }) => {
+          let singularName: string;
+          let pluralName: string;
+          if (typeof name === "string") {
+            singularName = name;
+            pluralName = name;
+          } else {
+            singularName = name.singular;
+            pluralName = name.plural;
+          }
+
           const fieldSchemas = Object.fromEntries(
             await Promise.all(
               Object.entries(fields).map(([key, field]) =>
@@ -103,7 +113,7 @@ export const CrudResourceRegistry = createPart(
           } satisfies JSONSchema7;
 
           const inputSchema = {
-            name: "Input" + capitalize(name),
+            name: "Input" + capitalize(singularName),
             schema: {
               type: "object",
               additionalProperties: false,
@@ -114,7 +124,7 @@ export const CrudResourceRegistry = createPart(
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
           const schemaWithId = {
-            name: capitalize(name),
+            name: capitalize(singularName),
             schema: {
               ...inputSchema.schema,
               properties: {
@@ -125,21 +135,21 @@ export const CrudResourceRegistry = createPart(
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
           const listSchemaWithId = {
-            name: capitalize(name) + "List",
+            name: capitalize(singularName) + "List",
             schema: {
               type: "array",
               items: schemaWithId.schema,
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
           const countSchema = {
-            name: capitalize(name) + "Count",
+            name: capitalize(singularName) + "Count",
             schema: {
               type: "integer",
               minimum: 0,
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
           const findOptions = {
-            name: capitalize(name) + "FindOptions",
+            name: capitalize(singularName) + "FindOptions",
             schema: {
               type: "object",
               additionalProperties: false,
@@ -162,7 +172,7 @@ export const CrudResourceRegistry = createPart(
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
           const countOptions = {
-            name: capitalize(name) + "CountOptions",
+            name: capitalize(singularName) + "CountOptions",
             schema: {
               type: "object",
               additionalProperties: false,
@@ -172,9 +182,9 @@ export const CrudResourceRegistry = createPart(
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
 
-          const collection = db.createCollection({ name, fields });
+          const collection = db.createCollection({ name: pluralName, fields });
           const endpoint = server.createEndpoint({
-            name,
+            name: pluralName,
             operations: {
               create: server.createMutation({
                 input: inputSchema,
