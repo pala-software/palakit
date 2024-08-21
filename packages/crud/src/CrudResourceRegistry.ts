@@ -4,34 +4,41 @@ import { DataType, DocumentStore, Field } from "@pala/db";
 import { toJSONSchema } from "@typeschema/main";
 import { JSONSchema7 } from "json-schema";
 
+type NullableJsonSchema = JSONSchema7 & { nullable?: boolean };
+
 const capitalize = (str: string) =>
   str.length < 1 ? str : str[0].toUpperCase() + str.slice(1);
 
 const maxInteger = (bits: number) => 2 ** (bits - 1) - 1;
 
-const schemaFromField = async (field: Field): Promise<JSONSchema7> => {
+const schemaFromField = async (field: Field): Promise<NullableJsonSchema> => {
   if (field.schema) {
-    return toJSONSchema(field.schema);
+    return { ...(await toJSONSchema(field.schema)), nullable: field.nullable };
   }
 
   switch (field.dataType) {
     case DataType.STRING:
-      return { type: "string", maxLength: field.length };
+      return {
+        type: "string",
+        nullable: field.nullable,
+        maxLength: field.length,
+      };
     case DataType.BOOLEAN:
-      return { type: "boolean" };
+      return { type: "boolean", nullable: field.nullable };
     case DataType.INTEGER:
       return {
         type: "integer",
+        nullable: field.nullable,
         ...(field.size && {
           minimum: -maxInteger(field.size),
           maximum: maxInteger(field.size),
         }),
       };
     case DataType.FLOAT:
-      return { type: "number" };
+      return { type: "number", nullable: field.nullable };
     case DataType.BLOB:
       // TODO: Support blobs
-      return { type: "null" };
+      return { type: "null", nullable: field.nullable };
   }
 };
 
@@ -55,10 +62,10 @@ export const CrudResourceRegistry = createPart(
                 schemaFromField(field).then((schema) => [key, schema]),
               ),
             ),
-          ) as Record<string, JSONSchema7>;
-          const fieldSchemasWithId: Record<string, JSONSchema7> = {
-            id: { type: "string" },
+          ) as Record<string, NullableJsonSchema>;
+          const fieldSchemasWithId: Record<string, NullableJsonSchema> = {
             ...fieldSchemas,
+            id: { type: "string", nullable: false },
           };
           const filterSchemas = {
             type: ["object"],
@@ -72,10 +79,12 @@ export const CrudResourceRegistry = createPart(
                   properties: {
                     equals: schema,
                     notEquals: schema,
-                    is: { type: "null" },
-                    isNot: { type: "null" },
                     in: { type: "array", items: schema },
                     notIn: { type: "array", items: schema },
+                    ...(schema.nullable && {
+                      is: { type: "null" },
+                      isNot: { type: "null" },
+                    }),
                     ...(schema.type === "string" && {
                       like: schema,
                       notLike: schema,
