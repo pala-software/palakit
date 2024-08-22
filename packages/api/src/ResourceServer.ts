@@ -1,12 +1,14 @@
-import { Application, Runtime } from "@pala/core";
+import { Application, Function, Runtime } from "@pala/core";
 import { createPart } from "part-di";
 import {
   MutationOperationOptions,
   QueryOperationOptions,
+  Request,
   ResourceEndpoint,
   ResourceEndpointFromOptions,
   ResourceEndpointOptions,
   ResourceServerAdapter,
+  Response,
   SubscriptionOperationOptions,
   TypedMutationOperationOptions,
   TypedOperationOptions,
@@ -51,6 +53,17 @@ export const ResourceServer = createPart(
       createEndpoint: <T extends ResourceEndpointOptions>(
         options: T,
       ): ResourceEndpointFromOptions<T> => {
+        const operationBeforeHooks: {
+          hookName: string;
+          fn: Function<[{ operation: string; request: Request }], Request>;
+        }[] = [];
+        const operationAfterHooks: {
+          hookName: string;
+          fn: Function<
+            [{ operation: string; request: Request; response: Response }],
+            Response
+          >;
+        }[] = [];
         const endpoint = {
           name: options.name,
           operations: Object.fromEntries(
@@ -63,13 +76,55 @@ export const ResourceServer = createPart(
                 {
                   ...operationOptions,
                   handler: runtime.createFunction(
-                    `${options.name}.${operationName}`,
+                    `ResourceServer.${options.name}.operations.${operationName}`,
                     operationOptions.handler,
                   ),
                 },
               ]),
           ),
+          operation: {
+            before: (hookName, hook) => {
+              operationBeforeHooks.push({
+                hookName,
+                fn: runtime.createFunction(hookName, hook),
+              });
+            },
+            after: (hookName, hook) => {
+              operationAfterHooks.push({
+                hookName,
+                fn: runtime.createFunction(hookName, hook),
+              });
+            },
+          },
         } as ResourceEndpointFromOptions<T>;
+
+        for (const [operationName, operation] of Object.entries(
+          endpoint.operations,
+        )) {
+          operation.handler.before(
+            `ResourceServer.${options.name}.operations.${operationName}.before`,
+            async (request) => {
+              for (const { fn } of operationBeforeHooks) {
+                request = await fn({ operation: operationName, request });
+              }
+              return [request];
+            },
+          );
+
+          operation.handler.after(
+            `ResourceServer.${options.name}.operations.${operationName}.before`,
+            async (response, request) => {
+              for (const { fn } of operationAfterHooks) {
+                response = await fn({
+                  operation: operationName,
+                  request,
+                  response,
+                });
+              }
+              return response;
+            },
+          );
+        }
 
         endpoints.push(endpoint);
         if (initialized) {

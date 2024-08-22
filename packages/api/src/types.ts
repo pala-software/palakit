@@ -9,7 +9,7 @@ type FromResourceSchema<T extends ResourceSchema | null> =
     ? FallbackToAny<OutputFrom<AdapterResolver, T["schema"]>>
     : void;
 
-export type Request<Input> = {
+export type Request<Input = unknown> = {
   input: Input;
 };
 
@@ -220,10 +220,25 @@ export type ResourceEndpoint<
 > = {
   name: string;
   operations: Operations;
+  operation: {
+    before: (
+      hookName: string,
+      hook: (data: { operation: string; request: Request }) => Request,
+    ) => void;
+    after: (
+      hookName: string,
+      hook: (data: {
+        operation: string;
+        request: Request;
+        response: Response;
+      }) => Response,
+    ) => void;
+  };
 };
 
 export type ResourceEndpointFromOptions<T extends ResourceEndpointOptions> =
-  T & { operations: OperationRecordFromOptions<T["operations"]> };
+  ResourceEndpoint &
+    T & { operations: OperationRecordFromOptions<T["operations"]> };
 
 export type ResourceSchema = {
   schema: Schema;
