@@ -7,6 +7,7 @@ import {
   ResourceEndpoint,
   ResourceEndpointFromOptions,
   ResourceEndpointOptions,
+  ResourceSchema,
   ResourceServerAdapter,
   Response,
   SubscriptionOperationOptions,
@@ -15,7 +16,6 @@ import {
   TypedQueryOperationOptions,
   TypedSubscriptionOperationOptions,
 } from "./types";
-import { Schema } from "@typeschema/main";
 
 export const ResourceServer = createPart(
   "ResourceServer",
@@ -136,8 +136,8 @@ export const ResourceServer = createPart(
       },
 
       createQuery: <
-        InputSchema extends Schema | null,
-        OutputSchema extends Schema | null,
+        InputSchema extends ResourceSchema | null,
+        OutputSchema extends ResourceSchema | null,
       >(
         options: QueryOperationOptions<InputSchema, OutputSchema>,
       ): TypedQueryOperationOptions<InputSchema, OutputSchema> => {
@@ -145,8 +145,8 @@ export const ResourceServer = createPart(
       },
 
       createMutation: <
-        InputSchema extends Schema | null,
-        OutputSchema extends Schema | null,
+        InputSchema extends ResourceSchema | null,
+        OutputSchema extends ResourceSchema | null,
       >(
         options: MutationOperationOptions<InputSchema, OutputSchema>,
       ): TypedMutationOperationOptions<InputSchema, OutputSchema> => {
@@ -154,8 +154,8 @@ export const ResourceServer = createPart(
       },
 
       createSubscription: <
-        InputSchema extends Schema | null,
-        OutputSchema extends Schema | null,
+        InputSchema extends ResourceSchema | null,
+        OutputSchema extends ResourceSchema | null,
       >(
         options: SubscriptionOperationOptions<InputSchema, OutputSchema>,
       ): TypedSubscriptionOperationOptions<InputSchema, OutputSchema> => {
