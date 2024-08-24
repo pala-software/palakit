@@ -1,11 +1,11 @@
 {
-  "name": "@pala/db-mongodb",
+  "name": "@pala/sequelize",
   "version": "0.1.0",
   "main": "src/index.ts",
   "dependencies": {
     "@pala/core": "workspace:*",
     "@pala/db": "workspace:*",
     "@typeschema/main": "^0.13.10",
-    "mongoose": "^8.4.3"
+    "sequelize": "^6.37.3"
   }
 }
