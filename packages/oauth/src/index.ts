@@ -1,1 +1,0 @@
-export { createOAuthAuthenticator } from "./OAuthAuthenticator";
