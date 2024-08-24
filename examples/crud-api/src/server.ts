@@ -1,6 +1,6 @@
-import { createSequelizeDocumentStore } from "@pala/db-sequelize";
+import { createSequelizeDocumentStore } from "@pala/sequelize";
 import { ResourceServer } from "@pala/api";
-import { createTrpcResourceServer } from "@pala/api-trpc";
+import { createTrpcResourceServer } from "@pala/trpc";
 import { LocalRuntime, createPart, resolveApplication } from "@pala/core";
 import { z } from "zod";
 import { DataType } from "@pala/db";

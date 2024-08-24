@@ -1,5 +1,5 @@
 {
-  "name": "@pala/events-nats",
+  "name": "@pala/nats",
   "version": "0.1.0",
   "main": "src/index.ts",
   "dependencies": {
