@@ -216,7 +216,7 @@ export const createTrpcResourceServer = (options: Options) =>
             typeAliases[target].set(operation, typeName);
           };
 
-          let contents = `import { BuildProcedure, BuildRouter } from "@pala/api-trpc";\n`;
+          let contents = `import { BuildProcedure, BuildRouter } from "@pala/trpc";\n`;
           contents += `\n`;
           for (const { name: endpointName, operations } of endpoints) {
             for (const [name, operation] of Object.entries(operations)) {

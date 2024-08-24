@@ -10,10 +10,10 @@
   },
   "dependencies": {
     "@pala/api": "workspace:*",
-    "@pala/api-trpc": "workspace:*",
+    "@pala/trpc": "workspace:*",
     "@pala/core": "workspace:*",
     "@pala/db": "workspace:*",
-    "@pala/db-sequelize": "workspace:*",
+    "@pala/sequelize": "workspace:*",
     "@trpc/client": "^10.45.2",
     "@typeschema/zod": "^0.13.3",
     "sqlite3": "^5.1.7",
