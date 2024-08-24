@@ -32,12 +32,12 @@ const pick = <T>(array: T[]): T | undefined =>
 
 const createName = async () => {
   const name = `${pick(firstNames)} ${pick(lastNames)}`;
-  await client.names.create.mutate({ name });
+  await client.names.create.mutate({ data: { name } });
   console.log("Created a new name: " + name);
 };
 
 const updateName = async () => {
-  const documents = await client.names.read.query();
+  const documents = await client.names.find.query({});
   const oldDocument = pick(documents);
   if (!oldDocument) return;
   const { name: oldName } = oldDocument;
@@ -47,29 +47,31 @@ const updateName = async () => {
   );
   let newName = [newFirstName, ...oldName.split(" ").slice(1)].join(" ");
   const newDocument = await client.names.update.mutate({
-    ...oldDocument,
-    name: newName,
+    id: oldDocument.id,
+    data: {
+      name: newName,
+    },
   });
   newName = newDocument.name;
   console.log(`Updated ${oldName} to: ${newName}`);
 };
 
 const deleteName = async () => {
-  const documents = await client.names.read.query();
+  const documents = await client.names.find.query({});
   const document = pick(documents);
   if (!document) return;
-  await client.names.delete.mutate(document);
+  await client.names.delete.mutate({ id: document.id });
   console.log("Deleted: " + document.name);
 };
 
 const mutations = [createName, updateName, deleteName];
 
 const listNames = async () => {
-  console.group("Current list of names:");
-  for (const { name } of await client.names.read.query()) {
+  for (const { name } of await client.names.find.query({
+    order: [["name", "ASC"]],
+  })) {
     console.log("- " + name);
   }
-  console.groupEnd();
 };
 
 const wsClient = createWSClient({ url: "ws://localhost:3000/" });
@@ -78,7 +80,7 @@ const client = createTRPCProxyClient<Router>({
 });
 
 const loop = async () => {
-  const count = await client.names.count.query();
+  const count = await client.names.count.query({});
   console.log("Current count of names: " + count);
 
   if (count > 0) {

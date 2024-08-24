@@ -247,7 +247,9 @@ export const createSequelizeDocumentStore = (options: Options) =>
           }),
           {},
         );
-        const model = sequelize.define(options.name, columns);
+        const model = sequelize.define(options.name, columns, {
+          timestamps: false,
+        });
 
         return {
           create: async (values) => {
