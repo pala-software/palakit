@@ -6,6 +6,7 @@
     "@pala/core": "workspace:*",
     "@trpc/server": "^10.45.2",
     "@typeschema/main": "^0.13.10",
-    "json-schema-to-typescript": "^14.0.5"
+    "json-schema-to-typescript": "^14.0.5",
+    "ws": "^8.18.0"
   }
 }
