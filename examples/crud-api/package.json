@@ -17,6 +17,7 @@
     "@pala/sequelize": "workspace:*",
     "@pala/trpc": "workspace:*",
     "@trpc/client": "^10.45.2",
+    "@types/ws": "^8.5.12",
     "@typeschema/zod": "^0.13.3",
     "sqlite3": "^5.1.7",
     "tsx": "^4.18.0",
