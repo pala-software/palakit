@@ -47,6 +47,9 @@ importers:
       '@pala/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@pala/crud':
+        specifier: workspace:*
+        version: link:../../packages/crud
       '@pala/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -61,7 +64,7 @@ importers:
         version: 10.45.2(@trpc/server@10.45.2)
       '@typeschema/zod':
         specifier: ^0.13.3
-        version: 0.13.3(@types/json-schema@7.0.15)(zod@3.23.8)
+        version: 0.13.3(@types/json-schema@7.0.15)(zod-to-json-schema@3.23.2(zod@3.23.8))(zod@3.23.8)
       sqlite3:
         specifier: ^5.1.7
         version: 5.1.7
@@ -74,15 +77,21 @@ importers:
       zod:
         specifier: ^3.23.8
         version: 3.23.8
+      zod-to-json-schema:
+        specifier: ^3.23.2
+        version: 3.23.2(zod@3.23.8)
 
   packages/api:
     dependencies:
       '@pala/core':
         specifier: workspace:*
         version: link:../core
+      '@typeschema/core':
+        specifier: ^0.14.0
+        version: 0.14.0(@types/json-schema@7.0.15)
       '@typeschema/main':
         specifier: ^0.13.10
-        version: 0.13.10(@types/json-schema@7.0.15)(@typeschema/json@0.13.3(@types/json-schema@7.0.15))(@typeschema/zod@0.13.3(@types/json-schema@7.0.15)(zod@3.23.8))
+        version: 0.13.10(@types/json-schema@7.0.15)(@typeschema/json@0.13.3(@types/json-schema@7.0.15)(ajv@8.17.1)(json-schema-to-ts@3.1.0))(@typeschema/zod@0.13.3(@types/json-schema@7.0.15)(zod-to-json-schema@3.23.2(zod@3.23.8))(zod@3.23.8))
 
   packages/core:
     dependencies:
@@ -103,13 +112,32 @@ importers:
         version: link:../db
       '@typeschema/json':
         specifier: ^0.13.3
-        version: 0.13.3(@types/json-schema@7.0.15)
+        version: 0.13.3(@types/json-schema@7.0.15)(ajv@8.17.1)(json-schema-to-ts@3.1.0)
+      '@typeschema/main':
+        specifier: ^0.13.10
+        version: 0.13.10(@types/json-schema@7.0.15)(@typeschema/json@0.13.3(@types/json-schema@7.0.15)(ajv@8.17.1)(json-schema-to-ts@3.1.0))(@typeschema/zod@0.13.3(@types/json-schema@7.0.15)(zod-to-json-schema@3.23.2(zod@3.23.8))(zod@3.23.8))
+      ajv:
+        specifier: ^8.17.1
+        version: 8.17.1
+      json-schema:
+        specifier: ^0.4.0
+        version: 0.4.0
+      json-schema-to-ts:
+        specifier: ^3.1.0
+        version: 3.1.0
+    devDependencies:
+      '@types/json-schema':
+        specifier: ^7.0.15
+        version: 7.0.15
 
   packages/db:
     dependencies:
       '@pala/core':
         specifier: workspace:*
         version: link:../core
+      '@typeschema/main':
+        specifier: ^0.13.10
+        version: 0.13.10(@types/json-schema@7.0.15)(@typeschema/json@0.13.3(@types/json-schema@7.0.15)(ajv@8.17.1)(json-schema-to-ts@3.1.0))(@typeschema/zod@0.13.3(@types/json-schema@7.0.15)(zod-to-json-schema@3.23.2(zod@3.23.8))(zod@3.23.8))
 
   packages/events:
     dependencies:
@@ -127,7 +155,7 @@ importers:
         version: link:../db
       '@typeschema/main':
         specifier: ^0.13.10
-        version: 0.13.10(@types/json-schema@7.0.15)(@typeschema/json@0.13.3(@types/json-schema@7.0.15))(@typeschema/zod@0.13.3(@types/json-schema@7.0.15)(zod@3.23.8))
+        version: 0.13.10(@types/json-schema@7.0.15)(@typeschema/json@0.13.3(@types/json-schema@7.0.15)(ajv@8.17.1)(json-schema-to-ts@3.1.0))(@typeschema/zod@0.13.3(@types/json-schema@7.0.15)(zod-to-json-schema@3.23.2(zod@3.23.8))(zod@3.23.8))
       mongoose:
         specifier: ^8.4.3
         version: 8.5.4(socks@2.8.3)
@@ -137,6 +165,9 @@ importers:
       '@pala/core':
         specifier: workspace:*
         version: link:../core
+      '@pala/events':
+        specifier: workspace:*
+        version: link:../events
       nats:
         specifier: ^2.26.0
         version: 2.28.2
@@ -151,13 +182,16 @@ importers:
         version: link:../db
       '@typeschema/main':
         specifier: ^0.13.10
-        version: 0.13.10(@types/json-schema@7.0.15)(@typeschema/json@0.13.3(@types/json-schema@7.0.15))(@typeschema/zod@0.13.3(@types/json-schema@7.0.15)(zod@3.23.8))
+        version: 0.13.10(@types/json-schema@7.0.15)(@typeschema/json@0.13.3(@types/json-schema@7.0.15)(ajv@8.17.1)(json-schema-to-ts@3.1.0))(@typeschema/zod@0.13.3(@types/json-schema@7.0.15)(zod-to-json-schema@3.23.2(zod@3.23.8))(zod@3.23.8))
       sequelize:
         specifier: ^6.37.3
         version: 6.37.3
 
   packages/trpc:
     dependencies:
+      '@pala/api':
+        specifier: workspace:*
+        version: link:../api
       '@pala/core':
         specifier: workspace:*
         version: link:../core
@@ -166,19 +200,27 @@ importers:
         version: 10.45.2
       '@typeschema/main':
         specifier: ^0.13.10
-        version: 0.13.10(@types/json-schema@7.0.15)(@typeschema/json@0.13.3(@types/json-schema@7.0.15))(@typeschema/zod@0.13.3(@types/json-schema@7.0.15)(zod@3.23.8))
+        version: 0.13.10(@types/json-schema@7.0.15)(@typeschema/json@0.13.3(@types/json-schema@7.0.15)(ajv@8.17.1)(json-schema-to-ts@3.1.0))(@typeschema/zod@0.13.3(@types/json-schema@7.0.15)(zod-to-json-schema@3.23.2(zod@3.23.8))(zod@3.23.8))
       json-schema-to-typescript:
         specifier: ^14.0.5
         version: 14.1.0
       ws:
         specifier: ^8.18.0
         version: 8.18.0
+    devDependencies:
+      '@types/ws':
+        specifier: ^8.5.12
+        version: 8.5.12
 
 packages:
 
   '@apidevtools/json-schema-ref-parser@11.7.0':
     resolution: {integrity: sha512-pRrmXMCwnmrkS3MLgAIW5dXRzeTv6GLjkjb4HmxNnvAKXN1Nfzp4KmGADBQvlVUcqi+a5D+hfGDLLnd5NnYxog==}
     engines: {node: '>= 16'}
+
+  '@babel/runtime@7.25.4':
+    resolution: {integrity: sha512-DSgLeL/FNcpXuzav5wfYvHCGvynXkJbn3Zvc3823AEe9nPwW9IK4UoCSS5yGymmQzN0pCPvivtgS6/8U2kkm1w==}
+    engines: {node: '>=6.9.0'}
 
   '@esbuild/aix-ppc64@0.23.1':
     resolution: {integrity: sha512-6VhYk1diRqrhBAqpJEdjASR/+WVRtfjpqKuNw11cLiaWpAT/Uu+nokB+UJnevzy/P9C/ty6AOe0dwueMrGh/iQ==}
@@ -441,8 +483,19 @@ packages:
   '@types/whatwg-url@11.0.5':
     resolution: {integrity: sha512-coYR071JRaHa+xoEvvYqvnIHaVqaYrLPbsufM9BF63HkwI5Lgmy2QR8Q5K/lYDYo5AK82wOvSOS0UsLTpTG7uQ==}
 
+  '@types/ws@8.5.12':
+    resolution: {integrity: sha512-3tPRkv1EtkDpzlgyKyI8pGsGZAGPEaXeu0DOj5DI25Ja91bdAYddYHbADRYVrZMRbfW+1l5YwXVDKohDJNQxkQ==}
+
   '@typeschema/core@0.13.2':
     resolution: {integrity: sha512-pAt0MK249/9szYaoPuvzhSfOd3smrLhhwCCpUNB4onX32mRx5F3lzDIveIYGQkLYRq58xOX5sjoW+n72f/MLLw==}
+    peerDependencies:
+      '@types/json-schema': ^7.0.15
+    peerDependenciesMeta:
+      '@types/json-schema':
+        optional: true
+
+  '@typeschema/core@0.14.0':
+    resolution: {integrity: sha512-Ia6PtZHcL3KqsAWXjMi5xIyZ7XMH4aSnOQes8mfMLx+wGFGtGRNlwe6Y7cYvX+WfNK67OL0/HSe9t8QDygV0/w==}
     peerDependencies:
       '@types/json-schema': ^7.0.15
     peerDependenciesMeta:
@@ -617,6 +670,9 @@ packages:
 
   ajv@6.12.6:
     resolution: {integrity: sha512-j3fVLgvTo527anyYyJOGTYJbG+vnnQYvE0m5mmkc1TK+nxAppkCLMIL0aZ4dblVCNoGShhm+kzE4ZUykBoMg4g==}
+
+  ajv@8.17.1:
+    resolution: {integrity: sha512-B/gBuNg5SiMTrPkC+A2+cW0RszwxYmn6VYxB/inlBStS5nx6xHIt/ehKRhIMhqusl7a8LjQoZnjCs5vhwxOQ1g==}
 
   ansi-escapes@7.0.0:
     resolution: {integrity: sha512-GdYO7a61mR0fOlAsvC9/rIHf7L96sBc6dEWzeOu+KAea5bZyQRPIpojrVoI4AXGJS/ycu/fBTdLrUkA4ODrvjw==}
@@ -962,6 +1018,9 @@ packages:
   fast-levenshtein@2.0.6:
     resolution: {integrity: sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==}
 
+  fast-uri@3.0.1:
+    resolution: {integrity: sha512-MWipKbbYiYI0UC7cl8m/i/IWTqfC8YXsqjzybjddLsFjStroQzsHXkc73JutMvBiXmOvapk+axIl79ig5t55Bw==}
+
   fastq@1.17.1:
     resolution: {integrity: sha512-sRVD3lWVIXWg6By68ZN7vho9a1pQcN/WBFaAAsDDFzlJjvoGx0P8z7V1t72grFJfJhu3YPZBuu25f7Kaw2jN1w==}
 
@@ -1191,6 +1250,10 @@ packages:
   json-buffer@3.0.1:
     resolution: {integrity: sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==}
 
+  json-schema-to-ts@3.1.0:
+    resolution: {integrity: sha512-UeVN/ery4/JeXI8h4rM8yZPxsH+KqPi/84qFxHfTGHZnWnK9D0UU9ZGYO+6XAaJLqCWMiks+ARuFOKAiSxJCHA==}
+    engines: {node: '>=16'}
+
   json-schema-to-typescript@14.1.0:
     resolution: {integrity: sha512-VIeAFQkn88gFh26MSHWG4uX7TjK/arTw0NVLMZn6vX1WrSF+P6xu5MyEdovu+9PJ0uiS5gm0wzwQvYW9eSq1uw==}
     engines: {node: '>=16.0.0'}
@@ -1198,6 +1261,12 @@ packages:
 
   json-schema-traverse@0.4.1:
     resolution: {integrity: sha512-xbbCH5dCYU5T8LcEhhuh7HJ88HXuW3qsI3Y0zOZFKfZEHcpWiHU/Jxzk629Brsab/mMiHQti9wMP+845RPe3Vg==}
+
+  json-schema-traverse@1.0.0:
+    resolution: {integrity: sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug==}
+
+  json-schema@0.4.0:
+    resolution: {integrity: sha512-es94M3nTIfsEPisRafak+HDLfHXnKBhV3vU5eqPcS3flIWqcxJWgXHXiey3YrpaNsanY5ei1VoYEbOzijuq9BA==}
 
   json-stable-stringify-without-jsonify@1.0.1:
     resolution: {integrity: sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==}
@@ -1648,6 +1717,13 @@ packages:
     resolution: {integrity: sha512-9u/sniCrY3D5WdsERHzHE4G2YCXqoG5FTHUiCC4SIbr6XcLZBY05ya9EKjYek9O5xOAwjGq+1JdGBAS7Q9ScoA==}
     engines: {node: '>= 6'}
 
+  regenerator-runtime@0.14.1:
+    resolution: {integrity: sha512-dYnhHh0nJoMfnkZs6GmmhFknAGRrLznOu5nc9ML+EJxGvrx6H7teuevqVqCuPcPK//3eDrrjQhehXVx9cnkGdw==}
+
+  require-from-string@2.0.2:
+    resolution: {integrity: sha512-Xf0nWe6RseziFMu+Ap9biiUbmplq6S9/p+7w7YXP/JBHhrUDDUhwa+vANyubuqfZWTveU//DYVGsDG7RKL/vEw==}
+    engines: {node: '>=0.10.0'}
+
   resolve-from@4.0.0:
     resolution: {integrity: sha512-pb/MYmXstAkysRFx8piNI1tGFNQIFA3vkE3Gq4EuA1dF6gHp/+vgZqsCGJapvy8N3Q+4o7FwvquPJcnZ7RYy4g==}
     engines: {node: '>=4'}
@@ -1869,6 +1945,9 @@ packages:
     resolution: {integrity: sha512-2lv/66T7e5yNyhAAC4NaKe5nVavzuGJQVVtRYLyQ2OI8tsJ61PMLlelehb0wi2Hx6+hT/OJUWZcw8MjlSRnxvw==}
     engines: {node: '>=14'}
 
+  ts-algebra@2.0.0:
+    resolution: {integrity: sha512-FPAhNPFMrkwz76P7cdjdmiShwMynZYN6SgOujD1urY4oNm80Ou9oMdmbR45LotcKOXoy7wSmHkRFE6Mxbrhefw==}
+
   ts-api-utils@1.3.0:
     resolution: {integrity: sha512-UQMIo7pb8WRomKR1/+MFVLTroIvDVtMX3K6OUir8ynLyzB8Jeriont2bTAtmNPa1ekAgN7YPDyf6V+ygrdU+eQ==}
     engines: {node: '>=16'}
@@ -2014,6 +2093,11 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
+  zod-to-json-schema@3.23.2:
+    resolution: {integrity: sha512-uSt90Gzc/tUfyNqxnjlfBs8W6WSGpNBv0rVsNxP/BVSMHMKGdthPYff4xtCHYloJGM0CFxFsb3NbC0eqPhfImw==}
+    peerDependencies:
+      zod: ^3.23.3
+
   zod@3.23.8:
     resolution: {integrity: sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==}
 
@@ -2024,6 +2108,10 @@ snapshots:
       '@jsdevtools/ono': 7.1.3
       '@types/json-schema': 7.0.15
       js-yaml: 4.1.0
+
+  '@babel/runtime@7.25.4':
+    dependencies:
+      regenerator-runtime: 0.14.1
 
   '@esbuild/aix-ppc64@0.23.1':
     optional: true
@@ -2218,30 +2306,42 @@ snapshots:
     dependencies:
       '@types/webidl-conversions': 7.0.3
 
+  '@types/ws@8.5.12':
+    dependencies:
+      '@types/node': 22.5.0
+
   '@typeschema/core@0.13.2(@types/json-schema@7.0.15)':
     optionalDependencies:
       '@types/json-schema': 7.0.15
 
-  '@typeschema/json@0.13.3(@types/json-schema@7.0.15)':
-    dependencies:
-      '@typeschema/core': 0.13.2(@types/json-schema@7.0.15)
-    transitivePeerDependencies:
-      - '@types/json-schema'
+  '@typeschema/core@0.14.0(@types/json-schema@7.0.15)':
+    optionalDependencies:
+      '@types/json-schema': 7.0.15
 
-  '@typeschema/main@0.13.10(@types/json-schema@7.0.15)(@typeschema/json@0.13.3(@types/json-schema@7.0.15))(@typeschema/zod@0.13.3(@types/json-schema@7.0.15)(zod@3.23.8))':
+  '@typeschema/json@0.13.3(@types/json-schema@7.0.15)(ajv@8.17.1)(json-schema-to-ts@3.1.0)':
     dependencies:
       '@typeschema/core': 0.13.2(@types/json-schema@7.0.15)
     optionalDependencies:
-      '@typeschema/json': 0.13.3(@types/json-schema@7.0.15)
-      '@typeschema/zod': 0.13.3(@types/json-schema@7.0.15)(zod@3.23.8)
+      ajv: 8.17.1
+      json-schema-to-ts: 3.1.0
     transitivePeerDependencies:
       - '@types/json-schema'
 
-  '@typeschema/zod@0.13.3(@types/json-schema@7.0.15)(zod@3.23.8)':
+  '@typeschema/main@0.13.10(@types/json-schema@7.0.15)(@typeschema/json@0.13.3(@types/json-schema@7.0.15)(ajv@8.17.1)(json-schema-to-ts@3.1.0))(@typeschema/zod@0.13.3(@types/json-schema@7.0.15)(zod-to-json-schema@3.23.2(zod@3.23.8))(zod@3.23.8))':
+    dependencies:
+      '@typeschema/core': 0.13.2(@types/json-schema@7.0.15)
+    optionalDependencies:
+      '@typeschema/json': 0.13.3(@types/json-schema@7.0.15)(ajv@8.17.1)(json-schema-to-ts@3.1.0)
+      '@typeschema/zod': 0.13.3(@types/json-schema@7.0.15)(zod-to-json-schema@3.23.2(zod@3.23.8))(zod@3.23.8)
+    transitivePeerDependencies:
+      - '@types/json-schema'
+
+  '@typeschema/zod@0.13.3(@types/json-schema@7.0.15)(zod-to-json-schema@3.23.2(zod@3.23.8))(zod@3.23.8)':
     dependencies:
       '@typeschema/core': 0.13.2(@types/json-schema@7.0.15)
     optionalDependencies:
       zod: 3.23.8
+      zod-to-json-schema: 3.23.2(zod@3.23.8)
     transitivePeerDependencies:
       - '@types/json-schema'
 
@@ -2359,6 +2459,13 @@ snapshots:
       fast-json-stable-stringify: 2.1.0
       json-schema-traverse: 0.4.1
       uri-js: 4.4.1
+
+  ajv@8.17.1:
+    dependencies:
+      fast-deep-equal: 3.1.3
+      fast-uri: 3.0.1
+      json-schema-traverse: 1.0.0
+      require-from-string: 2.0.2
 
   ansi-escapes@7.0.0:
     dependencies:
@@ -2754,6 +2861,8 @@ snapshots:
 
   fast-levenshtein@2.0.6: {}
 
+  fast-uri@3.0.1: {}
+
   fastq@1.17.1:
     dependencies:
       reusify: 1.0.4
@@ -2987,6 +3096,11 @@ snapshots:
 
   json-buffer@3.0.1: {}
 
+  json-schema-to-ts@3.1.0:
+    dependencies:
+      '@babel/runtime': 7.25.4
+      ts-algebra: 2.0.0
+
   json-schema-to-typescript@14.1.0:
     dependencies:
       '@apidevtools/json-schema-ref-parser': 11.7.0
@@ -3003,6 +3117,10 @@ snapshots:
       prettier: 3.3.3
 
   json-schema-traverse@0.4.1: {}
+
+  json-schema-traverse@1.0.0: {}
+
+  json-schema@0.4.0: {}
 
   json-stable-stringify-without-jsonify@1.0.1: {}
 
@@ -3575,6 +3693,10 @@ snapshots:
       string_decoder: 1.3.0
       util-deprecate: 1.0.2
 
+  regenerator-runtime@0.14.1: {}
+
+  require-from-string@2.0.2: {}
+
   resolve-from@4.0.0: {}
 
   resolve-pkg-maps@1.0.0: {}
@@ -3798,6 +3920,8 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
+  ts-algebra@2.0.0: {}
+
   ts-api-utils@1.3.0(typescript@5.5.4):
     dependencies:
       typescript: 5.5.4
@@ -3915,5 +4039,9 @@ snapshots:
   yaml@2.5.0: {}
 
   yocto-queue@0.1.0: {}
+
+  zod-to-json-schema@3.23.2(zod@3.23.8):
+    dependencies:
+      zod: 3.23.8
 
   zod@3.23.8: {}

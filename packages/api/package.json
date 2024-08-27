@@ -4,6 +4,7 @@
   "main": "src/index.ts",
   "dependencies": {
     "@pala/core": "workspace:*",
+    "@typeschema/core": "^0.14.0",
     "@typeschema/main": "^0.13.10"
   }
 }
