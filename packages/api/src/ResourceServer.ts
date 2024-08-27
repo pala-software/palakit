@@ -1,5 +1,5 @@
 import { Application } from "@pala/core";
-import { createPart } from "part-di";
+import { createPart } from "@pala/core";
 import {
   MutationOperation,
   MutationOperationOptions,

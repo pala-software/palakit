@@ -3,9 +3,14 @@
   "version": "0.1.0",
   "main": "src/index.ts",
   "dependencies": {
-    "@pala/core": "workspace:*",
     "@pala/api": "workspace:*",
+    "@pala/core": "workspace:*",
     "@pala/db": "workspace:*",
-    "@typeschema/json": "^0.13.3"
+    "@typeschema/json": "^0.13.3",
+    "@typeschema/main": "^0.13.10",
+    "json-schema": "^0.4.0"
+  },
+  "devDependencies": {
+    "@types/json-schema": "^7.0.15"
   }
 }
