@@ -52,9 +52,11 @@ export const CrudResourceRegistry = createPart(
         async <Fields extends Record<string, Field>>({
           name,
           fields,
+          requireAuthorization,
         }: {
           name: string | { singular: string; plural: string };
           fields: Fields;
+          requireAuthorization?: boolean;
         }) => {
           let singularName: string;
           let pluralName: string;
@@ -181,8 +183,14 @@ export const CrudResourceRegistry = createPart(
               additionalProperties: false,
               properties: {
                 data: valueSchema.schema,
+                ...(requireAuthorization && {
+                  authorization: { type: "string" },
+                }),
               },
-              required: ["data"],
+              required: [
+                "data",
+                ...(requireAuthorization ? ["authorization"] : []),
+              ],
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
           const findOptions = {
@@ -195,7 +203,11 @@ export const CrudResourceRegistry = createPart(
                 order: orderSchema.schema,
                 limit: { type: "integer", minimum: 0 },
                 offset: { type: "integer", minimum: 0 },
+                ...(requireAuthorization && {
+                  authorization: { type: "string" },
+                }),
               },
+              required: [...(requireAuthorization ? ["authorization"] : [])],
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
           const updateOptions = {
@@ -206,8 +218,15 @@ export const CrudResourceRegistry = createPart(
               properties: {
                 id: { type: "string" },
                 data: partialValueSchema.schema,
+                ...(requireAuthorization && {
+                  authorization: { type: "string" },
+                }),
               },
-              required: ["id", "data"],
+              required: [
+                "id",
+                "data",
+                ...(requireAuthorization ? ["authorization"] : []),
+              ],
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
           const deleteOptions = {
@@ -217,8 +236,14 @@ export const CrudResourceRegistry = createPart(
               additionalProperties: false,
               properties: {
                 id: { type: "string" },
+                ...(requireAuthorization && {
+                  authorization: { type: "string" },
+                }),
               },
-              required: ["id"],
+              required: [
+                "id",
+                ...(requireAuthorization ? ["authorization"] : []),
+              ],
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
           const countOptions = {
@@ -228,7 +253,11 @@ export const CrudResourceRegistry = createPart(
               additionalProperties: false,
               properties: {
                 where: filterSchema.schema,
+                ...(requireAuthorization && {
+                  authorization: { type: "string" },
+                }),
               },
+              required: [...(requireAuthorization ? ["authorization"] : [])],
             } satisfies JSONSchema7,
           } satisfies ResourceSchema;
 
@@ -292,7 +321,13 @@ export const CrudResourceRegistry = createPart(
                 input: findOptions,
                 output: listSchema,
                 handler: async ({ input }) => {
-                  const documents = await collection.find(input);
+                  const { where, order, limit, offset } = input;
+                  const documents = await collection.find({
+                    where,
+                    order,
+                    limit,
+                    offset,
+                  });
                   return {
                     response: {
                       type: "ok",
@@ -307,10 +342,11 @@ export const CrudResourceRegistry = createPart(
                 input: countOptions,
                 output: countSchema,
                 handler: async ({ input }) => {
+                  const { where } = input;
                   return {
                     response: {
                       type: "ok",
-                      data: await collection.count(input),
+                      data: await collection.count({ where }),
                     },
                   };
                 },
