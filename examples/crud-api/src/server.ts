@@ -1,10 +1,10 @@
-import { createSequelizeDocumentStore } from "@pala/sequelize";
-import { ResourceServer } from "@pala/api";
-import { createTrpcResourceServer } from "@pala/trpc";
-import { LocalRuntime, createPart, resolveApplication } from "@pala/core";
+import { createSequelizeDocumentStore } from "@palakit/sequelize";
+import { ResourceServer } from "@palakit/api";
+import { createTrpcResourceServer } from "@palakit/trpc";
+import { LocalRuntime, createPart, resolveApplication } from "@palakit/core";
 import { z } from "zod";
-import { DataType } from "@pala/db";
-import { CrudResourceRegistry } from "@pala/crud";
+import { DataType } from "@palakit/db";
+import { CrudResourceRegistry } from "@palakit/crud";
 
 const PORT = 3000;
 const SECRET = "bad secret";

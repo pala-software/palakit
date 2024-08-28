@@ -1,5 +1,5 @@
 import { EventBus } from "./EventBus";
-import { createPart, Function, Runtime, Trigger } from "@pala/core";
+import { createPart, Function, Runtime, Trigger } from "@palakit/core";
 
 export const EventRuntime = createPart(Runtime, [EventBus], ([eventBus]) => {
   const textEncoder = new TextEncoder();

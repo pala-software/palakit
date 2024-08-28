@@ -41,22 +41,22 @@ importers:
 
   examples/crud-api:
     devDependencies:
-      '@pala/api':
+      '@palakit/api':
         specifier: workspace:*
         version: link:../../packages/api
-      '@pala/core':
+      '@palakit/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@pala/crud':
+      '@palakit/crud':
         specifier: workspace:*
         version: link:../../packages/crud
-      '@pala/db':
+      '@palakit/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@pala/sequelize':
+      '@palakit/sequelize':
         specifier: workspace:*
         version: link:../../packages/sequelize
-      '@pala/trpc':
+      '@palakit/trpc':
         specifier: workspace:*
         version: link:../../packages/trpc
       '@trpc/client':
@@ -86,7 +86,7 @@ importers:
 
   packages/api:
     dependencies:
-      '@pala/core':
+      '@palakit/core':
         specifier: workspace:*
         version: link:../core
       '@typeschema/core':
@@ -104,13 +104,13 @@ importers:
 
   packages/crud:
     dependencies:
-      '@pala/api':
+      '@palakit/api':
         specifier: workspace:*
         version: link:../api
-      '@pala/core':
+      '@palakit/core':
         specifier: workspace:*
         version: link:../core
-      '@pala/db':
+      '@palakit/db':
         specifier: workspace:*
         version: link:../db
       '@typeschema/json':
@@ -135,7 +135,7 @@ importers:
 
   packages/db:
     dependencies:
-      '@pala/core':
+      '@palakit/core':
         specifier: workspace:*
         version: link:../core
       '@typeschema/main':
@@ -144,16 +144,16 @@ importers:
 
   packages/events:
     dependencies:
-      '@pala/core':
+      '@palakit/core':
         specifier: workspace:*
         version: link:../core
 
   packages/mongoose:
     dependencies:
-      '@pala/core':
+      '@palakit/core':
         specifier: workspace:*
         version: link:../core
-      '@pala/db':
+      '@palakit/db':
         specifier: workspace:*
         version: link:../db
       '@typeschema/main':
@@ -165,10 +165,10 @@ importers:
 
   packages/nats:
     dependencies:
-      '@pala/core':
+      '@palakit/core':
         specifier: workspace:*
         version: link:../core
-      '@pala/events':
+      '@palakit/events':
         specifier: workspace:*
         version: link:../events
       nats:
@@ -177,10 +177,10 @@ importers:
 
   packages/sequelize:
     dependencies:
-      '@pala/core':
+      '@palakit/core':
         specifier: workspace:*
         version: link:../core
-      '@pala/db':
+      '@palakit/db':
         specifier: workspace:*
         version: link:../db
       '@typeschema/main':
@@ -192,10 +192,10 @@ importers:
 
   packages/trpc:
     dependencies:
-      '@pala/api':
+      '@palakit/api':
         specifier: workspace:*
         version: link:../api
-      '@pala/core':
+      '@palakit/core':
         specifier: workspace:*
         version: link:../core
       '@trpc/server':

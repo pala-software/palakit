@@ -1,10 +1,10 @@
 {
-  "name": "@pala/nats",
+  "name": "@palakit/nats",
   "version": "0.1.0",
   "main": "src/index.ts",
   "dependencies": {
-    "@pala/core": "workspace:*",
-    "@pala/events": "workspace:*",
+    "@palakit/core": "workspace:*",
+    "@palakit/events": "workspace:*",
     "nats": "^2.26.0"
   }
 }

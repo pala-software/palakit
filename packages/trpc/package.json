@@ -1,10 +1,10 @@
 {
-  "name": "@pala/trpc",
+  "name": "@palakit/trpc",
   "version": "0.1.0",
   "main": "src/index.ts",
   "dependencies": {
-    "@pala/api": "workspace:*",
-    "@pala/core": "workspace:*",
+    "@palakit/api": "workspace:*",
+    "@palakit/core": "workspace:*",
     "@trpc/server": "^10.45.2",
     "@typeschema/main": "^0.13.10",
     "json-schema-to-typescript": "^14.0.5",

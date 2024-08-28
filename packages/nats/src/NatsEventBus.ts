@@ -1,5 +1,5 @@
-import { Application, createPart } from "@pala/core";
-import { EventBus } from "@pala/events";
+import { Application, createPart } from "@palakit/core";
+import { EventBus } from "@palakit/events";
 import { connect, ConnectionOptions, NatsConnection } from "nats";
 
 export const createNatsEventBus = (options: ConnectionOptions) =>

@@ -1,11 +1,11 @@
-import { Application, createPart } from "@pala/core";
+import { Application, createPart } from "@palakit/core";
 import {
   DocumentStore,
   DocumentHandle,
   Collection,
   Where,
   DataType,
-} from "@pala/db";
+} from "@palakit/db";
 import { validate } from "@typeschema/main";
 import {
   DataTypes,
