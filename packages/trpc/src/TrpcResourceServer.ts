@@ -18,7 +18,7 @@ import { observable } from "@trpc/server/observable";
 import { toJSONSchema, validate } from "@typeschema/main";
 import { writeFile } from "fs/promises";
 import { JSONSchema, compile } from "json-schema-to-typescript";
-import WebSocket from "ws";
+import { WebSocketServer } from "ws";
 
 export type Options = {
   /** Port where to host the tRPC WebSocket server. */
@@ -171,7 +171,7 @@ export const createTrpcResourceServer = (options: Options) =>
             });
           }
 
-          const wss = new WebSocket.Server({ port: options.port });
+          const wss = new WebSocketServer({ port: options.port });
           applyWSSHandler({ wss, router: t.router(routers) });
         },
 

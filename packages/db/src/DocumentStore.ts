@@ -1,5 +1,5 @@
 import { Schema } from "@typeschema/main";
-import { createPart } from "part-di";
+import { createPart } from "@pala/core";
 
 export enum DataType {
   STRING,

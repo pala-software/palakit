@@ -1,5 +1,7 @@
 import { createTRPCProxyClient, createWSClient, wsLink } from "@trpc/client";
 import Router from "../generated/trpc";
+import { connect } from "net";
+import { WebSocket } from "ws";
 
 const firstNames = [
   "Matti",
@@ -74,7 +76,34 @@ const listNames = async () => {
   }
 };
 
-const wsClient = createWSClient({ url: "ws://localhost:3000/" });
+// Wait for port to be open.
+while (true) {
+  await new Promise<void>((resolve) => setTimeout(resolve, 100));
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const socket = connect(3000, "127.0.0.1");
+      socket.on("connectionAttemptFailed", () => {
+        socket.destroy();
+        reject();
+      });
+      socket.on("connect", () => {
+        socket.destroy();
+        resolve();
+      });
+    });
+    break;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
+    // Ignore error.
+  }
+}
+
+const wsClient = createWSClient({
+  url: "ws://localhost:3000/",
+  // NOTE: I couldn't get the types to align here.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  WebSocket: WebSocket as any,
+});
 const client = createTRPCProxyClient<Router>({
   links: [wsLink({ client: wsClient })],
 });

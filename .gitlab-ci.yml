@@ -4,15 +4,19 @@ lint:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   stage: test
   image:
-    name: oven/bun:1
+    name: node:22-alpine
   cache:
     - key:
         files:
-          - bun.lockb
+          - pnpm-lock.yaml
       paths:
-        - node_modules
+        - .pnpm-store
   variables:
     HUSKY: 0
+  before_script:
+    - corepack enable
+    - corepack prepare pnpm@latest-9 --activate
+    - pnpm config set store-dir .pnpm-store
   script:
-    - bun install --frozen-lockfile
-    - bun lint
+    - pnpm install
+    - pnpm lint

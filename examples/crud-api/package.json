@@ -1,22 +1,28 @@
 {
   "name": "@pala/crud-api-example",
   "version": "0.1.0",
+  "type": "module",
   "scripts": {
-    "generate-client": "bun run scripts/generate-client.ts",
-    "start-both": "bun run scripts/start-both.ts",
-    "start-client": "bun run scripts/start-client.ts",
-    "start-server": "bun run scripts/start-server.ts",
-    "start": "bun run generate-client && bun run start-both"
+    "generate-client": "tsx scripts/generate-client.ts",
+    "start-both": "pnpm run --parallel \"/^start-(client|server)$/\"",
+    "start-client": "tsx scripts/start-client.ts",
+    "start-server": "tsx scripts/start-server.ts",
+    "start": "pnpm run generate-client && pnpm run start-both"
   },
-  "dependencies": {
+  "devDependencies": {
     "@pala/api": "workspace:*",
-    "@pala/trpc": "workspace:*",
     "@pala/core": "workspace:*",
+    "@pala/crud": "workspace:*",
     "@pala/db": "workspace:*",
     "@pala/sequelize": "workspace:*",
+    "@pala/trpc": "workspace:*",
     "@trpc/client": "^10.45.2",
+    "@types/ws": "^8.5.12",
     "@typeschema/zod": "^0.13.3",
     "sqlite3": "^5.1.7",
-    "zod": "^3.23.8"
+    "tsx": "^4.18.0",
+    "ws": "^8.17.1",
+    "zod": "^3.23.8",
+    "zod-to-json-schema": "^3.23.2"
   }
 }
