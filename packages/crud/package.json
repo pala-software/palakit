@@ -7,6 +7,8 @@
     "@pala/core": "workspace:*",
     "@pala/db": "workspace:*",
     "@typeschema/json": "^0.13.3",
+    "ajv": "^8.17.1",
+    "json-schema-to-ts": "^3.1.0",
     "@typeschema/main": "^0.13.10",
     "json-schema": "^0.4.0"
   },

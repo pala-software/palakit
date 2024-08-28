@@ -1,14 +1,18 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { Schema, AdapterResolver } from "@typeschema/main";
-import { OutputFrom } from "@typeschema/core";
+import { Schema, InferIn, Infer } from "@typeschema/main";
+import { Function } from "@pala/core";
 
-type FallbackToAny<T> = [T] extends [never] ? any : T;
-type FromResourceSchema<T extends ResourceSchema | null> =
-  T extends ResourceSchema
-    ? FallbackToAny<OutputFrom<AdapterResolver, T["schema"]>>
-    : void;
+export type ResourceSchema = {
+  schema: Schema;
+  name?: string;
+};
 
-export type Request<Input> = {
+type InputFromResourceSchema<T extends ResourceSchema | null> =
+  T extends ResourceSchema ? InferIn<T["schema"]> : void;
+type OutputFromResourceSchema<T extends ResourceSchema | null> =
+  T extends ResourceSchema ? Infer<T["schema"]> : void;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Request<Input = any> = {
   input: Input;
 };
 
@@ -41,52 +45,109 @@ export type ErrorResponse = {
 export const isErrorResponse = (value: unknown): value is ErrorResponse =>
   isBaseResponse(value) && value.response.type === "error";
 
-export type Response<Output = unknown> = OkResponse<Output> | ErrorResponse;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Response<Output = any> = OkResponse<Output> | ErrorResponse;
 
 export const isResponse = (value: unknown): value is Response =>
   isOkResponse(value) || isErrorResponse(value);
 
 export type OperationOptions<
-  InputSchema extends ResourceSchema | null,
-  OutputSchema extends ResourceSchema | null,
+  InputSchema extends ResourceSchema | null = ResourceSchema | null,
+  OutputSchema extends ResourceSchema | null = ResourceSchema | null,
 > = {
   input: InputSchema;
   output: OutputSchema;
-  handler: (
-    request: Request<FromResourceSchema<InputSchema>>,
-  ) =>
-    | Response<FromResourceSchema<OutputSchema>>
-    | Promise<Response<FromResourceSchema<OutputSchema>>>;
+  handler: (request: Request) => Response | Promise<Response>;
+};
+
+export type TypedOperationOptions<
+  InputSchema extends ResourceSchema | null = ResourceSchema | null,
+  OutputSchema extends ResourceSchema | null = ResourceSchema | null,
+> = OperationOptions<InputSchema, OutputSchema> & {
+  type: string;
 };
 
 export type Operation<
   InputSchema extends ResourceSchema | null = ResourceSchema | null,
   OutputSchema extends ResourceSchema | null = ResourceSchema | null,
-> = OperationOptions<InputSchema, OutputSchema> & { type: string };
+> = {
+  type: string;
+  input: InputSchema;
+  output: OutputSchema;
+  handler: Function<[Request], Response | Promise<Response>>;
+};
 
 export type QueryOperationOptions<
-  InputSchema extends ResourceSchema | null,
-  OutputSchema extends ResourceSchema | null,
-> = OperationOptions<InputSchema, OutputSchema>;
+  InputSchema extends ResourceSchema | null = ResourceSchema | null,
+  OutputSchema extends ResourceSchema | null = ResourceSchema | null,
+> = {
+  input: InputSchema;
+  output: OutputSchema;
+  handler: (
+    request: Request<OutputFromResourceSchema<InputSchema>>,
+  ) =>
+    | Response<InputFromResourceSchema<OutputSchema>>
+    | Promise<Response<InputFromResourceSchema<OutputSchema>>>;
+};
+
+export type TypedQueryOperationOptions<
+  InputSchema extends ResourceSchema | null = ResourceSchema | null,
+  OutputSchema extends ResourceSchema | null = ResourceSchema | null,
+> = QueryOperationOptions<InputSchema, OutputSchema> & {
+  type: "query";
+};
 
 export type QueryOperation<
   InputSchema extends ResourceSchema | null = ResourceSchema | null,
   OutputSchema extends ResourceSchema | null = ResourceSchema | null,
-> = QueryOperationOptions<InputSchema, OutputSchema> & { type: "query" };
+> = {
+  type: "query";
+  input: InputSchema;
+  output: OutputSchema;
+  handler: Function<
+    [Request<OutputFromResourceSchema<InputSchema>>],
+    | Response<InputFromResourceSchema<OutputSchema>>
+    | Promise<Response<InputFromResourceSchema<OutputSchema>>>
+  >;
+};
 
 export const isQueryOperation = (
   operation: Operation,
 ): operation is QueryOperation => operation.type === "query";
 
 export type MutationOperationOptions<
-  InputSchema extends ResourceSchema | null,
-  OutputSchema extends ResourceSchema | null,
-> = OperationOptions<InputSchema, OutputSchema>;
+  InputSchema extends ResourceSchema | null = ResourceSchema | null,
+  OutputSchema extends ResourceSchema | null = ResourceSchema | null,
+> = {
+  input: InputSchema;
+  output: OutputSchema;
+  handler: (
+    request: Request<OutputFromResourceSchema<InputSchema>>,
+  ) =>
+    | Response<InputFromResourceSchema<OutputSchema>>
+    | Promise<Response<InputFromResourceSchema<OutputSchema>>>;
+};
+
+export type TypedMutationOperationOptions<
+  InputSchema extends ResourceSchema | null = ResourceSchema | null,
+  OutputSchema extends ResourceSchema | null = ResourceSchema | null,
+> = MutationOperationOptions<InputSchema, OutputSchema> & {
+  type: "mutation";
+};
 
 export type MutationOperation<
   InputSchema extends ResourceSchema | null = ResourceSchema | null,
   OutputSchema extends ResourceSchema | null = ResourceSchema | null,
-> = MutationOperationOptions<InputSchema, OutputSchema> & { type: "mutation" };
+> = {
+  type: "mutation";
+  input: InputSchema;
+  output: OutputSchema;
+  handler: Function<
+    [Request<OutputFromResourceSchema<InputSchema>>],
+    | Response<InputFromResourceSchema<OutputSchema>>
+    | Promise<Response<InputFromResourceSchema<OutputSchema>>>
+  >;
+};
 
 export const isMutationOperation = (
   operation: Operation,
@@ -99,35 +160,71 @@ export type Observable<Output = unknown> = (observer: {
 }) => () => void;
 
 export type SubscriptionOperationOptions<
-  InputSchema extends ResourceSchema | null,
-  OutputSchema extends ResourceSchema | null,
+  InputSchema extends ResourceSchema | null = ResourceSchema | null,
+  OutputSchema extends ResourceSchema | null = ResourceSchema | null,
 > = {
   input: InputSchema | null;
   output: OutputSchema | null;
   handler: (
-    request: Request<FromResourceSchema<InputSchema>>,
+    request: Request<OutputFromResourceSchema<InputSchema>>,
   ) =>
-    | Response<Observable<FromResourceSchema<OutputSchema>>>
-    | Promise<Response<Observable<FromResourceSchema<OutputSchema>>>>;
+    | Response<Observable<OutputFromResourceSchema<OutputSchema>>>
+    | Promise<Response<Observable<OutputFromResourceSchema<OutputSchema>>>>;
 };
 
-export type SubscriptionOperation<
+export type TypedSubscriptionOperationOptions<
   InputSchema extends ResourceSchema | null = ResourceSchema | null,
   OutputSchema extends ResourceSchema | null = ResourceSchema | null,
 > = SubscriptionOperationOptions<InputSchema, OutputSchema> & {
   type: "subscription";
 };
 
+export type SubscriptionOperation<
+  InputSchema extends ResourceSchema | null = ResourceSchema | null,
+  OutputSchema extends ResourceSchema | null = ResourceSchema | null,
+> = {
+  type: "subscription";
+  input: InputSchema | null;
+  output: OutputSchema | null;
+  handler: Function<
+    [Request<OutputFromResourceSchema<InputSchema>>],
+    | Response<Observable<OutputFromResourceSchema<OutputSchema>>>
+    | Promise<Response<Observable<OutputFromResourceSchema<OutputSchema>>>>
+  >;
+};
+
 export const isSubscriptionOperation = (
   operation: Operation,
 ): operation is SubscriptionOperation => operation.type === "subscription";
 
-export type OperationRecord = {
-  create?: MutationOperation;
-  read?: QueryOperation;
-  update?: MutationOperation;
-  delete?: MutationOperation;
-  [name: string]: Operation | undefined;
+export type TypedOperationOptionRecord = Record<string, TypedOperationOptions>;
+
+export type OperationRecord = Record<string, Operation>;
+
+export type OperationRecordFromOptions<T extends TypedOperationOptionRecord> = {
+  [K in keyof T]: T[K] extends TypedQueryOperationOptions<
+    infer InputSchema,
+    infer OutputSchema
+  >
+    ? QueryOperation<InputSchema, OutputSchema>
+    : T[K] extends TypedMutationOperationOptions<
+          infer InputSchema,
+          infer OutputSchema
+        >
+      ? MutationOperation<InputSchema, OutputSchema>
+      : T[K] extends TypedSubscriptionOperationOptions<
+            infer InputSchema,
+            infer OutputSchema
+          >
+        ? SubscriptionOperation<InputSchema, OutputSchema>
+        : never;
+};
+
+export type ResourceEndpointOptions<
+  Operations extends TypedOperationOptionRecord = TypedOperationOptionRecord,
+> = {
+  name: string;
+  operations: Operations;
 };
 
 export type ResourceEndpoint<
@@ -135,11 +232,39 @@ export type ResourceEndpoint<
 > = {
   name: string;
   operations: Operations;
+  operation: {
+    before: (
+      hookName: string,
+      hook: (data: { operation: string; request: Request }) => Request,
+    ) => void;
+    after: (
+      hookName: string,
+      hook: (data: {
+        operation: string;
+        request: Request;
+        response: Response;
+      }) => Response,
+    ) => void;
+  };
 };
 
-export type ResourceSchema = {
-  schema: Schema;
-  name?: string;
+export type ResourceEndpointFromOptions<T extends ResourceEndpointOptions> = {
+  name: string;
+  operations: OperationRecordFromOptions<T["operations"]>;
+  operation: {
+    before: (
+      hookName: string,
+      hook: (data: { operation: string; request: Request }) => Request,
+    ) => void;
+    after: (
+      hookName: string,
+      hook: (data: {
+        operation: string;
+        request: Request;
+        response: Response;
+      }) => Response,
+    ) => void;
+  };
 };
 
 export type ResourceServerAdapter = {

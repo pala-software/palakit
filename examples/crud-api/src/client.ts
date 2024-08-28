@@ -3,6 +3,14 @@ import Router from "../generated/trpc";
 import { connect } from "net";
 import { WebSocket } from "ws";
 
+/**
+ * Secret that is used as a way of authentication. Both server and client knows
+ * it. I wouldn't suggest implementing this kind of authentication in production
+ * applications. For this example you can try and change the secret to see that
+ * they are required to match.
+ */
+const SECRET = "bad secret";
+
 const firstNames = [
   "Matti",
   "Timo",
@@ -34,12 +42,12 @@ const pick = <T>(array: T[]): T | undefined =>
 
 const createName = async () => {
   const name = `${pick(firstNames)} ${pick(lastNames)}`;
-  await client.names.create.mutate({ data: { name } });
+  await client.names.create.mutate({ data: { name }, authorization: SECRET });
   console.log("Created a new name: " + name);
 };
 
 const updateName = async () => {
-  const documents = await client.names.find.query({});
+  const documents = await client.names.find.query({ authorization: SECRET });
   const oldDocument = pick(documents);
   if (!oldDocument) return;
   const { name: oldName } = oldDocument;
@@ -53,16 +61,17 @@ const updateName = async () => {
     data: {
       name: newName,
     },
+    authorization: SECRET,
   });
   newName = newDocument.name;
   console.log(`Updated ${oldName} to: ${newName}`);
 };
 
 const deleteName = async () => {
-  const documents = await client.names.find.query({});
+  const documents = await client.names.find.query({ authorization: SECRET });
   const document = pick(documents);
   if (!document) return;
-  await client.names.delete.mutate({ id: document.id });
+  await client.names.delete.mutate({ id: document.id, authorization: SECRET });
   console.log("Deleted: " + document.name);
 };
 
@@ -71,6 +80,7 @@ const mutations = [createName, updateName, deleteName];
 const listNames = async () => {
   for (const { name } of await client.names.find.query({
     order: [["name", "ASC"]],
+    authorization: SECRET,
   })) {
     console.log("- " + name);
   }
@@ -109,7 +119,7 @@ const client = createTRPCProxyClient<Router>({
 });
 
 const loop = async () => {
-  const count = await client.names.count.query({});
+  const count = await client.names.count.query({ authorization: SECRET });
   console.log("Current count of names: " + count);
 
   if (count > 0) {
