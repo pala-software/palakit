@@ -1,5 +1,5 @@
 import { Application, Function, Runtime } from "@pala/core";
-import { createPart } from "part-di";
+import { createPart } from "@pala/core";
 import {
   MutationOperationOptions,
   QueryOperationOptions,

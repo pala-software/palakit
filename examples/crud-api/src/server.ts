@@ -61,7 +61,7 @@ export const app = await resolveApplication({
     ResourceServer,
     createTrpcResourceServer({
       port: PORT,
-      clientPath: __dirname + "/../generated/trpc.ts",
+      clientPath: import.meta.dirname + "/../generated/trpc.ts",
     }),
     CrudResourceRegistry,
     MyCrudApi,

@@ -1,7 +1,7 @@
 ## CRUD API Example
 
-Run by issuing following command in this directory:
+Run by issuing following command in workspace root directory:
 
 ```sh
-bun start
+pnpm --filter crud-api-example start
 ```
