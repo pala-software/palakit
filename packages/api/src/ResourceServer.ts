@@ -2,6 +2,7 @@ import { Application, Function, Runtime } from "@pala/core";
 import { createPart } from "@pala/core";
 import {
   MutationOperationOptions,
+  OperationRecord,
   QueryOperationOptions,
   Request,
   ResourceEndpoint,
@@ -99,7 +100,7 @@ export const ResourceServer = createPart(
         } as ResourceEndpointFromOptions<T>;
 
         for (const [operationName, operation] of Object.entries(
-          endpoint.operations,
+          endpoint.operations as OperationRecord,
         )) {
           operation.handler.before(
             `ResourceServer.${options.name}.operations.${operationName}.before`,
