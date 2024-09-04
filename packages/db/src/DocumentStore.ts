@@ -7,6 +7,15 @@ export enum DataType {
   INTEGER,
   FLOAT,
   BLOB,
+  ARRAY,
+  OBJECT,
+  REFERENCE,
+}
+
+export enum ReferenceType {
+  ONE_TO_ONE,
+  MANY_TO_ONE,
+  MANY_TO_MANY,
 }
 
 type BaseField = {
@@ -45,12 +54,33 @@ export type BlobField = BaseField & {
   dataType: DataType.BLOB;
 };
 
+export type ArrayField = BaseField & {
+  dataType: DataType.ARRAY;
+};
+
+export type ObjectField = BaseField & {
+  dataType: DataType.OBJECT;
+
+  fields: Record<string, Field>;
+};
+
+export type ReferenceField = BaseField & {
+  dataType: DataType.REFERENCE;
+
+  referenceType: ReferenceType;
+
+  collectionName: string;
+};
+
 export type Field =
   | StringField
   | BooleanField
   | IntegerField
   | FloatField
-  | BlobField;
+  | BlobField
+  | ArrayField
+  | ObjectField
+  | ReferenceField;
 
 export type ShapeOf<T extends Collection> =
   T extends Collection<infer Shape> ? Shape : never;

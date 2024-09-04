@@ -54,8 +54,17 @@ export const createMongooseDocumentStore = ({
                         return Boolean;
                       case DataType.BLOB:
                         return Blob;
+                      case DataType.ARRAY:
+                        return Array;
+                      case DataType.OBJECT:
+                        return Object;
+                      case DataType.REFERENCE:
+                        return String;
                     }
                   })(),
+                  ...(field.dataType === DataType.REFERENCE
+                    ? { ref: field.collectionName }
+                    : {}),
                   allowNull: field.nullable ?? true,
                   unique: field.unique ?? false,
                   validate: async (value: unknown) => {
