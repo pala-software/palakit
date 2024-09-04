@@ -127,10 +127,10 @@ export const createMongooseDocumentStore = ({
         const transformWhere = <T extends Collection>(where: Where<T>) => {
           const transformed: FilterQuery<object> = {};
           if (where.and) {
-            transformed.and = transformWhere<T>(where.and);
+            transformed.and = where.and.map((w) => transformWhere<T>(w));
           }
           if (where.or) {
-            transformed.or = transformWhere<T>(where.or);
+            transformed.or = where.or.map((w) => transformWhere<T>(w));
           }
           for (const fieldName of Object.keys(where)) {
             if (["and", "or"].includes(fieldName)) {
