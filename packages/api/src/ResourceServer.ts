@@ -1,5 +1,5 @@
-import { Application, Function, Runtime } from "@pala/core";
-import { createPart } from "@pala/core";
+import { Application, Function, Runtime } from "@palakit/core";
+import { createPart } from "@palakit/core";
 import {
   MutationOperationOptions,
   OperationRecord,

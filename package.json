@@ -1,5 +1,5 @@
 {
-  "name": "@pala/monorepo",
+  "name": "@palakit/monorepo",
   "private": true,
   "scripts": {
     "lint": "eslint .",
