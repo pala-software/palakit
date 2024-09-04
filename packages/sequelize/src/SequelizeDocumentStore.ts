@@ -1,12 +1,13 @@
 import { Application, createPart } from "@pala/core";
 import {
-  DocumentStore,
-  DocumentHandle,
   Collection,
-  Where,
   DataType,
+  DocumentHandle,
+  DocumentStore,
+  Field,
+  ReferenceType,
+  Where,
 } from "@pala/db";
-import { Field, ReferenceType } from "@pala/db/src/DocumentStore";
 import { validate } from "@typeschema/main";
 import {
   DataTypes,
