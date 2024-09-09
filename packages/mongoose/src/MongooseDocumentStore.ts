@@ -52,11 +52,14 @@ export const createMongooseDocumentStore = ({
                         return Number;
                       case DataType.BOOLEAN:
                         return Boolean;
+                      case DataType.DATE:
+                        return Date;
                       case DataType.BLOB:
                         return Blob;
                       case DataType.ARRAY:
                         return Array;
                       case DataType.OBJECT:
+                      case DataType.JSON:
                         return Object;
                       case DataType.REFERENCE:
                         return String;

@@ -6,9 +6,11 @@ export enum DataType {
   BOOLEAN,
   INTEGER,
   FLOAT,
+  DATE,
   BLOB,
   ARRAY,
   OBJECT,
+  JSON,
   REFERENCE,
 }
 
@@ -49,6 +51,10 @@ export type FloatField = BaseField & {
   size?: 32 | 64;
 };
 
+export type DateField = BaseField & {
+  dataType: DataType.DATE;
+};
+
 export type BlobField = BaseField & {
   dataType: DataType.BLOB;
 };
@@ -61,6 +67,10 @@ export type ObjectField = BaseField & {
   dataType: DataType.OBJECT;
 
   fields: Record<string, Field>;
+};
+
+export type JSONField = BaseField & {
+  dataType: DataType.JSON;
 };
 
 export type ReferenceField = BaseField & {
@@ -76,10 +86,12 @@ export type Field =
   | BooleanField
   | IntegerField
   | FloatField
+  | DateField
   | BlobField
   | ArrayField
   | ObjectField
-  | ReferenceField;
+  | ReferenceField
+  | JSONField;
 
 export type ShapeOf<T extends Collection> =
   T extends Collection<infer Shape> ? Shape : never;

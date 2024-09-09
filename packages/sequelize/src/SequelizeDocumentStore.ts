@@ -196,7 +196,10 @@ export const createSequelizeDocumentStore = (options: Options) =>
                           }
                         })(),
                       };
+                    case DataType.DATE:
+                      return { type: DataTypes.DATE };
                     case DataType.BLOB:
+                    case DataType.JSON:
                       return { type: DataTypes.BLOB };
                     case DataType.ARRAY:
                       return { type: DataTypes.ARRAY };
@@ -299,6 +302,13 @@ export const createSequelizeDocumentStore = (options: Options) =>
                           // NOTE: I don't think there's a need to validate size
                           // of floating point numbers as they usually aren't used
                           // absolute precision in mind.
+                          break;
+                        case DataType.DATE:
+                          if (!(input instanceof Date)) {
+                            throw new Error(
+                              `Field value for ${fieldName} is not a Date`,
+                            );
+                          }
                           break;
                         case DataType.BLOB:
                           if (!(input instanceof Buffer)) {
