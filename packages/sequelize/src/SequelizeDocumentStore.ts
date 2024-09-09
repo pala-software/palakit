@@ -5,7 +5,6 @@ import {
   DocumentHandle,
   DocumentStore,
   Field,
-  ReferenceType,
   Where,
 } from "@pala/db";
 import { validate } from "@typeschema/main";
@@ -104,12 +103,12 @@ export const createSequelizeDocumentStore = (options: Options) =>
     type Relation = {
       from: string | ModelCtor<Model>;
       to: string | ModelCtor<Model>;
-      type: "hasMany" | "belongsTo" | "belongsToMany";
+      type: "hasMany" | "hasOne" | "belongsTo" | "belongsToMany";
       key: string;
     };
 
     const models: ModelCtor<Model>[] = [];
-    let relations: Relation[] = [];
+    const relations: Relation[] = [];
 
     const findModel = (
       r: string | ModelCtor<Model>,
@@ -126,23 +125,21 @@ export const createSequelizeDocumentStore = (options: Options) =>
     };
 
     const createRelations = () => {
-      const leftRelations: Relation[] = [];
       for (const rel of relations) {
         const from = findModel(rel.from);
         const to = findModel(rel.to);
         if (!from || !to) {
-          leftRelations.push(rel);
           continue;
         }
         if (rel.type === "belongsTo") {
           from.belongsTo(to, { foreignKey: rel.key });
-        } else if (rel.type === "belongsToMany") {
-          from.belongsToMany(to, { through: rel.key });
+        } else if (rel.type === "hasOne") {
+          from.hasOne(to, { foreignKey: rel.key });
         } else {
           from.hasMany(to, { foreignKey: rel.key });
         }
       }
-      relations = leftRelations;
+      relations.splice(0, relations.length);
     };
 
     return {
@@ -212,47 +209,24 @@ export const createSequelizeDocumentStore = (options: Options) =>
                           timestamps: false,
                         },
                       );
-                      relations.push(
-                        {
-                          from: valueTable,
-                          to: options.name,
-                          type: "belongsTo",
-                          key: "id",
-                        },
-                        {
-                          from: options.name,
-                          to: valueTable,
-                          type: "hasMany",
-                          key: "id",
-                        },
-                      );
+                      relations.push({
+                        from: options.name,
+                        to: valueTable,
+                        type: "hasOne",
+                        key: "id",
+                      });
                       return {
                         type: DataTypes.STRING,
                         references: { key: "id", model: valueTableName },
                       };
                     }
                     case DataType.REFERENCE: {
-                      if (field.referenceType === ReferenceType.MANY_TO_MANY) {
-                        relations.push({
-                          from: options.name,
-                          to: field.collectionName,
-                          key: `link_${options.name}_${field.collectionName}`,
-                          type: "belongsToMany",
-                        });
-                        relations.push({
-                          from: field.collectionName,
-                          to: options.name,
-                          key: `link_${options.name}_${field.collectionName}`,
-                          type: "belongsToMany",
-                        });
-                      } else {
-                        relations.push({
-                          from: options.name,
-                          to: field.collectionName,
-                          key: fieldName,
-                          type: "belongsTo",
-                        });
-                      }
+                      relations.push({
+                        from: options.name,
+                        to: field.collectionName,
+                        key: fieldName,
+                        type: "belongsTo",
+                      });
                       return {
                         type: DataTypes.STRING,
                         references: { key: "id", model: field.collectionName },

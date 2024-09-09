@@ -15,7 +15,6 @@ export enum DataType {
 export enum ReferenceType {
   ONE_TO_ONE,
   MANY_TO_ONE,
-  MANY_TO_MANY,
 }
 
 type BaseField = {
