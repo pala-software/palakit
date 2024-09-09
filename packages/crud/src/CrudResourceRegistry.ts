@@ -53,10 +53,24 @@ export const CrudResourceRegistry = createPart(
           name,
           fields,
           requireAuthorization,
+          endpoints = {
+            create: true,
+            update: true,
+            find: true,
+            delete: true,
+            count: true,
+          },
         }: {
           name: string | { singular: string; plural: string };
           fields: Fields;
           requireAuthorization?: boolean;
+          endpoints?: {
+            create?: boolean;
+            update?: boolean;
+            find?: boolean;
+            delete?: boolean;
+            count?: boolean;
+          };
         }) => {
           let singularName: string;
           let pluralName: string;
@@ -265,92 +279,116 @@ export const CrudResourceRegistry = createPart(
           const endpoint = server.createEndpoint({
             name: pluralName,
             operations: {
-              create: server.createMutation({
-                input: createOptions,
-                output: documentSchema,
-                handler: async ({ input }) => {
-                  const document = await collection.create(input.data);
-                  return {
-                    response: {
-                      type: "ok",
-                      data: await document.get(),
-                    },
-                  };
-                },
-              }),
-              update: server.createMutation({
-                input: updateOptions,
-                output: documentSchema,
-                handler: async ({ input }) => {
-                  const [document] = await collection.find({
-                    where: { id: { equals: input.id } },
-                    limit: 1,
-                  });
-                  if (!document) {
-                    return { response: { type: "error", data: "Not found" } };
+              ...(endpoints?.create
+                ? {
+                    create: server.createMutation({
+                      input: createOptions,
+                      output: documentSchema,
+                      handler: async ({ input }) => {
+                        const document = await collection.create(input.data);
+                        return {
+                          response: {
+                            type: "ok",
+                            data: await document.get(),
+                          },
+                        };
+                      },
+                    }),
                   }
-                  await document.update(input.data);
-                  return {
-                    response: {
-                      type: "ok",
-                      data: await document.get(),
-                    },
-                  };
-                },
-              }),
-              delete: server.createMutation({
-                input: deleteOptions,
-                output: null,
-                handler: async ({ input }) => {
-                  const [document] = await collection.find({
-                    where: { id: { equals: input.id } },
-                    limit: 1,
-                  });
-                  if (!document) {
-                    return { response: { type: "error", data: "Not found" } };
+                : {}),
+              ...(endpoints?.update
+                ? {
+                    update: server.createMutation({
+                      input: updateOptions,
+                      output: documentSchema,
+                      handler: async ({ input }) => {
+                        const [document] = await collection.find({
+                          where: { id: { equals: input.id } },
+                          limit: 1,
+                        });
+                        if (!document) {
+                          return {
+                            response: { type: "error", data: "Not found" },
+                          };
+                        }
+                        await document.update(input.data);
+                        return {
+                          response: {
+                            type: "ok",
+                            data: await document.get(),
+                          },
+                        };
+                      },
+                    }),
                   }
-                  await document.delete();
-                  return {
-                    response: {
-                      type: "ok",
-                    },
-                  };
-                },
-              }),
-              find: server.createQuery({
-                input: findOptions,
-                output: listSchema,
-                handler: async ({ input }) => {
-                  const { where, order, limit, offset } = input;
-                  const documents = await collection.find({
-                    where,
-                    order,
-                    limit,
-                    offset,
-                  });
-                  return {
-                    response: {
-                      type: "ok",
-                      data: await Promise.all(
-                        documents.map((document) => document.get()),
-                      ),
-                    },
-                  };
-                },
-              }),
-              count: server.createQuery({
-                input: countOptions,
-                output: countSchema,
-                handler: async ({ input }) => {
-                  const { where } = input;
-                  return {
-                    response: {
-                      type: "ok",
-                      data: await collection.count({ where }),
-                    },
-                  };
-                },
-              }),
+                : {}),
+              ...(endpoints.delete
+                ? {
+                    delete: server.createMutation({
+                      input: deleteOptions,
+                      output: null,
+                      handler: async ({ input }) => {
+                        const [document] = await collection.find({
+                          where: { id: { equals: input.id } },
+                          limit: 1,
+                        });
+                        if (!document) {
+                          return {
+                            response: { type: "error", data: "Not found" },
+                          };
+                        }
+                        await document.delete();
+                        return {
+                          response: {
+                            type: "ok",
+                          },
+                        };
+                      },
+                    }),
+                  }
+                : {}),
+              ...(endpoints.find
+                ? {
+                    find: server.createQuery({
+                      input: findOptions,
+                      output: listSchema,
+                      handler: async ({ input }) => {
+                        const { where, order, limit, offset } = input;
+                        const documents = await collection.find({
+                          where,
+                          order,
+                          limit,
+                          offset,
+                        });
+                        return {
+                          response: {
+                            type: "ok",
+                            data: await Promise.all(
+                              documents.map((document) => document.get()),
+                            ),
+                          },
+                        };
+                      },
+                    }),
+                  }
+                : {}),
+              ...(endpoints.count
+                ? {
+                    count: server.createQuery({
+                      input: countOptions,
+                      output: countSchema,
+                      handler: async ({ input }) => {
+                        const { where } = input;
+                        return {
+                          response: {
+                            type: "ok",
+                            data: await collection.count({ where }),
+                          },
+                        };
+                      },
+                    }),
+                  }
+                : {}),
             },
           });
 
