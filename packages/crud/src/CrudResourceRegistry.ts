@@ -1,4 +1,10 @@
-import { ResourceSchema, ResourceServer } from "@pala/api";
+import {
+  ResourceSchema,
+  ResourceServer,
+  TypedQueryOperationOptions,
+  TypedMutationOperationOptions,
+  TypedSubscriptionOperationOptions,
+} from "@pala/api";
 import { createPart, Runtime } from "@pala/core";
 import { DataType, DocumentStore, Field } from "@pala/db";
 import { toJSONSchema } from "@typeschema/main";
@@ -60,6 +66,7 @@ export const CrudResourceRegistry = createPart(
             delete: true,
             count: true,
           },
+          extraEndpoints = [],
         }: {
           name: string | { singular: string; plural: string };
           fields: Fields;
@@ -76,6 +83,11 @@ export const CrudResourceRegistry = createPart(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             count?: boolean | ((o: any) => Promise<any>);
           };
+          extraEndpoints: (
+            | TypedQueryOperationOptions
+            | TypedMutationOperationOptions
+            | TypedSubscriptionOperationOptions
+          )[];
         }) => {
           let singularName: string;
           let pluralName: string;
@@ -423,6 +435,7 @@ export const CrudResourceRegistry = createPart(
           return {
             collection,
             endpoint,
+            ...extraEndpoints,
           };
         },
       ),
