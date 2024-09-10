@@ -1,6 +1,10 @@
 import {
+  OutputFromResourceSchema,
+  InputFromResourceSchema,
   ResourceSchema,
   ResourceServer,
+  Request,
+  Response,
   TypedQueryOperationOptions,
   TypedMutationOperationOptions,
   TypedSubscriptionOperationOptions,
@@ -48,6 +52,38 @@ const schemaFromField = async (field: Field): Promise<NullableJsonSchema> => {
   }
 };
 
+type FieldSchema<Fields extends Record<string, Field>> = Record<
+  keyof Fields,
+  NullableJsonSchema
+>;
+
+type FieldSchemaWithId<Fields extends Record<string, Field>> = Record<
+  keyof Fields | "id",
+  NullableJsonSchema
+>;
+
+type DocumentSchema<T extends FieldSchema<Record<string, Field>>> = {
+  name: string;
+  schema: {
+    type: "object";
+    additionalProperties: false;
+    properties: T;
+    required: (keyof T)[];
+  };
+};
+
+type CreateOptions<T extends Record<string, Field>> = {
+  name: string;
+  schema: {
+    type: "object";
+    additionalProperties: false;
+    properties: {
+      data: DocumentSchema<FieldSchema<T>>["schema"];
+    };
+    required: string[];
+  };
+};
+
 export const CrudResourceRegistry = createPart(
   "CrudResourceRegistry",
   [Runtime, DocumentStore, ResourceServer],
@@ -72,8 +108,13 @@ export const CrudResourceRegistry = createPart(
           fields: Fields;
           requireAuthorization?: boolean;
           endpoints?: {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            create?: boolean | ((o: any) => Promise<any>);
+            create?:
+              | boolean
+              | ((
+                  o: Request<OutputFromResourceSchema<CreateOptions<Fields>>>,
+                ) => Promise<
+                  Response<InputFromResourceSchema<DocumentSchema<Fields>>>
+                >);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             update?: boolean | ((o: any) => Promise<any>);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -106,8 +147,8 @@ export const CrudResourceRegistry = createPart(
                 schemaFromField(field).then((schema) => [key, schema]),
               ),
             ),
-          ) as Record<string, NullableJsonSchema>;
-          const fieldSchemasWithId: Record<string, NullableJsonSchema> = {
+          ) as FieldSchema<Fields>;
+          const fieldSchemasWithId: FieldSchemaWithId<Fields> = {
             ...fieldSchemas,
             id: { type: "string", nullable: false },
           };
@@ -159,7 +200,7 @@ export const CrudResourceRegistry = createPart(
                 .filter(([, schema]) => !schema.nullable)
                 .map(([key]) => key),
             } satisfies JSONSchema7,
-          } satisfies ResourceSchema;
+          } satisfies DocumentSchema<FieldSchema<Fields>>;
           const documentSchema = {
             name: capitalize(singularName),
             schema: {
@@ -170,7 +211,7 @@ export const CrudResourceRegistry = createPart(
                 .filter(([, schema]) => !schema.nullable)
                 .map(([key]) => key),
             } satisfies JSONSchema7,
-          } satisfies ResourceSchema;
+          } satisfies DocumentSchema<FieldSchemaWithId<Fields>>;
           const partialValueSchema = {
             name: "Partial" + capitalize(singularName) + "Value",
             schema: {
@@ -224,7 +265,7 @@ export const CrudResourceRegistry = createPart(
                 ...(requireAuthorization ? ["authorization"] : []),
               ],
             } satisfies JSONSchema7,
-          } satisfies ResourceSchema;
+          } satisfies CreateOptions<Fields>;
           const findOptions = {
             name: capitalize(singularName) + "FindOptions",
             schema: {
