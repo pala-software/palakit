@@ -66,7 +66,7 @@ export const CrudResourceRegistry = createPart(
             delete: true,
             count: true,
           },
-          extraEndpoints = [],
+          extraOperations = {},
         }: {
           name: string | { singular: string; plural: string };
           fields: Fields;
@@ -83,11 +83,12 @@ export const CrudResourceRegistry = createPart(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             count?: boolean | ((o: any) => Promise<any>);
           };
-          extraEndpoints: (
+          extraOperations?: Record<
+            string,
             | TypedQueryOperationOptions
             | TypedMutationOperationOptions
             | TypedSubscriptionOperationOptions
-          )[];
+          >;
         }) => {
           let singularName: string;
           let pluralName: string;
@@ -429,13 +430,13 @@ export const CrudResourceRegistry = createPart(
                     }),
                   }
                 : {}),
+              ...extraOperations,
             },
           });
 
           return {
             collection,
             endpoint,
-            ...extraEndpoints,
           };
         },
       ),
