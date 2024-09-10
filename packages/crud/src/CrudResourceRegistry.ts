@@ -65,11 +65,16 @@ export const CrudResourceRegistry = createPart(
           fields: Fields;
           requireAuthorization?: boolean;
           endpoints?: {
-            create?: boolean;
-            update?: boolean;
-            find?: boolean;
-            delete?: boolean;
-            count?: boolean;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            create?: boolean | ((o: any) => Promise<any>);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            update?: boolean | ((o: any) => Promise<any>);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            find?: boolean | ((o: any) => Promise<any>);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            delete?: boolean | ((o: any) => Promise<any>);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            count?: boolean | ((o: any) => Promise<any>);
           };
         }) => {
           let singularName: string;
@@ -284,15 +289,20 @@ export const CrudResourceRegistry = createPart(
                     create: server.createMutation({
                       input: createOptions,
                       output: documentSchema,
-                      handler: async ({ input }) => {
-                        const document = await collection.create(input.data);
-                        return {
-                          response: {
-                            type: "ok",
-                            data: await document.get(),
-                          },
-                        };
-                      },
+                      handler:
+                        typeof endpoints.create === "function"
+                          ? endpoints.create
+                          : async ({ input }) => {
+                              const document = await collection.create(
+                                input.data,
+                              );
+                              return {
+                                response: {
+                                  type: "ok",
+                                  data: await document.get(),
+                                },
+                              };
+                            },
                     }),
                   }
                 : {}),
@@ -301,24 +311,30 @@ export const CrudResourceRegistry = createPart(
                     update: server.createMutation({
                       input: updateOptions,
                       output: documentSchema,
-                      handler: async ({ input }) => {
-                        const [document] = await collection.find({
-                          where: { id: { equals: input.id } },
-                          limit: 1,
-                        });
-                        if (!document) {
-                          return {
-                            response: { type: "error", data: "Not found" },
-                          };
-                        }
-                        await document.update(input.data);
-                        return {
-                          response: {
-                            type: "ok",
-                            data: await document.get(),
-                          },
-                        };
-                      },
+                      handler:
+                        typeof endpoints.update === "function"
+                          ? endpoints.update
+                          : async ({ input }) => {
+                              const [document] = await collection.find({
+                                where: { id: { equals: input.id } },
+                                limit: 1,
+                              });
+                              if (!document) {
+                                return {
+                                  response: {
+                                    type: "error",
+                                    data: "Not found",
+                                  },
+                                };
+                              }
+                              await document.update(input.data);
+                              return {
+                                response: {
+                                  type: "ok",
+                                  data: await document.get(),
+                                },
+                              };
+                            },
                     }),
                   }
                 : {}),
@@ -327,23 +343,29 @@ export const CrudResourceRegistry = createPart(
                     delete: server.createMutation({
                       input: deleteOptions,
                       output: null,
-                      handler: async ({ input }) => {
-                        const [document] = await collection.find({
-                          where: { id: { equals: input.id } },
-                          limit: 1,
-                        });
-                        if (!document) {
-                          return {
-                            response: { type: "error", data: "Not found" },
-                          };
-                        }
-                        await document.delete();
-                        return {
-                          response: {
-                            type: "ok",
-                          },
-                        };
-                      },
+                      handler:
+                        typeof endpoints.delete === "function"
+                          ? endpoints.delete
+                          : async ({ input }) => {
+                              const [document] = await collection.find({
+                                where: { id: { equals: input.id } },
+                                limit: 1,
+                              });
+                              if (!document) {
+                                return {
+                                  response: {
+                                    type: "error",
+                                    data: "Not found",
+                                  },
+                                };
+                              }
+                              await document.delete();
+                              return {
+                                response: {
+                                  type: "ok",
+                                },
+                              };
+                            },
                     }),
                   }
                 : {}),
@@ -352,23 +374,26 @@ export const CrudResourceRegistry = createPart(
                     find: server.createQuery({
                       input: findOptions,
                       output: listSchema,
-                      handler: async ({ input }) => {
-                        const { where, order, limit, offset } = input;
-                        const documents = await collection.find({
-                          where,
-                          order,
-                          limit,
-                          offset,
-                        });
-                        return {
-                          response: {
-                            type: "ok",
-                            data: await Promise.all(
-                              documents.map((document) => document.get()),
-                            ),
-                          },
-                        };
-                      },
+                      handler:
+                        typeof endpoints.find === "function"
+                          ? endpoints.find
+                          : async ({ input }) => {
+                              const { where, order, limit, offset } = input;
+                              const documents = await collection.find({
+                                where,
+                                order,
+                                limit,
+                                offset,
+                              });
+                              return {
+                                response: {
+                                  type: "ok",
+                                  data: await Promise.all(
+                                    documents.map((document) => document.get()),
+                                  ),
+                                },
+                              };
+                            },
                     }),
                   }
                 : {}),
@@ -377,15 +402,18 @@ export const CrudResourceRegistry = createPart(
                     count: server.createQuery({
                       input: countOptions,
                       output: countSchema,
-                      handler: async ({ input }) => {
-                        const { where } = input;
-                        return {
-                          response: {
-                            type: "ok",
-                            data: await collection.count({ where }),
-                          },
-                        };
-                      },
+                      handler:
+                        typeof endpoints.count === "function"
+                          ? endpoints.count
+                          : async ({ input }) => {
+                              const { where } = input;
+                              return {
+                                response: {
+                                  type: "ok",
+                                  data: await collection.count({ where }),
+                                },
+                              };
+                            },
                     }),
                   }
                 : {}),
