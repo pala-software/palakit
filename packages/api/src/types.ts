@@ -6,9 +6,9 @@ export type ResourceSchema = {
   name?: string;
 };
 
-type InputFromResourceSchema<T extends ResourceSchema | null> =
+export type InputFromResourceSchema<T extends ResourceSchema | null> =
   T extends ResourceSchema ? InferIn<T["schema"]> : void;
-type OutputFromResourceSchema<T extends ResourceSchema | null> =
+export type OutputFromResourceSchema<T extends ResourceSchema | null> =
   T extends ResourceSchema ? Infer<T["schema"]> : void;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
