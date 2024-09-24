@@ -9,9 +9,9 @@ import {
   isMutationOperation,
   isQueryOperation,
   isSubscriptionOperation,
-} from "@pala/api";
-import { ResourceSchema } from "@pala/api";
-import { createPart } from "@pala/core";
+} from "@palakit/api";
+import { ResourceSchema } from "@palakit/api";
+import { createPart } from "@palakit/core";
 import { AnyRouter, initTRPC } from "@trpc/server";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { observable } from "@trpc/server/observable";
@@ -216,7 +216,7 @@ export const createTrpcResourceServer = (options: Options) =>
             typeAliases[target].set(operation, typeName);
           };
 
-          let contents = `import { BuildProcedure, BuildRouter } from "@pala/trpc";\n`;
+          let contents = `import { BuildProcedure, BuildRouter } from "@palakit/trpc";\n`;
           contents += `\n`;
           for (const { name: endpointName, operations } of endpoints) {
             for (const [name, operation] of Object.entries(operations)) {

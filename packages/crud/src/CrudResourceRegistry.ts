@@ -1,6 +1,6 @@
-import { ResourceSchema, ResourceServer } from "@pala/api";
-import { createPart, Runtime } from "@pala/core";
-import { DataType, DocumentStore, Field } from "@pala/db";
+import { ResourceSchema, ResourceServer } from "@palakit/api";
+import { createPart, Runtime } from "@palakit/core";
+import { DataType, DocumentStore, Field } from "@palakit/db";
 import { toJSONSchema } from "@typeschema/main";
 import { JSONSchema7 } from "json-schema";
 
