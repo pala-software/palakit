@@ -1,5 +1,5 @@
 {
-  "name": "@pala/oidc-auth-example",
+  "name": "@palakit/oidc-auth-example",
   "version": "0.1.0",
   "type": "module",
   "scripts": {
@@ -9,13 +9,13 @@
     "start": "pnpm run --filter . --parallel \"/^(generate|start)-(client|server)$/\""
   },
   "dependencies": {
-    "@pala/api": "workspace:*",
-    "@pala/core": "workspace:*",
-    "@pala/crud": "workspace:*",
-    "@pala/oidc-client": "workspace:*",
-    "@pala/oidc-idp": "workspace:*",
-    "@pala/sequelize": "workspace:*",
-    "@pala/trpc": "workspace:*",
+    "@palakit/api": "workspace:*",
+    "@palakit/core": "workspace:*",
+    "@palakit/crud": "workspace:*",
+    "@palakit/oidc-client": "workspace:*",
+    "@palakit/oidc-idp": "workspace:*",
+    "@palakit/sequelize": "workspace:*",
+    "@palakit/trpc": "workspace:*",
     "@trpc/client": "^10.45.2",
     "@typeschema/zod": "^0.13.3",
     "oauth4webapi": "^2.12.0",

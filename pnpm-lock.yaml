@@ -86,25 +86,25 @@ importers:
 
   examples/oidc-auth:
     dependencies:
-      '@pala/api':
+      '@palakit/api':
         specifier: workspace:*
         version: link:../../packages/api
-      '@pala/core':
+      '@palakit/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@pala/crud':
+      '@palakit/crud':
         specifier: workspace:*
         version: link:../../packages/crud
-      '@pala/oidc-client':
+      '@palakit/oidc-client':
         specifier: workspace:*
         version: link:../../packages/oidc-client
-      '@pala/oidc-idp':
+      '@palakit/oidc-idp':
         specifier: workspace:*
         version: link:../../packages/oidc-idp
-      '@pala/sequelize':
+      '@palakit/sequelize':
         specifier: workspace:*
         version: link:../../packages/sequelize
-      '@pala/trpc':
+      '@palakit/trpc':
         specifier: workspace:*
         version: link:../../packages/trpc
       '@trpc/client':
@@ -223,7 +223,7 @@ importers:
 
   packages/oidc-client:
     dependencies:
-      '@pala/core':
+      '@palakit/core':
         specifier: workspace:*
         version: link:../core
       jose:
@@ -235,7 +235,7 @@ importers:
 
   packages/oidc-idp:
     dependencies:
-      '@pala/core':
+      '@palakit/core':
         specifier: workspace:*
         version: link:../core
       oidc-provider:

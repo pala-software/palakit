@@ -1,7 +1,7 @@
-## OAuth Example
+## OpenID Connect Authentication Example
 
-Run by issuing following command in this directory:
+Run by issuing following command in workspace root directory:
 
 ```sh
-bun start
+pnpm --filter @palakit/oidc-auth-example start
 ```

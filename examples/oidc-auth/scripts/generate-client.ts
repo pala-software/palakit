@@ -1,4 +1,4 @@
-import { ResourceServer } from "@pala/api";
+import { ResourceServer } from "@palakit/api";
 import { app } from "../src/server";
 import { mkdir } from "fs/promises";
 

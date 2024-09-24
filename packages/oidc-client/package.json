@@ -1,10 +1,10 @@
 {
-  "name": "@pala/oidc-client",
+  "name": "@palakit/oidc-client",
   "version": "0.1.0",
   "type": "module",
   "main": "src/index.ts",
   "dependencies": {
-    "@pala/core": "workspace:*",
+    "@palakit/core": "workspace:*",
     "jose": "^5.7.0",
     "oauth4webapi": "^2.12.0"
   }

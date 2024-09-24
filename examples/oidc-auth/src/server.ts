@@ -1,12 +1,12 @@
-import { createSequelizeDocumentStore } from "@pala/sequelize";
-import { ResourceServer } from "@pala/api";
-import { createTrpcResourceServer } from "@pala/trpc";
-import { LocalRuntime, createPart, resolveApplication } from "@pala/core";
+import { createSequelizeDocumentStore } from "@palakit/sequelize";
+import { ResourceServer } from "@palakit/api";
+import { createTrpcResourceServer } from "@palakit/trpc";
+import { LocalRuntime, createPart, resolveApplication } from "@palakit/core";
 import { z } from "zod";
-import { CrudResourceRegistry } from "@pala/crud";
-import { OpenIdConnectAuthenticator } from "@pala/oidc-client";
-import { OpenIdConnectIdentityProvider } from "@pala/oidc-idp";
-import { IdentityProvider } from "@pala/oidc-client";
+import { CrudResourceRegistry } from "@palakit/crud";
+import { OpenIdConnectAuthenticator } from "@palakit/oidc-client";
+import { OpenIdConnectIdentityProvider } from "@palakit/oidc-idp";
+import { IdentityProvider } from "@palakit/oidc-client";
 
 const ISSUER = new URL("http://localhost:3001");
 const PORT = 3000;

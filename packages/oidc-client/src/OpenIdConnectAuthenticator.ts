@@ -1,4 +1,4 @@
-import { createPart } from "@pala/core";
+import { createPart } from "@palakit/core";
 import {
   AuthorizationServer,
   Client,

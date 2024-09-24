@@ -1,4 +1,4 @@
-import { Application, createPart } from "@pala/core";
+import { Application, createPart } from "@palakit/core";
 import Provider from "oidc-provider";
 
 export const OpenIdConnectIdentityProvider = createPart(
