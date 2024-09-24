@@ -1,18 +1,21 @@
 {
   "name": "@pala/oidc-auth-example",
   "version": "0.1.0",
+  "type": "module",
   "scripts": {
-    "start-server": "bun run scripts/start-server.ts",
-    "generate-client": "bun run scripts/generate-client.ts",
-    "build-client": "bun build src/client.ts --outfile=site/build/client.js",
-    "serve-client": "http-server -c-1 site/",
-    "start": "bun run scripts/start.ts"
+    "generate-client": "tsx watch scripts/generate-client.ts",
+    "start-client": "vite",
+    "start-server": "tsx watch scripts/start-server.ts",
+    "start": "pnpm run --filter . --parallel \"/^(generate|start)-(client|server)$/\""
   },
   "dependencies": {
     "@pala/api": "workspace:*",
-    "@pala/trpc": "workspace:*",
     "@pala/core": "workspace:*",
+    "@pala/crud": "workspace:*",
     "@pala/oidc-client": "workspace:*",
+    "@pala/oidc-idp": "workspace:*",
+    "@pala/sequelize": "workspace:*",
+    "@pala/trpc": "workspace:*",
     "@trpc/client": "^10.45.2",
     "@typeschema/zod": "^0.13.3",
     "oauth4webapi": "^2.12.0",
@@ -20,6 +23,7 @@
     "zod-to-json-schema": "^3.23.2"
   },
   "devDependencies": {
-    "http-server": "^14.1.1"
+    "tsx": "^4.18.0",
+    "vite": "^5.4.2"
   }
 }

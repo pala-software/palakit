@@ -1,0 +1,13 @@
+{
+  "name": "@pala/oidc-idp",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@pala/core": "workspace:*",
+    "oidc-provider": "^8.5.1"
+  },
+  "devDependencies": {
+    "@types/oidc-provider": "^8.5.2"
+  }
+}

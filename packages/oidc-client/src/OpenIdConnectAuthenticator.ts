@@ -3,12 +3,12 @@ import {
   AuthorizationServer,
   Client,
   discoveryRequest,
+  introspectionRequest,
+  IntrospectionResponse,
+  isOAuth2Error,
   processDiscoveryResponse,
-  processUserInfoResponse,
-  skipSubjectCheck,
-  userInfoRequest,
+  processIntrospectionResponse,
 } from "oauth4webapi";
-import { createRemoteJWKSet, jwtVerify } from "jose";
 
 export type IdentityProvider = {
   client: Client;
@@ -47,39 +47,21 @@ export const OpenIdConnectAuthenticator = createPart(
 
         /** Access token from a client. */
         accessToken: string;
-      }) => {
-        if (!idp.server.jwks_uri) {
-          throw new Error("Authorization server does not provide JWKS key set");
-        }
-        const jwks = createRemoteJWKSet(new URL(idp.server.jwks_uri));
-        await jwtVerify(accessToken, jwks, {
-          issuer: idp.server.issuer,
-          audience: idp.client.client_id,
-        });
-      },
-
-      getUserInfo: async ({
-        idp,
-        accessToken,
-      }: {
-        idp: IdentityProvider;
-
-        /** Access token from a client. */
-        accessToken: string;
-      }) => {
-        const userInfo = await userInfoRequest(
+      }): Promise<IntrospectionResponse> => {
+        const introspection = await introspectionRequest(
           idp.server,
           idp.client,
           accessToken,
         ).then((response) =>
-          processUserInfoResponse(
-            idp.server,
-            idp.client,
-            skipSubjectCheck,
-            response,
-          ),
+          processIntrospectionResponse(idp.server, idp.client, response),
         );
-        return userInfo;
+        if (isOAuth2Error(introspection)) {
+          throw new Error(introspection.error);
+        }
+        if (!introspection.active) {
+          throw new Error("Invalid token");
+        }
+        return introspection;
       },
     };
   },

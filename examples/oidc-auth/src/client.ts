@@ -1,5 +1,5 @@
 import { createTRPCProxyClient, createWSClient, wsLink } from "@trpc/client";
-import Router from "../generated/trpc";
+import Router from "../build/trpc";
 import {
   generateRandomCodeVerifier,
   calculatePKCECodeChallenge,
@@ -60,7 +60,6 @@ if (!query.has("code")) {
   if (isOAuth2Error(params)) {
     throw new Error(params.error);
   }
-  // location.replace(location.pathname);
 
   const result = await authorizationCodeGrantRequest(
     as,

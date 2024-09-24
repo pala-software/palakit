@@ -1,5 +1,5 @@
 import { createTRPCProxyClient, createWSClient, wsLink } from "@trpc/client";
-import Router from "../generated/trpc";
+import Router from "../build/trpc";
 import { connect } from "net";
 import { WebSocket } from "ws";
 

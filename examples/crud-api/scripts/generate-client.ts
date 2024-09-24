@@ -3,7 +3,7 @@ import { app } from "../src/server";
 import { mkdir } from "fs/promises";
 
 // Ensure that target directory exists.
-await mkdir(import.meta.dirname + "/../generated", { recursive: true });
+await mkdir(import.meta.dirname + "/../build", { recursive: true });
 
 const server = app.resolve(ResourceServer);
 await server.generateClients();
