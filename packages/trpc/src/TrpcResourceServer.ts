@@ -4,14 +4,15 @@ import {
   Operation,
   QueryOperation,
   ResourceEndpoint,
+  ResourceSchema,
   ResourceServer,
   SubscriptionOperation,
   isMutationOperation,
   isQueryOperation,
   isSubscriptionOperation,
 } from "@palakit/api";
-import { ResourceSchema } from "@palakit/api";
 import { createPart } from "@palakit/core";
+import { Logger } from "@palakit/core/src/Logger";
 import { AnyRouter, initTRPC } from "@trpc/server";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { observable } from "@trpc/server/observable";
@@ -29,9 +30,10 @@ export type Options = {
 };
 
 export const createTrpcResourceServer = (options: Options) =>
-  createPart("TrpcServer", [ResourceServer], ([server]) => {
+  createPart("TrpcServer", [ResourceServer, Logger], ([server, lg]) => {
     const t = initTRPC.create();
     const endpoints: ResourceEndpoint[] = [];
+    const logger = lg.createLogger("TrpcServer");
 
     const executeOperation = async ({
       operation,
@@ -42,6 +44,7 @@ export const createTrpcResourceServer = (options: Options) =>
     }): Promise<unknown> => {
       const { response } = await operation.handler({ input });
       if (response.type === "error") {
+        logger.error(response.data);
         throw response.data;
       } else {
         return response.data;
@@ -54,6 +57,7 @@ export const createTrpcResourceServer = (options: Options) =>
           if (value === undefined) {
             return undefined;
           } else {
+            logger.error("Validation failed, expected nothing");
             throw new Error("Validation failed, expected nothing");
           }
         }
@@ -62,16 +66,17 @@ export const createTrpcResourceServer = (options: Options) =>
         if (result.success) {
           return value;
         } else {
-          throw new Error(
+          const msg =
             "Validation failed with following issues: \n" +
-              result.issues
-                .map(
-                  ({ message, path }) =>
-                    ` - ${message}` +
-                    (path?.length ? ` (at ${path.join(".")})` : ""),
-                )
-                .join("\n"),
-          );
+            result.issues
+              .map(
+                ({ message, path }) =>
+                  ` - ${message}` +
+                  (path?.length ? ` (at ${path.join(".")})` : ""),
+              )
+              .join("\n");
+          logger.error(msg);
+          throw new Error(msg);
         }
       };
     const createQuery = (operation: QueryOperation) =>
@@ -107,9 +112,8 @@ export const createTrpcResourceServer = (options: Options) =>
                 try {
                   await validate(value);
                   next(value);
-                  // TODO: Log error in server log.
-                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 } catch (err) {
+                  logger.error(err);
                   error("Output validation failed");
                 }
               },
@@ -124,6 +128,7 @@ export const createTrpcResourceServer = (options: Options) =>
       if (isMutationOperation(operation)) return createMutation(operation);
       if (isSubscriptionOperation(operation))
         return createSubscription(operation);
+      logger.error("Invalid operation type encountered");
       throw new Error("Invalid operation type encountered");
     };
 
@@ -136,9 +141,9 @@ export const createTrpcResourceServer = (options: Options) =>
         )
         .join("");
       if (typeName.length < 1) {
-        throw new Error(
-          `Type name ${parts.join(",")} is converted to empty string which is not valid TypeScript type name`,
-        );
+        const msg = `Type name ${parts.join(",")} is converted to empty string which is not valid TypeScript type name`;
+        logger.error(msg);
+        throw new Error(msg);
       }
       return typeName;
     };
@@ -177,9 +182,10 @@ export const createTrpcResourceServer = (options: Options) =>
 
         generateClient: async () => {
           if (!options.clientPath) {
-            throw new Error(
-              "Cannot generate client, because option 'clientPath' was not provided.",
-            );
+            const msg =
+              "Cannot generate client, because option 'clientPath' was not provided.";
+            logger.error(msg);
+            throw new Error(msg);
           }
 
           const generatedTypes: string[] = [];
@@ -235,6 +241,7 @@ export const createTrpcResourceServer = (options: Options) =>
 
               const { type } = operation;
               if (!["query", "mutation", "subscription"].includes(type)) {
+                logger.error("Invalid operation type encountered");
                 throw new Error("Invalid operation type encountered");
               }
 
