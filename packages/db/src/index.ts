@@ -1,6 +1,5 @@
-export { DataType, DocumentStore, ReferenceType } from "./DocumentStore";
+export { DataType, DocumentStore } from "./DocumentStore";
 export type {
-  ArrayField,
   BlobField,
   BooleanField,
   Collection,
@@ -9,10 +8,11 @@ export type {
   Field,
   FloatField,
   IntegerField,
-  ObjectField,
   ReferenceField,
   ShapeOf,
   SortingRule,
   StringField,
   Where,
+  DateField,
+  Shape,
 } from "./DocumentStore";
