@@ -5,6 +5,8 @@ import { LocalRuntime, createPart, resolveApplication } from "@palakit/core";
 import { z } from "zod";
 import { DataType } from "@palakit/db";
 import { CrudResourceRegistry } from "@palakit/crud";
+import { createPinoLogger } from "@palakit/core/src/PinoLogger";
+import pino from "pino";
 
 const PORT = 3000;
 const SECRET = "bad secret";
@@ -42,7 +44,7 @@ const MyCrudApi = createPart(
 
     return {
       serverStarted: server.start.after("MyCrudApi.serverStarted", () => {
-        console.log(`Server running is running on port ${PORT}!`);
+        console.log(`Server is running on port ${PORT}!`);
       }),
       names,
     };
@@ -65,5 +67,27 @@ export const app = await resolveApplication({
     }),
     CrudResourceRegistry,
     MyCrudApi,
+    createPinoLogger(
+      pino({
+        transport: {
+          targets: [
+            {
+              target: "pino-pretty",
+              options: {
+                colorize: true,
+                translateTime: true,
+              },
+            },
+            {
+              target: "pino/file",
+              options: {
+                destination: "logs/logfile.log",
+                mkdir: true,
+              },
+            },
+          ],
+        },
+      }),
+    ),
   ],
 });
