@@ -10,6 +10,10 @@
     "start": "pnpm run generate-client && pnpm run start-both"
   },
   "devDependencies": {
+    "@types/ws": "^8.5.12",
+    "tsx": "^4.18.0"
+  },
+  "dependencies": {
     "@palakit/api": "workspace:*",
     "@palakit/core": "workspace:*",
     "@palakit/crud": "workspace:*",
@@ -17,16 +21,12 @@
     "@palakit/sequelize": "workspace:*",
     "@palakit/trpc": "workspace:*",
     "@trpc/client": "^10.45.2",
-    "@types/ws": "^8.5.12",
     "@typeschema/zod": "^0.13.3",
+    "pino": "^9.4.0",
+    "pino-pretty": "^11.2.2",
     "sqlite3": "^5.1.7",
-    "tsx": "^4.18.0",
     "ws": "^8.17.1",
     "zod": "^3.23.8",
     "zod-to-json-schema": "^3.23.2"
-  },
-  "dependencies": {
-    "pino": "^9.4.0",
-    "pino-pretty": "^11.2.2"
   }
 }

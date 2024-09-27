@@ -41,13 +41,6 @@ importers:
 
   examples/crud-api:
     dependencies:
-      pino:
-        specifier: ^9.4.0
-        version: 9.4.0
-      pino-pretty:
-        specifier: ^11.2.2
-        version: 11.2.2
-    devDependencies:
       '@palakit/api':
         specifier: workspace:*
         version: link:../../packages/api
@@ -69,18 +62,18 @@ importers:
       '@trpc/client':
         specifier: ^10.45.2
         version: 10.45.2(@trpc/server@10.45.2)
-      '@types/ws':
-        specifier: ^8.5.12
-        version: 8.5.12
       '@typeschema/zod':
         specifier: ^0.13.3
         version: 0.13.3(@types/json-schema@7.0.15)(zod-to-json-schema@3.23.2(zod@3.23.8))(zod@3.23.8)
+      pino:
+        specifier: ^9.4.0
+        version: 9.4.0
+      pino-pretty:
+        specifier: ^11.2.2
+        version: 11.2.2
       sqlite3:
         specifier: ^5.1.7
         version: 5.1.7
-      tsx:
-        specifier: ^4.18.0
-        version: 4.19.0
       ws:
         specifier: ^8.17.1
         version: 8.18.0
@@ -90,6 +83,13 @@ importers:
       zod-to-json-schema:
         specifier: ^3.23.2
         version: 3.23.2(zod@3.23.8)
+    devDependencies:
+      '@types/ws':
+        specifier: ^8.5.12
+        version: 8.5.12
+      tsx:
+        specifier: ^4.18.0
+        version: 4.19.0
 
   packages/api:
     dependencies:
