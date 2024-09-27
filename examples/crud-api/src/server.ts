@@ -69,6 +69,8 @@ export const app = await resolveApplication({
     MyCrudApi,
     createPinoLogger(
       pino({
+        base: null,
+        timestamp: pino.stdTimeFunctions.isoTime,
         transport: {
           targets: [
             {
@@ -81,7 +83,7 @@ export const app = await resolveApplication({
             {
               target: "pino/file",
               options: {
-                destination: "logs/logfile.log",
+                destination: "logs/server.log",
                 mkdir: true,
               },
             },
