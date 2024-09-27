@@ -11,8 +11,7 @@ import {
   isQueryOperation,
   isSubscriptionOperation,
 } from "@palakit/api";
-import { createPart } from "@palakit/core";
-import { Logger } from "@palakit/core/src/Logger";
+import { Logger, createPart } from "@palakit/core";
 import { AnyRouter, initTRPC } from "@trpc/server";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { observable } from "@trpc/server/observable";

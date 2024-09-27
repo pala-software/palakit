@@ -1,12 +1,16 @@
-import { createSequelizeDocumentStore } from "@palakit/sequelize";
 import { ResourceServer } from "@palakit/api";
-import { createTrpcResourceServer } from "@palakit/trpc";
-import { LocalRuntime, createPart, resolveApplication } from "@palakit/core";
-import { z } from "zod";
-import { DataType } from "@palakit/db";
+import {
+  LocalRuntime,
+  createPart,
+  createPinoLogger,
+  resolveApplication,
+} from "@palakit/core";
 import { CrudResourceRegistry } from "@palakit/crud";
-import { createPinoLogger } from "@palakit/core/src/PinoLogger";
+import { DataType } from "@palakit/db";
+import { createSequelizeDocumentStore } from "@palakit/sequelize";
+import { createTrpcResourceServer } from "@palakit/trpc";
 import pino from "pino";
+import { z } from "zod";
 
 const PORT = 3000;
 const SECRET = "bad secret";
