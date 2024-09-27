@@ -1,17 +1,17 @@
 import { createPart } from "part-di";
-import { Logger as PinoLoggerType } from "pino";
+import { Logger as PinoLogger } from "pino";
 import { Logger } from "./Logger";
 
-export const createPinoLogger = (logger: PinoLoggerType) =>
+export const createPinoLogger = (logger: PinoLogger) =>
   createPart(Logger, [], () => ({
     createLogger: (category) => {
       const childLogger = logger.child({ category });
       return {
-        debug: (...msg) => childLogger.debug(msg),
-        info: (...msg) => childLogger.info(msg),
-        warn: (...msg) => childLogger.warn(msg),
-        error: (...msg) => childLogger.error(msg),
-        fatal: (...msg) => childLogger.fatal(msg),
+        debug: (obj, msg?) => childLogger.debug(obj, msg),
+        info: (obj, msg?) => childLogger.info(obj, msg),
+        warn: (obj, msg?) => childLogger.warn(obj, msg),
+        error: (obj, msg?) => childLogger.error(obj, msg),
+        fatal: (obj, msg?) => childLogger.fatal(obj, msg),
       };
     },
   }));

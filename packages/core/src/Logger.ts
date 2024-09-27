@@ -1,13 +1,15 @@
 import { createPart } from "part-di";
 
-type LoggerType = {
+type LogFunction = (obj: unknown, msg?: string) => void;
+
+type Logger = {
   createLogger: (category: string) => {
-    debug: (...msg: unknown[]) => void;
-    info: (...msg: unknown[]) => void;
-    warn: (...msg: unknown[]) => void;
-    error: (...msg: unknown[]) => void;
-    fatal: (...msg: unknown[]) => void;
+    debug: LogFunction;
+    info: LogFunction;
+    warn: LogFunction;
+    error: LogFunction;
+    fatal: LogFunction;
   };
 };
 
-export const Logger = createPart<LoggerType>("Logger");
+export const Logger = createPart<Logger>("Logger");
