@@ -8,9 +8,6 @@ export enum DataType {
   FLOAT,
   DATE,
   BLOB,
-  ARRAY,
-  OBJECT,
-  JSON,
   REFERENCE,
 }
 
