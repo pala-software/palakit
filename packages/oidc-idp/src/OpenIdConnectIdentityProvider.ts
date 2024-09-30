@@ -1,25 +1,26 @@
-import { Application, createPart } from "@palakit/core";
-import Provider from "oidc-provider";
+import {
+  Application,
+  createConfiguration,
+  createFeature,
+  createPart,
+} from "@palakit/core";
+import Provider, { ClientMetadata } from "oidc-provider";
+
+export type OpenIdConnectIdentityProviderConfiguration = {
+  clients: ClientMetadata[];
+};
+
+export const OpenIdConnectIdentityProviderConfiguration =
+  createConfiguration<OpenIdConnectIdentityProviderConfiguration>(
+    "OpenIdConnectIdentityProviderConfiguration",
+  );
 
 export const OpenIdConnectIdentityProvider = createPart(
   "OpenIdConnectIdentityProvider",
-  [Application],
-  ([app]) => {
+  [OpenIdConnectIdentityProviderConfiguration, Application],
+  ([config, app]) => {
     const provider = new Provider("http://localhost:3001", {
-      clients: [
-        {
-          client_id: "pala-server",
-          client_secret: "bad secret",
-          redirect_uris: [],
-          response_types: [],
-          grant_types: [],
-        },
-        {
-          client_id: "pala-client",
-          redirect_uris: ["http://localhost:5173"],
-          token_endpoint_auth_method: "none",
-        },
-      ],
+      clients: config.clients,
       clientBasedCORS: (_ctx, origin, client) => {
         if (!client.redirectUris) {
           return false;
@@ -39,4 +40,9 @@ export const OpenIdConnectIdentityProvider = createPart(
       }),
     };
   },
+);
+
+export const OpenIdConnectIdentityProviderFeature = createFeature(
+  [OpenIdConnectIdentityProvider],
+  OpenIdConnectIdentityProviderConfiguration,
 );

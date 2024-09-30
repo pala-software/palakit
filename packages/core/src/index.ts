@@ -5,3 +5,4 @@ export type { Part } from "part-di";
 export { LocalRuntime } from "./LocalRuntime";
 export { Application, resolveApplication } from "./Application";
 export type { ApplicationOptions } from "./Application";
+export { createFeature, createConfiguration } from "./Feature";

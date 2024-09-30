@@ -1,11 +1,14 @@
-import { createSequelizeDocumentStore } from "@palakit/sequelize";
+import { SequelizeDocumentStoreFeature } from "@palakit/sequelize";
 import { ResourceServer } from "@palakit/api";
-import { createTrpcResourceServer } from "@palakit/trpc";
+import { TrpcResourceServerFeature } from "@palakit/trpc";
 import { LocalRuntime, createPart, resolveApplication } from "@palakit/core";
 import { z } from "zod";
 import { CrudResourceRegistry } from "@palakit/crud";
 import { OpenIdConnectAuthenticator } from "@palakit/oidc-client";
-import { OpenIdConnectIdentityProvider } from "@palakit/oidc-idp";
+import {
+  OpenIdConnectIdentityProvider,
+  OpenIdConnectIdentityProviderFeature,
+} from "@palakit/oidc-idp";
 import { IdentityProvider } from "@palakit/oidc-client";
 
 const ISSUER = new URL("http://localhost:3001");
@@ -76,18 +79,32 @@ export const app = await resolveApplication({
   name: "OAuth Example",
   parts: [
     LocalRuntime,
-    createSequelizeDocumentStore({
+    ...SequelizeDocumentStoreFeature.configure({
       dialect: "sqlite",
       storage: ":memory:",
       logging: false,
     }),
-    ResourceServer,
-    createTrpcResourceServer({
+    ...TrpcResourceServerFeature.configure({
       port: PORT,
       clientPath: import.meta.dirname + "/../build/trpc.ts",
     }),
+    ...OpenIdConnectIdentityProviderFeature.configure({
+      clients: [
+        {
+          client_id: "pala-server",
+          client_secret: "bad secret",
+          redirect_uris: [],
+          response_types: [],
+          grant_types: [],
+        },
+        {
+          client_id: "pala-client",
+          redirect_uris: ["http://localhost:5173"],
+          token_endpoint_auth_method: "none",
+        },
+      ],
+    }),
     CrudResourceRegistry,
     MyCrudApi,
-    OpenIdConnectIdentityProvider,
   ],
 });

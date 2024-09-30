@@ -1,4 +1,9 @@
-import { Application, createPart } from "@palakit/core";
+import {
+  Application,
+  createConfiguration,
+  createFeature,
+  createPart,
+} from "@palakit/core";
 import {
   DocumentStore,
   DocumentHandle,
@@ -17,9 +22,18 @@ import {
   WhereAttributeHash,
 } from "sequelize";
 
-export const createSequelizeDocumentStore = (options: Options) =>
-  createPart(DocumentStore, [Application], ([application]) => {
-    const sequelize = new Sequelize(options);
+export type SequelizeDocumentStoreConfiguration = Options;
+
+export const SequelizeDocumentStoreConfiguration =
+  createConfiguration<SequelizeDocumentStoreConfiguration>(
+    "SequelizeDocumentStoreConfiguration",
+  );
+
+export const SequelizeDocumentStore = createPart(
+  DocumentStore,
+  [SequelizeDocumentStoreConfiguration, Application],
+  ([config, application]) => {
+    const sequelize = new Sequelize(config);
     let setSynchronized: () => void;
     const synchronized = new Promise<void>((resolve) => {
       setSynchronized = resolve;
@@ -277,4 +291,10 @@ export const createSequelizeDocumentStore = (options: Options) =>
         };
       },
     };
-  });
+  },
+);
+
+export const SequelizeDocumentStoreFeature = createFeature(
+  [SequelizeDocumentStore],
+  SequelizeDocumentStoreConfiguration,
+);
