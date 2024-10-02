@@ -5,7 +5,7 @@
   "dependencies": {
     "@palakit/core": "workspace:*",
     "@palakit/db": "workspace:*",
-    "@typeschema/main": "^0.13.10",
-    "mongoose": "^8.4.3"
+    "@typeschema/main": "^0.14.0",
+    "mongoose": "^8.7.0"
   }
 }

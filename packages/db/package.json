@@ -4,6 +4,6 @@
   "main": "src/index.ts",
   "dependencies": {
     "@palakit/core": "workspace:*",
-    "@typeschema/main": "^0.13.10"
+    "@typeschema/main": "^0.14.0"
   }
 }
