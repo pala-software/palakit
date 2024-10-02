@@ -1,5 +1,5 @@
 {
-  "name": "@pala/crud-api-example",
+  "name": "@palakit/crud-api-example",
   "version": "0.1.0",
   "type": "module",
   "scripts": {
@@ -10,19 +10,19 @@
     "start": "pnpm run generate-client && pnpm run start-both"
   },
   "devDependencies": {
-    "@pala/api": "workspace:*",
-    "@pala/core": "workspace:*",
-    "@pala/crud": "workspace:*",
-    "@pala/db": "workspace:*",
-    "@pala/sequelize": "workspace:*",
-    "@pala/trpc": "workspace:*",
+    "@palakit/api": "workspace:*",
+    "@palakit/core": "workspace:*",
+    "@palakit/crud": "workspace:*",
+    "@palakit/db": "workspace:*",
+    "@palakit/sequelize": "workspace:*",
+    "@palakit/trpc": "workspace:*",
     "@trpc/client": "^10.45.2",
     "@types/ws": "^8.5.12",
-    "@typeschema/zod": "^0.13.3",
+    "@typeschema/zod": "^0.14.0",
     "sqlite3": "^5.1.7",
-    "tsx": "^4.18.0",
-    "ws": "^8.17.1",
+    "tsx": "^4.19.1",
+    "ws": "^8.18.0",
     "zod": "^3.23.8",
-    "zod-to-json-schema": "^3.23.2"
+    "zod-to-json-schema": "^3.23.3"
   }
 }

@@ -1,16 +1,16 @@
 import {
-  OutputFromResourceSchema,
   InputFromResourceSchema,
+  OutputFromResourceSchema,
+  Request,
   ResourceSchema,
   ResourceServer,
-  Request,
   Response,
-  TypedQueryOperationOptions,
   TypedMutationOperationOptions,
+  TypedQueryOperationOptions,
   TypedSubscriptionOperationOptions,
-} from "@pala/api";
-import { createPart, Runtime } from "@pala/core";
-import { DataType, DocumentStore, Field } from "@pala/db";
+} from "@palakit/api";
+import { createPart, Runtime } from "@palakit/core";
+import { DataType, DocumentStore, Field } from "@palakit/db";
 import { toJSONSchema } from "@typeschema/main";
 import { JSONSchema7 } from "json-schema";
 

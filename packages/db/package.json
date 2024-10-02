@@ -1,9 +1,9 @@
 {
-  "name": "@pala/db",
+  "name": "@palakit/db",
   "version": "0.1.0",
   "main": "src/index.ts",
   "dependencies": {
-    "@pala/core": "workspace:*",
-    "@typeschema/main": "^0.13.10"
+    "@palakit/core": "workspace:*",
+    "@typeschema/main": "^0.14.0"
   }
 }

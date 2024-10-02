@@ -1,11 +1,11 @@
-import { Application, createPart } from "@pala/core";
+import { Application, createPart } from "@palakit/core";
 import {
   DataType,
   DocumentStore,
   Collection,
   Where,
   DocumentHandle,
-} from "@pala/db";
+} from "@palakit/db";
 import { validate } from "@typeschema/main";
 import mongoose, {
   ConnectOptions,

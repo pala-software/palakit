@@ -1,11 +1,11 @@
 {
-  "name": "@pala/mongoose",
+  "name": "@palakit/mongoose",
   "version": "0.1.0",
   "main": "src/index.ts",
   "dependencies": {
-    "@pala/core": "workspace:*",
-    "@pala/db": "workspace:*",
-    "@typeschema/main": "^0.13.10",
-    "mongoose": "^8.4.3"
+    "@palakit/core": "workspace:*",
+    "@palakit/db": "workspace:*",
+    "@typeschema/main": "^0.14.0",
+    "mongoose": "^8.7.0"
   }
 }

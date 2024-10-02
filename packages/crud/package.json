@@ -1,16 +1,16 @@
 {
-  "name": "@pala/crud",
+  "name": "@palakit/crud",
   "version": "0.1.0",
   "main": "src/index.ts",
   "dependencies": {
-    "@pala/api": "workspace:*",
-    "@pala/core": "workspace:*",
-    "@pala/db": "workspace:*",
-    "@typeschema/json": "^0.13.3",
+    "@palakit/api": "workspace:*",
+    "@palakit/core": "workspace:*",
+    "@palakit/db": "workspace:*",
+    "@typeschema/json": "^0.14.0",
+    "@typeschema/main": "^0.14.0",
     "ajv": "^8.17.1",
-    "json-schema-to-ts": "^3.1.0",
-    "@typeschema/main": "^0.13.10",
-    "json-schema": "^0.4.0"
+    "json-schema": "^0.4.0",
+    "json-schema-to-ts": "^3.1.1"
   },
   "devDependencies": {
     "@types/json-schema": "^7.0.15"

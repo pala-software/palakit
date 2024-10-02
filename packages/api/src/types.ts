@@ -1,5 +1,5 @@
 import { Schema, InferIn, Infer } from "@typeschema/main";
-import { Function } from "@pala/core";
+import { Function } from "@palakit/core";
 
 export type ResourceSchema = {
   schema: Schema;
