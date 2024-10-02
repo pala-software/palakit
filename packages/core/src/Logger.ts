@@ -2,7 +2,7 @@ import { createPart } from "part-di";
 
 type LogFunction = (obj: unknown, msg?: string) => void;
 
-type Logger = {
+export type Logger = {
   createLogger: (category: string) => {
     debug: LogFunction;
     info: LogFunction;
