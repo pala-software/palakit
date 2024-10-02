@@ -1,6 +1,6 @@
 import { createPart } from "part-di";
 import { Logger as PinoLogger } from "pino";
-import { Logger } from "./Logger";
+import { Logger } from "@palakit/core";
 
 export const createPinoLogger = (logger: PinoLogger) =>
   createPart(Logger, [], () => ({

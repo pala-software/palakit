@@ -1,10 +1,6 @@
 import { ResourceServer } from "@palakit/api";
-import {
-  LocalRuntime,
-  createPart,
-  createPinoLogger,
-  resolveApplication,
-} from "@palakit/core";
+import { LocalRuntime, createPart, resolveApplication } from "@palakit/core";
+import { createPinoLogger } from "@palakit/pino";
 import { CrudResourceRegistry } from "@palakit/crud";
 import { DataType } from "@palakit/db";
 import { createSequelizeDocumentStore } from "@palakit/sequelize";
