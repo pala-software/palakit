@@ -95,7 +95,7 @@ export const CrudResourceRegistry = createPart(
           name,
           fields,
           requireAuthorization,
-          endpoints = {
+          operations = {
             create: true,
             update: true,
             find: true,
@@ -107,7 +107,7 @@ export const CrudResourceRegistry = createPart(
           name: string | { singular: string; plural: string };
           fields: Fields;
           requireAuthorization?: boolean;
-          endpoints?: {
+          operations?: {
             create?:
               | boolean
               | ((
@@ -338,14 +338,14 @@ export const CrudResourceRegistry = createPart(
           const endpoint = server.createEndpoint({
             name: pluralName,
             operations: {
-              ...(endpoints?.create
+              ...(operations?.create
                 ? {
                     create: server.createMutation({
                       input: createOptions,
                       output: documentSchema,
                       handler:
-                        typeof endpoints.create === "function"
-                          ? endpoints.create
+                        typeof operations.create === "function"
+                          ? operations.create
                           : async ({ input }) => {
                               const document = await collection.create(
                                 input.data,
@@ -360,14 +360,14 @@ export const CrudResourceRegistry = createPart(
                     }),
                   }
                 : {}),
-              ...(endpoints?.update
+              ...(operations?.update
                 ? {
                     update: server.createMutation({
                       input: updateOptions,
                       output: documentSchema,
                       handler:
-                        typeof endpoints.update === "function"
-                          ? endpoints.update
+                        typeof operations.update === "function"
+                          ? operations.update
                           : async ({ input }) => {
                               const [document] = await collection.find({
                                 where: { id: { equals: input.id } },
@@ -392,14 +392,14 @@ export const CrudResourceRegistry = createPart(
                     }),
                   }
                 : {}),
-              ...(endpoints.delete
+              ...(operations.delete
                 ? {
                     delete: server.createMutation({
                       input: deleteOptions,
                       output: null,
                       handler:
-                        typeof endpoints.delete === "function"
-                          ? endpoints.delete
+                        typeof operations.delete === "function"
+                          ? operations.delete
                           : async ({ input }) => {
                               const [document] = await collection.find({
                                 where: { id: { equals: input.id } },
@@ -423,14 +423,14 @@ export const CrudResourceRegistry = createPart(
                     }),
                   }
                 : {}),
-              ...(endpoints.find
+              ...(operations.find
                 ? {
                     find: server.createQuery({
                       input: findOptions,
                       output: listSchema,
                       handler:
-                        typeof endpoints.find === "function"
-                          ? endpoints.find
+                        typeof operations.find === "function"
+                          ? operations.find
                           : async ({ input }) => {
                               const { where, order, limit, offset } = input;
                               const documents = await collection.find({
@@ -451,14 +451,14 @@ export const CrudResourceRegistry = createPart(
                     }),
                   }
                 : {}),
-              ...(endpoints.count
+              ...(operations.count
                 ? {
                     count: server.createQuery({
                       input: countOptions,
                       output: countSchema,
                       handler:
-                        typeof endpoints.count === "function"
-                          ? endpoints.count
+                        typeof operations.count === "function"
+                          ? operations.count
                           : async ({ input }) => {
                               const { where } = input;
                               return {
