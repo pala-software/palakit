@@ -19,10 +19,12 @@ import { toJSONSchema, validate } from "@typeschema/main";
 import { writeFile } from "fs/promises";
 import { JSONSchema, compile } from "json-schema-to-typescript";
 import { WebSocketServer } from "ws";
+import { KoaHttpServer } from "@palakit/koa";
+import Router from "@koa/router";
 
 export type TrpcResourceServerConfiguration = {
-  /** Port where to host the tRPC WebSocket server. */
-  port: number;
+  /** URL path where to mount tRPC server. */
+  path: string;
 
   /** Path where to generate client code. */
   clientPath?: string;
@@ -35,8 +37,8 @@ export const TrpcResourceServerConfiguration =
 
 export const TrpcResourceServer = createPart(
   "TrpcServer",
-  [TrpcResourceServerConfiguration, ResourceServer],
-  ([config, server]) => {
+  [TrpcResourceServerConfiguration, ResourceServer, KoaHttpServer],
+  ([config, server, http]) => {
     const t = initTRPC.create();
     const endpoints: ResourceEndpoint[] = [];
 
@@ -178,8 +180,27 @@ export const TrpcResourceServer = createPart(
             });
           }
 
-          const wss = new WebSocketServer({ port: config.port });
+          const wss = new WebSocketServer({ noServer: true });
           applyWSSHandler({ wss, router: t.router(routers) });
+
+          const router = new Router();
+          router.get(config.path, (ctx) => {
+            if (ctx.req.headers.upgrade !== "websocket") {
+              ctx.req.statusCode = 426;
+              return;
+            }
+
+            wss.handleUpgrade(
+              ctx.req,
+              ctx.socket,
+              Buffer.alloc(0),
+              (client, request) => {
+                wss.emit("connection", client, request);
+              },
+            );
+            ctx.respond = false;
+          });
+          http.use(router.routes());
         },
 
         generateClient: async () => {

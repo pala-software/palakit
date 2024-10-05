@@ -13,6 +13,7 @@
     "@palakit/core": "workspace:*",
     "@palakit/crud": "workspace:*",
     "@palakit/db": "workspace:*",
+    "@palakit/koa": "workspace:*",
     "@palakit/sequelize": "workspace:*",
     "@palakit/trpc": "workspace:*",
     "@trpc/client": "^10.45.2",

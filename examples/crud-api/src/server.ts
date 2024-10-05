@@ -5,8 +5,10 @@ import { LocalRuntime, createPart, resolveApplication } from "@palakit/core";
 import { z } from "zod";
 import { DataType } from "@palakit/db";
 import { CrudResourceRegistry } from "@palakit/crud";
+import { KoaHttpServerFeature } from "@palakit/koa";
 
 const PORT = 3000;
+const HOSTNAME = "localhost";
 const SECRET = "bad secret";
 
 const MyCrudApi = createPart(
@@ -58,8 +60,9 @@ export const app = await resolveApplication({
       storage: ":memory:",
       logging: false,
     }),
+    ...KoaHttpServerFeature.configure({ port: PORT, hostname: HOSTNAME }),
     ...TrpcResourceServerFeature.configure({
-      port: PORT,
+      path: "/trpc",
       clientPath: import.meta.dirname + "/../build/trpc.ts",
     }),
     CrudResourceRegistry,

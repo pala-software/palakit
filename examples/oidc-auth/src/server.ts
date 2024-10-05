@@ -5,19 +5,37 @@ import { LocalRuntime, createPart, resolveApplication } from "@palakit/core";
 import { z } from "zod";
 import { CrudResourceRegistry } from "@palakit/crud";
 import { OpenIdConnectAuthenticator } from "@palakit/oidc-client";
-import {
-  OpenIdConnectIdentityProvider,
-  OpenIdConnectIdentityProviderFeature,
-} from "@palakit/oidc-idp";
+import { OpenIdConnectIdentityProviderFeature } from "@palakit/oidc-idp";
 import { IdentityProvider } from "@palakit/oidc-client";
+import { KoaHttpServerFeature } from "@palakit/koa";
+import { Client } from "oauth4webapi";
 
-const ISSUER = new URL("http://localhost:3001");
 const PORT = 3000;
+const HOSTNAME = "localhost";
+const TRPC_PATH = "/trpc";
+const AUTH_PATH = "/id";
+const ISSUER = new URL(`http://${HOSTNAME}:${PORT}${AUTH_PATH}`);
 
-const MyCrudApi = createPart(
-  "MyCrudApi",
-  [ResourceServer, OpenIdConnectAuthenticator, OpenIdConnectIdentityProvider],
-  async ([server, auth, idp]) => {
+const BACKEND_CLIENT = {
+  client_id: "pala-backend",
+  client_secret: crypto.randomUUID(),
+  redirect_uris: [],
+  response_types: [],
+  grant_types: [],
+} satisfies Client;
+
+const FRONTEND_CLIENT = {
+  client_id: "pala-frontend",
+  redirect_uris: ["http://localhost:5173"],
+  token_endpoint_auth_method: "none",
+} satisfies Client;
+
+const CLIENTS = [BACKEND_CLIENT, FRONTEND_CLIENT] satisfies Client[];
+
+const MyApi = createPart(
+  "MyApi",
+  [ResourceServer, OpenIdConnectAuthenticator],
+  async ([server, auth]) => {
     let idpOptions: IdentityProvider;
 
     const publicEndpoint = await server.createEndpoint({
@@ -57,16 +75,11 @@ const MyCrudApi = createPart(
     });
 
     return {
-      serverStarted: server.start.after("MyCrudApi.serverStarted", () => {
+      serverStarted: server.start.after("MyApi.serverStarted", async () => {
         console.log(`Server running is running on port ${PORT}!`);
-      }),
-      idpStarted: idp.start.after("MyCrudApi.idpStarted", async () => {
         idpOptions = await auth.discover({
           issuer: ISSUER,
-          client: {
-            client_id: "pala-server",
-            client_secret: "bad secret",
-          },
+          client: BACKEND_CLIENT,
         });
       }),
       publicEndpoint,
@@ -84,27 +97,19 @@ export const app = await resolveApplication({
       storage: ":memory:",
       logging: false,
     }),
-    ...TrpcResourceServerFeature.configure({
+    ...KoaHttpServerFeature.configure({
       port: PORT,
+      hostname: HOSTNAME,
+    }),
+    ...TrpcResourceServerFeature.configure({
+      path: TRPC_PATH,
       clientPath: import.meta.dirname + "/../build/trpc.ts",
     }),
     ...OpenIdConnectIdentityProviderFeature.configure({
-      clients: [
-        {
-          client_id: "pala-server",
-          client_secret: "bad secret",
-          redirect_uris: [],
-          response_types: [],
-          grant_types: [],
-        },
-        {
-          client_id: "pala-client",
-          redirect_uris: ["http://localhost:5173"],
-          token_endpoint_auth_method: "none",
-        },
-      ],
+      issuer: ISSUER,
+      clients: CLIENTS,
     }),
     CrudResourceRegistry,
-    MyCrudApi,
+    MyApi,
   ],
 });

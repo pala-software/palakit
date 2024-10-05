@@ -12,6 +12,7 @@
     "@palakit/api": "workspace:*",
     "@palakit/core": "workspace:*",
     "@palakit/crud": "workspace:*",
+    "@palakit/koa": "workspace:*",
     "@palakit/oidc-client": "workspace:*",
     "@palakit/oidc-idp": "workspace:*",
     "@palakit/sequelize": "workspace:*",

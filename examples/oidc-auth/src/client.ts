@@ -13,13 +13,13 @@ import {
   processAuthorizationCodeOpenIDResponse,
 } from "oauth4webapi";
 
-const ISSUER = new URL("http://localhost:3001");
+const ISSUER = new URL("http://localhost:3000/id");
 const CLIENT: Client = {
-  client_id: "pala-client",
+  client_id: "pala-frontend",
   token_endpoint_auth_method: "none",
 };
 
-const wsClient = createWSClient({ url: "ws://localhost:3000/" });
+const wsClient = createWSClient({ url: "ws://localhost:3000/trpc" });
 const client = createTRPCProxyClient<Router>({
   links: [wsLink({ client: wsClient })],
 });

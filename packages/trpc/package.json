@@ -4,14 +4,17 @@
   "type": "module",
   "main": "src/index.ts",
   "dependencies": {
+    "@koa/router": "^13.1.0",
     "@palakit/api": "workspace:*",
     "@palakit/core": "workspace:*",
+    "@palakit/koa": "workspace:*",
     "@trpc/server": "^10.45.2",
     "@typeschema/main": "^0.13.10",
     "json-schema-to-typescript": "^14.0.5",
     "ws": "^8.18.0"
   },
   "devDependencies": {
+    "@types/koa__router": "^12.0.4",
     "@types/ws": "^8.5.12"
   }
 }

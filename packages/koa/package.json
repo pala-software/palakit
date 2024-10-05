@@ -1,10 +1,13 @@
 {
-  "name": "@palakit/oidc-client",
+  "name": "@palakit/koa",
   "version": "0.1.0",
   "type": "module",
   "main": "src/index.ts",
   "dependencies": {
     "@palakit/core": "workspace:*",
-    "oauth4webapi": "^2.12.0"
+    "koa": "^2.15.3"
+  },
+  "devDependencies": {
+    "@types/koa": "^2.15.0"
   }
 }
