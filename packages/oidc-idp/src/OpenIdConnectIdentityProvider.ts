@@ -3,6 +3,7 @@ import Provider, { ClientMetadata, Interaction, errors } from "oidc-provider";
 import { KoaHttpServer } from "@palakit/koa";
 import Router from "@koa/router";
 import mount from "koa-mount";
+import { koaBody } from "koa-body";
 
 export type OpenIdConnectIdentityProviderConfiguration = {
   issuer: URL;
@@ -37,7 +38,7 @@ ${contents}
 </body>
 </html>`;
 
-const renderLogin = (interaction: Interaction) =>
+const renderLoginPrompt = (interaction: Interaction) =>
   renderTemplate(
     { title: "Login" },
     `<form
@@ -48,7 +49,7 @@ const renderLogin = (interaction: Interaction) =>
       <input
         required
         type="text"
-        name="login"
+        name="email"
         placeholder="Email"
         ${
           interaction.params.login_hint
@@ -67,6 +68,19 @@ const renderLogin = (interaction: Interaction) =>
         Login
       </button>
     </form>`,
+  );
+
+const renderError = (error: unknown) =>
+  renderTemplate(
+    { title: "Error" },
+    error instanceof errors.OIDCProviderError && error.expose
+      ? `<p>${
+          escape(error.error) +
+          (error.error_description
+            ? `: ${escape(error.error_description)}`
+            : "")
+        }</p>`
+      : "<p>an error occurred.</p>",
   );
 
 export const OpenIdConnectIdentityProvider = createPart(
@@ -95,12 +109,19 @@ export const OpenIdConnectIdentityProvider = createPart(
         devInteractions: { enabled: false },
         introspection: { enabled: true },
       },
+      renderError: (ctx, _out, error) => {
+        console.error(error);
+        ctx.type = "html";
+        ctx.body = renderError(error);
+      },
     });
 
     const interactionRouter = new Router<{ interaction: Interaction }>({
-      prefix: "/interaction",
+      host: config.issuer.host,
+      prefix: prefix("/interaction").pathname,
     });
     interactionRouter.use(async (ctx, next) => {
+      ctx.headers["cache-control"] = "no-store";
       try {
         ctx.state.interaction = await provider.interactionDetails(
           ctx.req,
@@ -108,43 +129,64 @@ export const OpenIdConnectIdentityProvider = createPart(
         );
         await next();
       } catch (error) {
-        if (error instanceof errors.SessionNotFound) {
-          ctx.res.statusCode = error.status;
-          ctx.res.setHeader("Content-Type", "text/plain");
-          ctx.res.write(error.error + "\n\n" + error.error_description);
-          ctx.res.end();
-          return true;
-        } else {
-          throw error;
+        console.error(error);
+        if (error instanceof errors.OIDCProviderError) {
+          ctx.status = error.status;
         }
+        ctx.type = "html";
+        ctx.body = renderError(error);
       }
     });
     interactionRouter.get("/:uid", (ctx) => {
       switch (ctx.state.interaction.prompt.name) {
         case "login": {
-          ctx.res.setHeader("Content-Type", "text/html");
-          ctx.res.write(renderLogin(ctx.state.interaction));
-          ctx.res.end();
+          ctx.type = "html";
+          ctx.body = renderLoginPrompt(ctx.state.interaction);
           return;
         }
         default: {
-          // TODO: Handle maybe
-          return;
+          throw new Error("Unknown prompt");
         }
       }
     });
-    interactionRouter.post("/:uid/login", async (ctx) => {
-      await provider.interactionFinished(ctx.req, ctx.res, {
-        login: { accountId: "asd" },
-      });
-    });
+    interactionRouter.post(
+      "/:uid/login",
+      koaBody({ multipart: false, urlencoded: true, text: false, json: false }),
+      async (ctx) => {
+        if (ctx.state.interaction.prompt.name !== "login") {
+          throw new Error("Unexpected type of prompt");
+        }
 
-    const router = new Router({
-      host: config.issuer.host,
-      prefix: config.issuer.pathname,
-    });
-    router.use(interactionRouter.routes());
-    http.use(router.routes());
+        const { email, password } = ctx.request.body;
+        if (
+          typeof email !== "string" ||
+          typeof password !== "string" ||
+          !email ||
+          !password
+        ) {
+          ctx.status = 400;
+          return;
+        }
+
+        // TODO: Check password.
+
+        const accountId = email;
+        const grant = new provider.Grant({
+          accountId,
+          clientId: ctx.state.interaction.params.client_id as
+            | string
+            | undefined,
+        });
+        grant.addOIDCScope("openid");
+        const grantId = await grant.save();
+        await provider.interactionFinished(ctx.req, ctx.res, {
+          login: { accountId },
+          consent: { grantId },
+        });
+      },
+    );
+
+    http.use(interactionRouter.routes());
     http.use(mount(config.issuer.pathname, provider.app));
   },
 );
