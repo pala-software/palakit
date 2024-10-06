@@ -199,86 +199,87 @@ export const SequelizeDocumentStore = createPart(
                 allowNull: field.nullable ?? true,
                 unique: field.unique ?? false,
                 validate: {
-                  ...(field.schema && {
-                    hasCorrectType: (input: unknown) => {
-                      switch (field.dataType) {
-                        case DataType.STRING:
-                          if (typeof input !== "string") {
-                            throw new Error(
-                              `Field value for ${fieldName} is not a string`,
-                            );
-                          }
-                          if (
-                            field.length !== undefined &&
-                            input.length > field.length
-                          ) {
-                            throw new Error(
-                              `Field value for ${fieldName} has length more` +
-                                " than allowed maximum",
-                            );
-                          }
-                          break;
-                        case DataType.BOOLEAN:
-                          if (typeof input !== "boolean") {
-                            throw new Error(
-                              `Field value for ${fieldName} is not a boolean`,
-                            );
-                          }
-                          break;
-                        case DataType.INTEGER: {
-                          if (
-                            typeof input !== "number" ||
-                            Number.isNaN(input)
-                          ) {
-                            throw new Error(
-                              `Field value for ${fieldName} is not a number`,
-                            );
-                          }
-                          if (input % 1 !== 0) {
-                            throw new Error(
-                              `Field value for ${fieldName} is not an integer`,
-                            );
-                          }
-
-                          if (
-                            field.size !== undefined &&
-                            Math.abs(input) > maxInteger(field.size)
-                          ) {
-                            throw new Error(
-                              `Field value for ${fieldName} does not fit as a` +
-                                ` ${field.size} bit integer`,
-                            );
-                          }
-                          break;
+                  hasCorrectType: (input: unknown) => {
+                    switch (field.dataType) {
+                      case DataType.STRING:
+                        if (typeof input !== "string") {
+                          throw new Error(
+                            `Field value for ${fieldName} is not a string`,
+                          );
                         }
-                        case DataType.FLOAT:
-                          if (typeof input !== "number") {
-                            throw new Error(
-                              `Field value for ${fieldName} is not a number`,
-                            );
-                          }
+                        if (
+                          field.length !== undefined &&
+                          input.length > field.length
+                        ) {
+                          throw new Error(
+                            `Field value for ${fieldName} has length more` +
+                              " than allowed maximum",
+                          );
+                        }
+                        break;
+                      case DataType.BOOLEAN:
+                        if (typeof input !== "boolean") {
+                          throw new Error(
+                            `Field value for ${fieldName} is not a boolean`,
+                          );
+                        }
+                        break;
+                      case DataType.INTEGER: {
+                        if (typeof input !== "number" || Number.isNaN(input)) {
+                          throw new Error(
+                            `Field value for ${fieldName} is not a number`,
+                          );
+                        }
+                        if (input % 1 !== 0) {
+                          throw new Error(
+                            `Field value for ${fieldName} is not an integer`,
+                          );
+                        }
 
-                          // NOTE: I don't think there's a need to validate size
-                          // of floating point numbers as they usually aren't used
-                          // absolute precision in mind.
-                          break;
-                        case DataType.DATE:
-                          if (!(input instanceof Date)) {
-                            throw new Error(
-                              `Field value for ${fieldName} is not a Date`,
-                            );
-                          }
-                          break;
-                        case DataType.BLOB:
-                          if (!(input instanceof Buffer)) {
-                            throw new Error(
-                              `Field value for ${fieldName} is not a Buffer`,
-                            );
-                          }
-                          break;
+                        if (
+                          field.size !== undefined &&
+                          Math.abs(input) > maxInteger(field.size)
+                        ) {
+                          throw new Error(
+                            `Field value for ${fieldName} does not fit as a` +
+                              ` ${field.size} bit integer`,
+                          );
+                        }
+                        break;
                       }
-                    },
+                      case DataType.FLOAT:
+                        if (typeof input !== "number") {
+                          throw new Error(
+                            `Field value for ${fieldName} is not a number`,
+                          );
+                        }
+
+                        // NOTE: I don't think there's a need to validate size
+                        // of floating point numbers as they usually aren't used
+                        // absolute precision in mind.
+                        break;
+                      case DataType.DATE:
+                        if (!(input instanceof Date)) {
+                          throw new Error(
+                            `Field value for ${fieldName} is not a Date`,
+                          );
+                        }
+                        break;
+                      case DataType.BLOB:
+                        if (!(input instanceof Buffer)) {
+                          throw new Error(
+                            `Field value for ${fieldName} is not a Buffer`,
+                          );
+                        }
+                        break;
+                    }
+                  },
+                  ...(field.schema && {
                     isValid: async (input: unknown) => {
+                      if (!field.schema) {
+                        throw new Error("No schema");
+                      }
+
                       const result = await validate(field.schema, input);
                       if (!result.success) {
                         throw new Error(
