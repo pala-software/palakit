@@ -45,8 +45,7 @@ export const SequelizeDocumentStore = createPart(
     const toDocument = <T extends Shape>(instance: Model) =>
       ({
         get: async () => {
-          const { id, ...values } = instance.get();
-          return { id: id.toString(), ...values };
+          return instance.get();
         },
         update: async (values) => {
           await instance.update(values);
@@ -134,7 +133,7 @@ export const SequelizeDocumentStore = createPart(
         fields: Record<string, Field>;
       }): Collection<T> => {
         const toColumns = (fields: Record<string, Field>) =>
-          Object.entries(fields).reduce(
+          Object.entries(fields).reduce<ModelAttributes>(
             (obj, [fieldName, field]) => ({
               ...obj,
               [fieldName]: {
@@ -300,7 +299,14 @@ export const SequelizeDocumentStore = createPart(
                 },
               } satisfies ModelAttributes[string],
             }),
-            {},
+            {
+              id: {
+                type: DataTypes.UUIDV4,
+                defaultValue: DataTypes.UUIDV4,
+                primaryKey: true,
+                allowNull: false,
+              },
+            },
           );
 
         const model = sequelize.define(
