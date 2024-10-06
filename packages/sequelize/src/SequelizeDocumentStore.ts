@@ -200,6 +200,11 @@ export const SequelizeDocumentStore = createPart(
                 unique: field.unique ?? false,
                 validate: {
                   hasCorrectType: (input: unknown) => {
+                    if ((field.nullable ?? true) && input === undefined) {
+                      // No input for nullable field. That's ok.
+                      return;
+                    }
+
                     switch (field.dataType) {
                       case DataType.STRING:
                         if (typeof input !== "string") {
