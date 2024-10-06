@@ -257,6 +257,9 @@ importers:
       '@palakit/core':
         specifier: workspace:*
         version: link:../core
+      '@palakit/db':
+        specifier: workspace:*
+        version: link:../db
       '@palakit/koa':
         specifier: workspace:*
         version: link:../koa

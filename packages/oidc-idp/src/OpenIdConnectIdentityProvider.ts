@@ -9,6 +9,7 @@ import { KoaHttpServer } from "@palakit/koa";
 import Router from "@koa/router";
 import mount from "koa-mount";
 import { koaBody } from "koa-body";
+import { OidcProviderDatabaseAdapter } from "./OidcProviderDatabaseAdapter";
 
 export type OpenIdConnectIdentityProviderConfiguration = {
   issuer: URL;
@@ -90,12 +91,17 @@ const renderError = (error: unknown) =>
 
 export const OpenIdConnectIdentityProvider = createPart(
   "OpenIdConnectIdentityProvider",
-  [OpenIdConnectIdentityProviderConfiguration, KoaHttpServer],
-  ([config, http]) => {
+  [
+    OpenIdConnectIdentityProviderConfiguration,
+    KoaHttpServer,
+    OidcProviderDatabaseAdapter,
+  ],
+  ([config, http, adapter]) => {
     const prefix = (path: string) =>
       new URL(path.slice(1), config.issuer.href + "/");
 
     const providerConfig: Configuration = {
+      adapter,
       clients: config.clients,
       clientBasedCORS: (_ctx, origin, client) => {
         if (!client.redirectUris) {
@@ -213,6 +219,6 @@ export const OpenIdConnectIdentityProvider = createPart(
 );
 
 export const OpenIdConnectIdentityProviderFeature = createFeature(
-  [OpenIdConnectIdentityProvider],
+  [OpenIdConnectIdentityProvider, OidcProviderDatabaseAdapter],
   OpenIdConnectIdentityProviderConfiguration,
 );
