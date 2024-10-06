@@ -1,5 +1,10 @@
 import { createConfiguration, createFeature, createPart } from "@palakit/core";
-import Provider, { ClientMetadata, Interaction, errors } from "oidc-provider";
+import Provider, {
+  ClientMetadata,
+  Configuration,
+  Interaction,
+  errors,
+} from "oidc-provider";
 import { KoaHttpServer } from "@palakit/koa";
 import Router from "@koa/router";
 import mount from "koa-mount";
@@ -90,7 +95,7 @@ export const OpenIdConnectIdentityProvider = createPart(
     const prefix = (path: string) =>
       new URL(path.slice(1), config.issuer.href + "/");
 
-    const provider = new Provider(config.issuer.href, {
+    const providerConfig: Configuration = {
       clients: config.clients,
       clientBasedCORS: (_ctx, origin, client) => {
         if (!client.redirectUris) {
@@ -114,7 +119,32 @@ export const OpenIdConnectIdentityProvider = createPart(
         ctx.type = "html";
         ctx.body = renderError(error);
       },
-    });
+      loadExistingGrant: async (ctx) => {
+        const { client, session } = ctx.oidc;
+        if (!client) {
+          throw new Error("No client");
+        }
+        if (!session) {
+          throw new Error("No session");
+        }
+
+        const grantId =
+          ctx.oidc.result?.consent?.grantId ||
+          session.grantIdFor(client.clientId);
+        if (grantId) {
+          return ctx.oidc.provider.Grant.find(grantId);
+        } else {
+          const grant = new provider.Grant({
+            clientId: client.clientId,
+            accountId: session.accountId,
+          });
+          grant.addOIDCScope("openid");
+          await grant.save();
+          return grant;
+        }
+      },
+    };
+    const provider = new Provider(config.issuer.href, providerConfig);
 
     const interactionRouter = new Router<{ interaction: Interaction }>({
       host: config.issuer.host,
@@ -171,17 +201,8 @@ export const OpenIdConnectIdentityProvider = createPart(
         // TODO: Check password.
 
         const accountId = email;
-        const grant = new provider.Grant({
-          accountId,
-          clientId: ctx.state.interaction.params.client_id as
-            | string
-            | undefined,
-        });
-        grant.addOIDCScope("openid");
-        const grantId = await grant.save();
         await provider.interactionFinished(ctx.req, ctx.res, {
           login: { accountId },
-          consent: { grantId },
         });
       },
     );
