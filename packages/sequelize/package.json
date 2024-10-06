@@ -6,7 +6,7 @@
   "dependencies": {
     "@palakit/core": "workspace:*",
     "@palakit/db": "workspace:*",
-    "@typeschema/main": "^0.13.10",
+    "@typeschema/main": "^0.14.0",
     "sequelize": "^6.37.3"
   }
 }

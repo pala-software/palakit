@@ -10,6 +10,8 @@ import {
   Collection,
   Where,
   DocumentHandle,
+  Shape,
+  Field,
 } from "@palakit/db";
 import { validate } from "@typeschema/main";
 import mongoose, {
@@ -37,6 +39,8 @@ export const MongooseDocumentStore = createPart(
       setConnected = resolve;
     });
 
+    const meta = new Map<Collection, { name: string }>();
+
     return {
       connect: application.start.on(
         "MongooseDocumentStore.connect",
@@ -49,7 +53,10 @@ export const MongooseDocumentStore = createPart(
         },
       ),
 
-      createCollection: (options) => {
+      createCollection: <T extends Shape>(options: {
+        name: string;
+        fields: Record<string, Field>;
+      }): Collection<T> => {
         const Model = mongoose.model(
           options.name,
           new mongoose.Schema(
@@ -57,17 +64,24 @@ export const MongooseDocumentStore = createPart(
               (obj, [name, field]) => ({
                 ...obj,
                 [name]: {
-                  type: (() => {
+                  ...(() => {
                     switch (field.dataType) {
                       case DataType.STRING:
-                        return String;
+                        return { type: String };
                       case DataType.INTEGER:
                       case DataType.FLOAT:
-                        return Number;
+                        return { type: Number };
                       case DataType.BOOLEAN:
-                        return Boolean;
+                        return { type: Boolean };
+                      case DataType.DATE:
+                        return { type: Date };
                       case DataType.BLOB:
-                        return Blob;
+                        return { type: Blob };
+                      case DataType.REFERENCE:
+                        return {
+                          type: mongoose.Schema.Types.ObjectId,
+                          ref: meta.get(field.targetCollection)?.name,
+                        };
                     }
                   })(),
                   allowNull: field.nullable ?? true,
@@ -101,7 +115,7 @@ export const MongooseDocumentStore = createPart(
           ),
         );
 
-        const toDocument = <T extends Collection>(m: mongoose.Document) =>
+        const toDocument = <T extends Shape>(m: mongoose.Document) =>
           ({
             get: async () => {
               const { _id, ...values } = m.toObject({
@@ -138,75 +152,87 @@ export const MongooseDocumentStore = createPart(
             "i",
           );
 
-        const transformWhere = <T extends Collection>(where: Where<T>) => {
-          const transformed: FilterQuery<object> = {};
+        const transformWhere = <T extends Shape>(
+          where: Where<T>,
+        ): FilterQuery<object> => {
           if (where.and) {
-            transformed.and = transformWhere<T>(where.and);
+            return {
+              and: where.and.map((w) => transformWhere<T>(w)),
+            };
           }
+
           if (where.or) {
-            transformed.or = transformWhere<T>(where.or);
+            return {
+              or: where.or.map((w) => transformWhere<T>(w)),
+            };
           }
-          for (const fieldName of Object.keys(where)) {
-            if (["and", "or"].includes(fieldName)) {
+
+          const conditions: FilterQuery<object>[] = [];
+          for (const field of Object.keys(where)) {
+            if (["and", "or"].includes(field)) {
               continue;
             }
-            const condition = where[fieldName];
+
+            const condition = where[field];
             if (!condition) {
               continue;
             }
-            const field = fieldName === "id" ? "_id" : fieldName;
-            transformed[field] = {};
+            const key = field === "id" ? "_id" : field;
             if ("equals" in condition) {
-              transformed[field]["$eq"] = condition.equals;
+              conditions.push({ [key]: { ["$eq"]: condition.equals } });
             }
             if ("notEquals" in condition) {
-              transformed[field]["$ne"] = condition.notEquals;
+              conditions.push({ [key]: { ["$ne"]: condition.notEquals } });
             }
             if ("is" in condition && condition.is === null) {
-              transformed[field]["$eq"] = null;
+              conditions.push({ [key]: { ["$eq"]: null } });
             }
             if ("isNot" in condition && condition.isNot === null) {
-              transformed[field]["$ne"] = null;
+              conditions.push({ [key]: { ["$ne"]: null } });
             }
             if ("in" in condition) {
-              transformed[field]["$in"] = condition.in;
+              conditions.push({ [key]: { ["$in"]: condition.in } });
             }
             if ("notIn" in condition) {
-              transformed[field]["$nin"] = condition.notIn;
+              conditions.push({ [key]: { ["$nin"]: condition.notIn } });
             }
             if ("like" in condition && condition.like) {
-              transformed[field]["$regex"] = toRegex(condition.like);
+              conditions.push({
+                [key]: { ["$regex"]: toRegex(condition.like) },
+              });
             }
             if ("notLike" in condition && condition.notLike) {
-              transformed[field]["$not"] = toRegex(condition.notLike);
+              conditions.push({
+                [key]: { ["$not"]: toRegex(condition.notLike) },
+              });
             }
             if ("gt" in condition) {
-              transformed[field]["$gt"] = condition.gt;
+              conditions.push({ [key]: { ["$gt"]: condition.gt } });
             }
             if ("gte" in condition) {
-              transformed[field]["$gte"] = condition.gte;
+              conditions.push({ [key]: { ["$gte"]: condition.gte } });
             }
             if ("lt" in condition) {
-              transformed[field]["$lt"] = condition.lt;
+              conditions.push({ [key]: { ["$lt"]: condition.lt } });
             }
             if ("lte" in condition) {
-              transformed[field]["$lte"] = condition.lte;
+              conditions.push({ [key]: { ["$lte"]: condition.lte } });
             }
           }
-          return transformed;
+          return { $and: conditions };
         };
 
-        return {
+        const collection: Collection<T> = {
           create: async (values) => {
             await connected;
-            return toDocument(await new Model(values).save());
+            return toDocument<T>(await new Model(values).save());
           },
           find: async (options) => {
             await connected;
             return (
               await Model.find(
                 options && "where" in options && options.where
-                  ? transformWhere(options.where)
+                  ? transformWhere<T>(options.where)
                   : {},
                 {},
                 { limit: options?.limit, skip: options?.offset },
@@ -216,17 +242,21 @@ export const MongooseDocumentStore = createPart(
                   item[1].toLowerCase() as "asc" | "desc",
                 ]),
               )
-            ).map((i) => toDocument(i));
+            ).map(toDocument<T>);
           },
           count: async (options) => {
             await connected;
             return await Model.countDocuments(
               options && "where" in options && options.where
-                ? transformWhere(options.where)
+                ? transformWhere<T>(options.where)
                 : {},
             );
           },
         };
+
+        meta.set(collection, { name: options.name });
+
+        return collection;
       },
     };
   },

@@ -1,15 +1,18 @@
-export { DocumentStore, DataType } from "./DocumentStore";
+export { DataType, DocumentStore } from "./DocumentStore";
 export type {
+  BlobField,
   BooleanField,
   Collection,
+  Document,
   DocumentHandle,
   Field,
-  Where,
-  SortingRule,
-  BlobField,
   FloatField,
   IntegerField,
-  StringField,
-  Document,
+  ReferenceField,
   ShapeOf,
+  SortingRule,
+  StringField,
+  Where,
+  DateField,
+  Shape,
 } from "./DocumentStore";
