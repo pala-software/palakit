@@ -74,6 +74,9 @@ if (!query.has("code")) {
     throw new Error(result.error);
   }
 
+  // Remove parameters
+  history.replaceState(null, "", location.pathname);
+
   await client.public.read.query();
   await client.protected.read.query({ token: result.access_token });
 }
