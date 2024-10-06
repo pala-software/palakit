@@ -11,6 +11,8 @@ import Router from "@koa/router";
 import mount from "koa-mount";
 import { koaBody } from "koa-body";
 import { OidcProviderDatabaseAdapter } from "./OidcProviderDatabaseAdapter";
+import { DataType, DocumentStore } from "@palakit/db";
+import { compare, hash } from "bcrypt";
 
 export type OpenIdConnectIdentityProviderConfiguration = {
   issuer: URL;
@@ -77,33 +79,73 @@ const renderLoginPrompt = (interaction: Interaction) =>
     </form>`,
   );
 
-const renderError = (error: unknown) =>
+const renderError = (error: unknown, interaction?: Interaction) =>
   renderTemplate(
     { title: "Error" },
-    error instanceof errors.OIDCProviderError && error.expose
+    (error instanceof errors.OIDCProviderError && error.expose
       ? `<p>${
           escape(error.error) +
           (error.error_description
             ? `: ${escape(error.error_description)}`
             : "")
         }</p>`
-      : "<p>an error occurred.</p>",
+      : "<p>an error occurred.</p>") +
+      (interaction
+        ? `<a href="${escape(interaction.returnTo)}" autofocus="on">Return</a>`
+        : ""),
   );
 
 export const OpenIdConnectIdentityProvider = createPart(
   "OpenIdConnectIdentityProvider",
   [
     OpenIdConnectIdentityProviderConfiguration,
+    DocumentStore,
     KoaHttpServer,
     OidcProviderDatabaseAdapter,
   ],
-  ([config, http, adapter]) => {
+  ([config, db, http, adapter]) => {
     const prefix = (path: string) =>
       new URL(path.slice(1), config.issuer.href + "/");
+
+    const accounts = db.createCollection({
+      name: "oidcAccounts",
+      fields: {
+        email: {
+          dataType: DataType.STRING,
+          nullable: false,
+        },
+        passwordHash: {
+          dataType: DataType.STRING,
+          nullable: false,
+        },
+      },
+    });
 
     const providerConfig: Configuration = {
       adapter,
       clients: config.clients,
+      interactions: {
+        url: (_ctx, interaction) =>
+          prefix(`/interaction/${interaction.uid}`).href,
+      },
+      features: {
+        devInteractions: { enabled: false },
+        introspection: { enabled: true },
+      },
+      findAccount: async (_ctx, id) => {
+        const [account] = await accounts.find({
+          where: { id: { equals: id } },
+          limit: 1,
+        });
+        if (account) {
+          return {
+            accountId: id,
+            claims: () => ({ sub: id }),
+          };
+        } else {
+          return undefined;
+        }
+      },
       clientBasedCORS: (_ctx, origin, client) => {
         if (!client.redirectUris) {
           return false;
@@ -112,14 +154,6 @@ export const OpenIdConnectIdentityProvider = createPart(
         return client.redirectUris.some(
           (uri) => origin === new URL(uri).origin,
         );
-      },
-      interactions: {
-        url: (_ctx, interaction) =>
-          prefix(`/interaction/${interaction.uid}`).href,
-      },
-      features: {
-        devInteractions: { enabled: false },
-        introspection: { enabled: true },
       },
       renderError: (ctx, _out, error) => {
         console.error(error);
@@ -174,7 +208,7 @@ export const OpenIdConnectIdentityProvider = createPart(
           ctx.status = error.status;
         }
         ctx.type = "html";
-        ctx.body = renderError(error);
+        ctx.body = renderError(error, ctx.state.interaction);
       }
     });
     interactionRouter.get("/:uid", (ctx) => {
@@ -204,13 +238,23 @@ export const OpenIdConnectIdentityProvider = createPart(
           !email ||
           !password
         ) {
-          ctx.status = 400;
-          return;
+          throw new errors.InvalidRequest("invalid email or password");
         }
 
-        // TODO: Check password.
+        const [account] = await accounts.find({
+          where: { email: { equals: email } },
+          limit: 1,
+        });
+        if (!account) {
+          throw new errors.AccessDenied("incorrect email or password");
+        }
 
-        const accountId = email;
+        const { id: accountId, passwordHash } = await account.get();
+        const valid = await compare(password, passwordHash);
+        if (!valid) {
+          throw new errors.AccessDenied("incorrect email or password");
+        }
+
         await provider.interactionFinished(ctx.req, ctx.res, {
           login: { accountId },
         });
@@ -219,6 +263,11 @@ export const OpenIdConnectIdentityProvider = createPart(
 
     http.use(interactionRouter.routes());
     http.use(mount(config.issuer.pathname, provider.app));
+
+    return {
+      accounts,
+      createPasswordHash: (password: string) => hash(password, 10),
+    };
   },
 );
 

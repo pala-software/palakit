@@ -5,7 +5,10 @@ import { LocalRuntime, createPart, resolveApplication } from "@palakit/core";
 import { z } from "zod";
 import { CrudResourceRegistry } from "@palakit/crud";
 import { OpenIdConnectAuthenticator } from "@palakit/oidc-client";
-import { OpenIdConnectIdentityProviderFeature } from "@palakit/oidc-idp";
+import {
+  OpenIdConnectIdentityProvider,
+  OpenIdConnectIdentityProviderFeature,
+} from "@palakit/oidc-idp";
 import { IdentityProvider } from "@palakit/oidc-client";
 import { KoaHttpServerFeature } from "@palakit/koa";
 import { Client } from "oauth4webapi";
@@ -15,6 +18,11 @@ const HOSTNAME = "localhost";
 const TRPC_PATH = "/trpc";
 const AUTH_PATH = "/id";
 const ISSUER = new URL(`http://${HOSTNAME}:${PORT}${AUTH_PATH}`);
+
+const ACCOUNTS = [{ email: "test@example.com", password: "test" }] satisfies {
+  email: string;
+  password: string;
+}[];
 
 const BACKEND_CLIENT = {
   client_id: "pala-backend",
@@ -34,8 +42,8 @@ const CLIENTS = [BACKEND_CLIENT, FRONTEND_CLIENT] satisfies Client[];
 
 const MyApi = createPart(
   "MyApi",
-  [ResourceServer, OpenIdConnectAuthenticator],
-  async ([server, auth]) => {
+  [ResourceServer, OpenIdConnectIdentityProvider, OpenIdConnectAuthenticator],
+  async ([server, idp, auth]) => {
     let idpOptions: IdentityProvider;
 
     const publicEndpoint = await server.createEndpoint({
@@ -73,6 +81,13 @@ const MyApi = createPart(
         }),
       },
     });
+
+    for (const { email, password } of ACCOUNTS) {
+      idp.accounts.create({
+        email,
+        passwordHash: await idp.createPasswordHash(password),
+      });
+    }
 
     return {
       serverStarted: server.start.after("MyApi.serverStarted", async () => {

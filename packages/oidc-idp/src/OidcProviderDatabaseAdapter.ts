@@ -34,7 +34,7 @@ export const OidcProviderDatabaseAdapter = createPart(
     const collections = new Map<string, Collection>();
     for (const name of models) {
       const collection = db.createCollection({
-        name: "Oidc" + name,
+        name: "oidc" + name,
         fields: {
           ...((grantable as string[]).includes(name) && {
             grantId: { dataType: DataType.STRING, nullable: false },
