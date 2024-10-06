@@ -2,6 +2,7 @@ import { createConfiguration, createFeature, createPart } from "@palakit/core";
 import Provider, {
   ClientMetadata,
   Configuration,
+  Grant,
   Interaction,
   errors,
 } from "oidc-provider";
@@ -137,17 +138,20 @@ export const OpenIdConnectIdentityProvider = createPart(
         const grantId =
           ctx.oidc.result?.consent?.grantId ||
           session.grantIdFor(client.clientId);
+        let grant: Grant | undefined;
         if (grantId) {
-          return ctx.oidc.provider.Grant.find(grantId);
-        } else {
-          const grant = new provider.Grant({
+          grant = await ctx.oidc.provider.Grant.find(grantId);
+        }
+        if (!grant) {
+          grant = new provider.Grant({
             clientId: client.clientId,
             accountId: session.accountId,
           });
-          grant.addOIDCScope("openid");
-          await grant.save();
-          return grant;
         }
+
+        grant.addOIDCScope("openid");
+        await grant.save();
+        return grant;
       },
     };
     const provider = new Provider(config.issuer.href, providerConfig);
