@@ -5,7 +5,7 @@ import {
   DocumentHandle,
   DocumentStore,
   Field,
-  ReferenceType,
+  Shape,
   Where,
 } from "@palakit/db";
 import { validate } from "@typeschema/main";
@@ -13,11 +13,11 @@ import {
   DataTypes,
   Model,
   ModelAttributes,
-  ModelCtor,
+  ModelStatic,
   Op,
   Options,
   Sequelize,
-  WhereAttributeHash,
+  WhereOptions,
 } from "sequelize";
 
 export const createSequelizeDocumentStore = (options: Options) =>
@@ -28,7 +28,7 @@ export const createSequelizeDocumentStore = (options: Options) =>
       setSynchronized = resolve;
     });
 
-    const toDocument = <T extends Collection>(instance: Model) =>
+    const toDocument = <T extends Shape>(instance: Model) =>
       ({
         get: async () => {
           const { id, ...values } = instance.get();
@@ -42,14 +42,20 @@ export const createSequelizeDocumentStore = (options: Options) =>
         },
       }) as DocumentHandle<T>;
 
-    const transformWhere = <T extends Collection>(where: Where<T>) => {
-      const transformed: WhereAttributeHash = {};
+    const transformWhere = <T extends Shape>(where: Where<T>): WhereOptions => {
       if (where.and) {
-        transformed.and = where.and.map((where) => transformWhere<T>(where));
+        return {
+          [Op.and]: where.and.map((where) => transformWhere<T>(where)),
+        };
       }
+
       if (where.or) {
-        transformed.or = where.or.map((where) => transformWhere<T>(where));
+        return {
+          [Op.and]: where.or.map((where) => transformWhere<T>(where)),
+        };
       }
+
+      const conditions: WhereOptions[] = [];
       for (const field of Object.keys(where)) {
         if (["and", "or"].includes(field)) {
           continue;
@@ -58,103 +64,61 @@ export const createSequelizeDocumentStore = (options: Options) =>
         if (!condition) {
           continue;
         }
-        transformed[field] = {};
         if ("equals" in condition) {
-          transformed[field][Op.eq] = condition.equals;
+          conditions.push({ [field]: { [Op.eq]: condition.equals } });
         }
         if ("notEquals" in condition) {
-          transformed[field][Op.ne] = condition.notEquals;
+          conditions.push({ [field]: { [Op.ne]: condition.notEquals } });
         }
         if ("is" in condition) {
-          transformed[field][Op.is] = condition.is;
+          conditions.push({ [field]: { [Op.is]: condition.is } });
         }
         if ("isNot" in condition) {
-          transformed[field][Op.not] = condition.isNot;
+          conditions.push({ [field]: { [Op.not]: condition.isNot } });
         }
         if ("in" in condition) {
-          transformed[field][Op.in] = condition.in;
+          conditions.push({ [field]: { [Op.in]: condition.in } });
         }
         if ("notIn" in condition) {
-          transformed[field][Op.notIn] = condition.notIn;
+          conditions.push({ [field]: { [Op.notIn]: condition.notIn } });
         }
         if ("like" in condition) {
-          transformed[field][Op.like] = condition.like;
+          conditions.push({ [field]: { [Op.like]: condition.like } });
         }
         if ("notLike" in condition) {
-          transformed[field][Op.notLike] = condition.notLike;
+          conditions.push({ [field]: { [Op.notLike]: condition.notLike } });
         }
         if ("gt" in condition) {
-          transformed[field][Op.gt] = condition.gt;
+          conditions.push({ [field]: { [Op.gt]: condition.gt } });
         }
         if ("gte" in condition) {
-          transformed[field][Op.gte] = condition.gte;
+          conditions.push({ [field]: { [Op.gte]: condition.gte } });
         }
         if ("lt" in condition) {
-          transformed[field][Op.lt] = condition.lt;
+          conditions.push({ [field]: { [Op.lt]: condition.lt } });
         }
         if ("lte" in condition) {
-          transformed[field][Op.lte] = condition.lte;
+          conditions.push({ [field]: { [Op.lte]: condition.lte } });
         }
       }
-      return transformed;
+      return { [Op.and]: conditions };
     };
 
     const maxInteger = (bits: number) => 2 ** (bits - 1) - 1;
-
-    type Relation = {
-      from: string | ModelCtor<Model>;
-      to: string | ModelCtor<Model>;
-      type: "hasMany" | "belongsTo" | "belongsToMany";
-      key: string;
-    };
-
-    const models: ModelCtor<Model>[] = [];
-    let relations: Relation[] = [];
-
-    const findModel = (
-      r: string | ModelCtor<Model>,
-    ): ModelCtor<Model> | null => {
-      if (typeof r === "string") {
-        for (const model of models) {
-          if (model.name === r) {
-            return model;
-          }
-        }
-        return null;
-      }
-      return r;
-    };
-
-    const createRelations = () => {
-      const leftRelations: Relation[] = [];
-      for (const rel of relations) {
-        const from = findModel(rel.from);
-        const to = findModel(rel.to);
-        if (!from || !to) {
-          leftRelations.push(rel);
-          continue;
-        }
-        if (rel.type === "belongsTo") {
-          from.belongsTo(to, { foreignKey: rel.key });
-        } else if (rel.type === "belongsToMany") {
-          from.belongsToMany(to, { through: rel.key });
-        } else {
-          from.hasMany(to, { foreignKey: rel.key });
-        }
-      }
-      relations = leftRelations;
-    };
+    const meta = new Map<Collection, { model: ModelStatic<Model> }>();
 
     return {
       connect: application.start.on(
         "SequelizeDocumentStore.connect",
         async () => {
-          createRelations();
           await sequelize.sync();
           setSynchronized();
         },
       ),
-      createCollection: (options) => {
+      createCollection: <T extends Shape>(options: {
+        name: string;
+        fields: Record<string, Field>;
+      }): Collection<T> => {
         const toColumns = (fields: Record<string, Field>) =>
           Object.entries(fields).reduce(
             (obj, [fieldName, field]) => ({
@@ -199,65 +163,24 @@ export const createSequelizeDocumentStore = (options: Options) =>
                           }
                         })(),
                       };
+                    case DataType.DATE:
+                      return { type: DataTypes.DATE };
                     case DataType.BLOB:
                       return { type: DataTypes.BLOB };
-                    case DataType.ARRAY:
-                      return { type: DataTypes.ARRAY };
-                    case DataType.OBJECT: {
-                      const valueTableName = `${fieldName}_values`;
-                      const valueTable = sequelize.define(
-                        valueTableName,
-                        toColumns(field.fields),
-                        {
-                          timestamps: false,
-                        },
-                      );
-                      relations.push(
-                        {
-                          from: valueTable,
-                          to: options.name,
-                          type: "belongsTo",
+                    case DataType.REFERENCE:
+                      return {
+                        type: DataTypes.INTEGER,
+                        references: {
+                          model: meta.get(field.targetCollection)?.model,
                           key: "id",
                         },
-                        {
-                          from: options.name,
-                          to: valueTable,
-                          type: "hasMany",
-                          key: "id",
+                        get() {
+                          return this.getDataValue(fieldName).toString();
                         },
-                      );
-                      return {
-                        type: DataTypes.STRING,
-                        references: { key: "id", model: valueTableName },
+                        set(value: string) {
+                          this.setDataValue(fieldName, +value);
+                        },
                       };
-                    }
-                    case DataType.REFERENCE: {
-                      if (field.referenceType === ReferenceType.MANY_TO_MANY) {
-                        relations.push({
-                          from: options.name,
-                          to: field.collectionName,
-                          key: `link_${options.name}_${field.collectionName}`,
-                          type: "belongsToMany",
-                        });
-                        relations.push({
-                          from: field.collectionName,
-                          to: options.name,
-                          key: `link_${options.name}_${field.collectionName}`,
-                          type: "belongsToMany",
-                        });
-                      } else {
-                        relations.push({
-                          from: options.name,
-                          to: field.collectionName,
-                          key: fieldName,
-                          type: "belongsTo",
-                        });
-                      }
-                      return {
-                        type: DataTypes.STRING,
-                        references: { key: "id", model: field.collectionName },
-                      };
-                    }
                   }
                 })(),
                 allowNull: field.nullable ?? true,
@@ -326,6 +249,13 @@ export const createSequelizeDocumentStore = (options: Options) =>
                           // of floating point numbers as they usually aren't used
                           // absolute precision in mind.
                           break;
+                        case DataType.DATE:
+                          if (!(input instanceof Date)) {
+                            throw new Error(
+                              `Field value for ${fieldName} is not a Date`,
+                            );
+                          }
+                          break;
                         case DataType.BLOB:
                           if (!(input instanceof Buffer)) {
                             throw new Error(
@@ -366,32 +296,39 @@ export const createSequelizeDocumentStore = (options: Options) =>
             timestamps: false,
           },
         );
-        models.push(model);
 
-        return {
+        const collection: Collection<T> = {
           create: async (values) => {
             await synchronized;
             const instance = await model.create(values);
-            return toDocument(instance);
+            return toDocument<T>(instance);
           },
           find: async (options) => {
             await synchronized;
             const instances = await model.findAll({
-              where: options?.where ? transformWhere(options.where) : undefined,
+              where: options?.where
+                ? transformWhere<T>(options.where)
+                : undefined,
               order: options?.order,
               limit: options?.limit,
               offset: options?.offset,
             });
-            return instances.map(toDocument);
+            return instances.map(toDocument<T>);
           },
           count: async (options) => {
             await synchronized;
             const count = await model.count({
-              where: options?.where ? transformWhere(options.where) : undefined,
+              where: options?.where
+                ? transformWhere<T>(options.where)
+                : undefined,
             });
             return count;
           },
         };
+
+        meta.set(collection, { model });
+
+        return collection;
       },
     };
   });

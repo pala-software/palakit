@@ -6,16 +6,9 @@ export enum DataType {
   BOOLEAN,
   INTEGER,
   FLOAT,
+  DATE,
   BLOB,
-  ARRAY,
-  OBJECT,
   REFERENCE,
-}
-
-export enum ReferenceType {
-  ONE_TO_ONE,
-  MANY_TO_ONE,
-  MANY_TO_MANY,
 }
 
 type BaseField = {
@@ -50,26 +43,17 @@ export type FloatField = BaseField & {
   size?: 32 | 64;
 };
 
+export type DateField = BaseField & {
+  dataType: DataType.DATE;
+};
+
 export type BlobField = BaseField & {
   dataType: DataType.BLOB;
 };
 
-export type ArrayField = BaseField & {
-  dataType: DataType.ARRAY;
-};
-
-export type ObjectField = BaseField & {
-  dataType: DataType.OBJECT;
-
-  fields: Record<string, Field>;
-};
-
 export type ReferenceField = BaseField & {
   dataType: DataType.REFERENCE;
-
-  referenceType: ReferenceType;
-
-  collectionName: string;
+  targetCollection: Collection;
 };
 
 export type Field =
@@ -77,23 +61,26 @@ export type Field =
   | BooleanField
   | IntegerField
   | FloatField
+  | DateField
   | BlobField
-  | ArrayField
-  | ObjectField
   | ReferenceField;
+
+export type Shape = Record<string, unknown>;
 
 export type ShapeOf<T extends Collection> =
   T extends Collection<infer Shape> ? Shape : never;
 
-export type Document<T extends Collection> = { id: string } & ShapeOf<T>;
+export type Document<T extends Shape> = {
+  id: string;
+} & T;
 
-export type DocumentHandle<T extends Collection> = {
+export type DocumentHandle<T extends Shape> = {
   get: () => Promise<Document<T>>;
-  update: (values: Partial<ShapeOf<T>>) => Promise<void>;
+  update: (values: Partial<T>) => Promise<void>;
   delete: () => Promise<void>;
 };
 
-export type Where<T extends Collection> = {
+export type Where<T extends Shape> = {
   [K in keyof Document<T>]?: {
     equals?: Document<T>[K];
     notEquals?: Document<T>[K];
@@ -113,40 +100,43 @@ export type Where<T extends Collection> = {
       : object);
 } & { and?: Where<T>[]; or?: Where<T>[] };
 
-export type SortingRule<T extends Collection> = [
+export type SortingRule<T extends Shape> = [
   keyof Document<T> extends string ? keyof Document<T> : never,
   "ASC" | "DESC",
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Collection<Shape extends Record<string, unknown> = any> = {
-  create: (values: Shape) => Promise<DocumentHandle<Collection<Shape>>>;
+export type Collection<T extends Shape = any> = {
+  create: (values: T) => Promise<DocumentHandle<T>>;
   find: (options?: {
-    where?: Where<Collection<Shape>>;
-    order?: SortingRule<Collection<Shape>>[];
+    where?: Where<T>;
+    order?: SortingRule<T>[];
     limit?: number;
     offset?: number;
-  }) => Promise<DocumentHandle<Collection<Shape>>[]>;
-  count: (options?: { where?: Where<Collection<Shape>> }) => Promise<number>;
+  }) => Promise<DocumentHandle<T>[]>;
+  count: (options?: { where?: Where<T> }) => Promise<number>;
 };
 
-type TypeOfField<T extends Field> = T extends StringField
+type TypeOfField<T extends Field> = T extends StringField | ReferenceField
   ? string
   : T extends BooleanField
     ? boolean
     : T extends IntegerField | FloatField
       ? number
-      : T extends BlobField
-        ? Buffer
-        : never;
-
-type NullableFieldKey<T extends Record<string, Field>> = {
-  [K in keyof T]: T[K]["nullable"] extends true ? K : never;
-}[keyof T];
+      : T extends DateField
+        ? Date
+        : T extends BlobField
+          ? Buffer
+          : never;
 
 type NonNullableFieldKey<T extends Record<string, Field>> = {
-  [K in keyof T]: T[K]["nullable"] extends true ? never : K;
+  [K in keyof T]: T[K]["nullable"] extends false ? K : never;
 }[keyof T];
+
+type NullableFieldKey<T extends Record<string, Field>> = Exclude<
+  keyof T,
+  NonNullableFieldKey<T>
+>;
 
 export type DocumentStore = {
   connect: () => Promise<void> | void;
