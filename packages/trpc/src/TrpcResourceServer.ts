@@ -56,8 +56,9 @@ export const createTrpcResourceServer = (options: Options) =>
           if (value === undefined) {
             return undefined;
           } else {
-            logger.error("Validation failed, expected nothing");
-            throw new Error("Validation failed, expected nothing");
+            const e = new Error("Validation failed, expected nothing");
+            logger.error(e);
+            throw e;
           }
         }
 
@@ -65,17 +66,18 @@ export const createTrpcResourceServer = (options: Options) =>
         if (result.success) {
           return value;
         } else {
-          const msg =
+          const e = new Error(
             "Validation failed with following issues: \n" +
-            result.issues
-              .map(
-                ({ message, path }) =>
-                  ` - ${message}` +
-                  (path?.length ? ` (at ${path.join(".")})` : ""),
-              )
-              .join("\n");
-          logger.error(msg);
-          throw new Error(msg);
+              result.issues
+                .map(
+                  ({ message, path }) =>
+                    ` - ${message}` +
+                    (path?.length ? ` (at ${path.join(".")})` : ""),
+                )
+                .join("\n"),
+          );
+          logger.error(e);
+          throw e;
         }
       };
     const createQuery = (operation: QueryOperation) =>
@@ -127,8 +129,9 @@ export const createTrpcResourceServer = (options: Options) =>
       if (isMutationOperation(operation)) return createMutation(operation);
       if (isSubscriptionOperation(operation))
         return createSubscription(operation);
-      logger.error("Invalid operation type encountered");
-      throw new Error("Invalid operation type encountered");
+      const e = new Error("Invalid operation type encountered");
+      logger.error(e);
+      throw e;
     };
 
     const createTypeName = (parts: string[]) => {
@@ -140,9 +143,11 @@ export const createTrpcResourceServer = (options: Options) =>
         )
         .join("");
       if (typeName.length < 1) {
-        const msg = `Type name ${parts.join(",")} is converted to empty string which is not valid TypeScript type name`;
-        logger.error(msg);
-        throw new Error(msg);
+        const e = new Error(
+          `Type name ${parts.join(",")} is converted to empty string which is not valid TypeScript type name`,
+        );
+        logger.error(e);
+        throw e;
       }
       return typeName;
     };
@@ -181,10 +186,11 @@ export const createTrpcResourceServer = (options: Options) =>
 
         generateClient: async () => {
           if (!options.clientPath) {
-            const msg =
-              "Cannot generate client, because option 'clientPath' was not provided.";
-            logger.error(msg);
-            throw new Error(msg);
+            const e = new Error(
+              "Cannot generate client, because option 'clientPath' was not provided.",
+            );
+            logger.error(e);
+            throw e;
           }
 
           const generatedTypes: string[] = [];
@@ -240,8 +246,9 @@ export const createTrpcResourceServer = (options: Options) =>
 
               const { type } = operation;
               if (!["query", "mutation", "subscription"].includes(type)) {
-                logger.error("Invalid operation type encountered");
-                throw new Error("Invalid operation type encountered");
+                const e = new Error("Invalid operation type encountered");
+                logger.error(e);
+                throw e;
               }
 
               const jsonName = JSON.stringify(name);
