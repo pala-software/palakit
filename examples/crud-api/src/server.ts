@@ -5,7 +5,6 @@ import { CrudResourceRegistry } from "@palakit/crud";
 import { DataType } from "@palakit/db";
 import { createSequelizeDocumentStore } from "@palakit/sequelize";
 import { createTrpcResourceServer } from "@palakit/trpc";
-import pino from "pino";
 import { z } from "zod";
 
 const PORT = 3000;
@@ -67,29 +66,26 @@ export const app = await resolveApplication({
     }),
     CrudResourceRegistry,
     MyCrudApi,
-    createPinoLogger(
-      pino({
-        base: null,
-        timestamp: pino.stdTimeFunctions.isoTime,
-        transport: {
-          targets: [
-            {
-              target: "pino-pretty",
-              options: {
-                colorize: true,
-                translateTime: true,
-              },
+    createPinoLogger({
+      base: null,
+      transport: {
+        targets: [
+          {
+            target: "pino-pretty",
+            options: {
+              colorize: true,
+              translateTime: true,
             },
-            {
-              target: "pino/file",
-              options: {
-                destination: "logs/server.log",
-                mkdir: true,
-              },
+          },
+          {
+            target: "pino/file",
+            options: {
+              destination: "logs/server.log",
+              mkdir: true,
             },
-          ],
-        },
-      }),
-    ),
+          },
+        ],
+      },
+    }),
   ],
 });

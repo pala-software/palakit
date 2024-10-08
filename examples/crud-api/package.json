@@ -24,7 +24,6 @@
     "@trpc/client": "^10.45.2",
     "@types/ws": "^8.5.12",
     "@typeschema/zod": "^0.14.0",
-    "pino": "^9.4.0",
     "pino-pretty": "^11.2.2",
     "sqlite3": "^5.1.7",
     "tsx": "^4.19.1",

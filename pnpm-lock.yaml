@@ -71,9 +71,6 @@ importers:
       '@typeschema/zod':
         specifier: ^0.14.0
         version: 0.14.0(@types/json-schema@7.0.15)(zod-to-json-schema@3.23.3(zod@3.23.8))(zod@3.23.8)
-      pino:
-        specifier: ^9.4.0
-        version: 9.4.0
       pino-pretty:
         specifier: ^11.2.2
         version: 11.2.2
