@@ -85,10 +85,6 @@ const MyApi = createPart(
     return {
       serverStarted: server.start.after("MyApi.serverStarted", async () => {
         console.log(`Server running is running on port ${PORT}!`);
-        idpOptions = await auth.discover({
-          issuer: ISSUER,
-          client: BACKEND_CLIENT,
-        });
       }),
       idpStarted: idp.start.after("MyApi.idpStarted", async () => {
         for (const { email, password } of ACCOUNTS) {
@@ -97,6 +93,11 @@ const MyApi = createPart(
             passwordHash: await idp.createPasswordHash(password),
           });
         }
+
+        idpOptions = await auth.discover({
+          issuer: ISSUER,
+          client: BACKEND_CLIENT,
+        });
       }),
       publicEndpoint,
       protectedEndpoint,
