@@ -15,7 +15,7 @@ export const KoaHttpServerConfiguration =
   createConfiguration<KoaHttpServerConfiguration>("KoaHttpServerConfiguration");
 
 export const KoaHttpServer = createPart(
-  "HttpServer",
+  "KoaHttpServer",
   [KoaHttpServerConfiguration, Application],
   ([config, app]) => {
     const koa = new Koa();

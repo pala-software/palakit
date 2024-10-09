@@ -188,7 +188,7 @@ export const OpenIdConnectIdentityProvider = createPart(
         return grant;
       },
     };
-    const provider = new Provider(config.issuer.href, providerConfig);
+    let provider: Provider;
 
     const interactionRouter = new Router<{ interaction: Interaction }>({
       host: config.issuer.host,
@@ -261,10 +261,12 @@ export const OpenIdConnectIdentityProvider = createPart(
       },
     );
 
-    http.use(interactionRouter.routes());
-    http.use(mount(config.issuer.pathname, provider.app));
-
     return {
+      start: db.connect.after("OpenIdConnectIdentityProvider.start", () => {
+        provider = new Provider(config.issuer.href, providerConfig);
+        http.use(interactionRouter.routes());
+        http.use(mount(config.issuer.pathname, provider.app));
+      }),
       accounts,
       createPasswordHash: (password: string) => hash(password, 10),
     };

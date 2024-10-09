@@ -1,5 +1,5 @@
 import { Schema } from "@typeschema/main";
-import { createPart } from "@palakit/core";
+import { createPart, Function } from "@palakit/core";
 
 export enum DataType {
   STRING,
@@ -139,7 +139,7 @@ type NullableFieldKey<T extends Record<string, Field>> = Exclude<
 >;
 
 export type DocumentStore = {
-  connect: () => Promise<void> | void;
+  connect: Function<[], void>;
   createCollection: <Fields extends Record<string, Field>>(options: {
     name: string;
     fields: Fields;

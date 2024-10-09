@@ -82,13 +82,6 @@ const MyApi = createPart(
       },
     });
 
-    for (const { email, password } of ACCOUNTS) {
-      idp.accounts.create({
-        email,
-        passwordHash: await idp.createPasswordHash(password),
-      });
-    }
-
     return {
       serverStarted: server.start.after("MyApi.serverStarted", async () => {
         console.log(`Server running is running on port ${PORT}!`);
@@ -96,6 +89,14 @@ const MyApi = createPart(
           issuer: ISSUER,
           client: BACKEND_CLIENT,
         });
+      }),
+      idpStarted: idp.start.after("MyApi.idpStarted", async () => {
+        for (const { email, password } of ACCOUNTS) {
+          idp.accounts.create({
+            email,
+            passwordHash: await idp.createPasswordHash(password),
+          });
+        }
       }),
       publicEndpoint,
       protectedEndpoint,
