@@ -220,6 +220,7 @@ const getSchemas = async <Fields extends Record<string, Field>>({
           { enum: ["ASC", "DESC"] },
         ],
         minItems: 2,
+        maxItems: 2,
       },
     } satisfies JSONSchema7,
   } satisfies ResourceSchema;
