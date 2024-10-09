@@ -6,6 +6,7 @@ import {
   DocumentStore,
   Field,
   Shape,
+  ShapeOf,
   Where,
 } from "@palakit/db";
 import { validate } from "@typeschema/main";
@@ -115,10 +116,7 @@ export const createSequelizeDocumentStore = (options: Options) =>
           setSynchronized();
         },
       ),
-      createCollection: <T extends Shape>(options: {
-        name: string;
-        fields: Record<string, Field>;
-      }): Collection<T> => {
+      createCollection: (options) => {
         const toColumns = (fields: Record<string, Field>) =>
           Object.entries(fields).reduce(
             (obj, [fieldName, field]) => ({
@@ -297,36 +295,39 @@ export const createSequelizeDocumentStore = (options: Options) =>
           },
         );
 
-        const collection: Collection<T> = {
+        type Fields = (typeof options)["fields"];
+        const collection: Collection<Fields> = {
+          name: options.name,
+          fields: options.fields,
           create: async (values) => {
             await synchronized;
             const instance = await model.create(values);
-            return toDocument<T>(instance);
+            return toDocument<ShapeOf<Fields>>(instance);
           },
           find: async (options) => {
             await synchronized;
             const instances = await model.findAll({
               where: options?.where
-                ? transformWhere<T>(options.where)
+                ? transformWhere<ShapeOf<Fields>>(options.where)
                 : undefined,
               order: options?.order,
               limit: options?.limit,
               offset: options?.offset,
             });
-            return instances.map(toDocument<T>);
+            return instances.map(toDocument<ShapeOf<Fields>>);
           },
           count: async (options) => {
             await synchronized;
             const count = await model.count({
               where: options?.where
-                ? transformWhere<T>(options.where)
+                ? transformWhere<ShapeOf<Fields>>(options.where)
                 : undefined,
             });
             return count;
           },
         };
 
-        meta.set(collection, { model });
+        meta.set(collection as Collection, { model });
 
         return collection;
       },

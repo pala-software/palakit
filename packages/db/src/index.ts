@@ -9,10 +9,10 @@ export type {
   FloatField,
   IntegerField,
   ReferenceField,
-  ShapeOf,
   SortingRule,
   StringField,
   Where,
   DateField,
   Shape,
+  ShapeOf,
 } from "./DocumentStore";

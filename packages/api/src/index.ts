@@ -17,7 +17,6 @@ export {
   type Operation,
   type OperationOptions,
   type OperationRecord,
-  type OperationRecordFromOptions,
   type OutputFromResourceSchema,
   type QueryOperation,
   type QueryOperationOptions,
@@ -30,9 +29,5 @@ export {
   type Response,
   type SubscriptionOperation,
   type SubscriptionOperationOptions,
-  type TypedMutationOperationOptions,
-  type TypedOperationOptionRecord,
-  type TypedOperationOptions,
-  type TypedQueryOperationOptions,
-  type TypedSubscriptionOperationOptions,
+  type Validator,
 } from "./types";
