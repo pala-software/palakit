@@ -1,1 +1,5 @@
-export { createSequelizeDocumentStore } from "./SequelizeDocumentStore";
+export {
+  SequelizeDocumentStore,
+  SequelizeDocumentStoreConfiguration,
+  SequelizeDocumentStoreFeature,
+} from "./SequelizeDocumentStore";

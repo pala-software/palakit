@@ -1,5 +1,5 @@
 import { createTRPCProxyClient, createWSClient, wsLink } from "@trpc/client";
-import Router from "../generated/trpc";
+import Router from "../build/trpc";
 import { connect } from "net";
 import { WebSocket } from "ws";
 
@@ -81,7 +81,7 @@ while (true) {
   await new Promise<void>((resolve) => setTimeout(resolve, 100));
   try {
     await new Promise<void>((resolve, reject) => {
-      const socket = connect(3000, "127.0.0.1");
+      const socket = connect(3000, "localhost");
       socket.on("connectionAttemptFailed", () => {
         socket.destroy();
         reject();
@@ -99,7 +99,7 @@ while (true) {
 }
 
 const wsClient = createWSClient({
-  url: "ws://localhost:3000/",
+  url: "ws://localhost:3000/trpc",
   // NOTE: I couldn't get the types to align here.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   WebSocket: WebSocket as any,

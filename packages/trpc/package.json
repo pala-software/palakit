@@ -1,16 +1,20 @@
 {
   "name": "@palakit/trpc",
   "version": "0.1.0",
+  "type": "module",
   "main": "src/index.ts",
   "dependencies": {
+    "@koa/router": "^13.1.0",
     "@palakit/api": "workspace:*",
     "@palakit/core": "workspace:*",
+    "@palakit/koa": "workspace:*",
     "@trpc/server": "^10.45.2",
     "@typeschema/main": "^0.14.0",
     "json-schema-to-typescript": "^15.0.2",
     "ws": "^8.18.0"
   },
   "devDependencies": {
+    "@types/koa__router": "^12.0.4",
     "@types/ws": "^8.5.12"
   }
 }

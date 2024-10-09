@@ -1,11 +1,13 @@
-import { createSequelizeDocumentStore } from "@palakit/sequelize";
+import { SequelizeDocumentStoreFeature } from "@palakit/sequelize";
 import { ResourceServer } from "@palakit/api";
-import { createTrpcResourceServer } from "@palakit/trpc";
+import { TrpcResourceServerFeature } from "@palakit/trpc";
 import { LocalRuntime, createPart, resolveApplication } from "@palakit/core";
 import { DataType, DocumentStore } from "@palakit/db";
 import { CrudHelper } from "@palakit/crud";
+import { KoaHttpServerFeature } from "@palakit/koa";
 
 const PORT = 3000;
+const HOSTNAME = "localhost";
 
 const MyCrudApi = createPart(
   "MyCrudApi",
@@ -43,15 +45,15 @@ export const app = await resolveApplication({
   name: "Crud API Example",
   parts: [
     LocalRuntime,
-    createSequelizeDocumentStore({
+    ...SequelizeDocumentStoreFeature.configure({
       dialect: "sqlite",
       storage: ":memory:",
       logging: false,
     }),
-    ResourceServer,
-    createTrpcResourceServer({
-      port: PORT,
-      clientPath: import.meta.dirname + "/../generated/trpc.ts",
+    ...KoaHttpServerFeature.configure({ port: PORT, hostname: HOSTNAME }),
+    ...TrpcResourceServerFeature.configure({
+      path: "/trpc",
+      clientPath: import.meta.dirname + "/../build/trpc.ts",
     }),
     CrudHelper,
     MyCrudApi,

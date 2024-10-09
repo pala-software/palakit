@@ -1,3 +1,6 @@
-export { createTrpcResourceServer } from "./TrpcResourceServer";
-export type { Options } from "./TrpcResourceServer";
+export {
+  TrpcResourceServer,
+  TrpcResourceServerConfiguration,
+  TrpcResourceServerFeature,
+} from "./TrpcResourceServer";
 export type { BuildProcedure, BuildRouter } from "./typeUtils";

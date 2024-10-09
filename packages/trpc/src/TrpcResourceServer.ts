@@ -10,7 +10,7 @@ import {
   isQueryOperation,
   isSubscriptionOperation,
 } from "@palakit/api";
-import { createPart } from "@palakit/core";
+import { createConfiguration, createFeature, createPart } from "@palakit/core";
 import { AnyRouter, initTRPC } from "@trpc/server";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { observable } from "@trpc/server/observable";
@@ -18,17 +18,26 @@ import { toJSONSchema } from "@typeschema/main";
 import { writeFile } from "fs/promises";
 import { JSONSchema, compile } from "json-schema-to-typescript";
 import { WebSocketServer } from "ws";
+import { KoaHttpServer } from "@palakit/koa";
+import Router from "@koa/router";
 
-export type Options = {
-  /** Port where to host the tRPC WebSocket server. */
-  port: number;
+export type TrpcResourceServerConfiguration = {
+  /** URL path where to mount tRPC server. */
+  path: string;
 
   /** Path where to generate client code. */
   clientPath?: string;
 };
 
-export const createTrpcResourceServer = (options: Options) =>
-  createPart("TrpcServer", [ResourceServer], ([server]) => {
+export const TrpcResourceServerConfiguration =
+  createConfiguration<TrpcResourceServerConfiguration>(
+    "TrpcResourceServerConfiguration",
+  );
+
+export const TrpcResourceServer = createPart(
+  "TrpcServer",
+  [TrpcResourceServerConfiguration, ResourceServer, KoaHttpServer],
+  ([config, server, http]) => {
     const t = initTRPC.create();
     const endpoints: ResourceEndpoint[] = [];
 
@@ -138,12 +147,31 @@ export const createTrpcResourceServer = (options: Options) =>
             });
           }
 
-          const wss = new WebSocketServer({ port: options.port });
+          const wss = new WebSocketServer({ noServer: true });
           applyWSSHandler({ wss, router: t.router(routers) });
+
+          const router = new Router();
+          router.get(config.path, (ctx) => {
+            if (ctx.req.headers.upgrade !== "websocket") {
+              ctx.req.statusCode = 426;
+              return;
+            }
+
+            wss.handleUpgrade(
+              ctx.req,
+              ctx.socket,
+              Buffer.alloc(0),
+              (client, request) => {
+                wss.emit("connection", client, request);
+              },
+            );
+            ctx.respond = false;
+          });
+          http.use(router.routes());
         },
 
         generateClient: async () => {
-          if (!options.clientPath) {
+          if (!config.clientPath) {
             throw new Error(
               "Cannot generate client, because option 'clientPath' was not provided.",
             );
@@ -223,8 +251,14 @@ export const createTrpcResourceServer = (options: Options) =>
           contents += `\n`;
           contents += `export default GeneratedRouter;\n`;
 
-          await writeFile(options.clientPath, contents);
+          await writeFile(config.clientPath, contents);
         },
       }),
     };
-  });
+  },
+);
+
+export const TrpcResourceServerFeature = createFeature(
+  [ResourceServer, TrpcResourceServer],
+  TrpcResourceServerConfiguration,
+);
