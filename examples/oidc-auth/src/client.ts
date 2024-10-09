@@ -6,21 +6,17 @@ import {
   discoveryRequest,
   processDiscoveryResponse,
   validateAuthResponse,
-  Client,
   skipStateCheck,
   isOAuth2Error,
   authorizationCodeGrantRequest,
   processAuthorizationCodeOpenIDResponse,
 } from "oauth4webapi";
+import { FRONTEND_CLIENT, HOSTNAME, ISSUER, PORT, TRPC_PATH } from "./config";
 
 try {
-  const ISSUER = new URL("http://localhost:3000/id");
-  const CLIENT: Client = {
-    client_id: "pala-frontend",
-    token_endpoint_auth_method: "none",
-  };
-
-  const wsClient = createWSClient({ url: "ws://localhost:3000/trpc" });
+  const wsClient = createWSClient({
+    url: `ws://${HOSTNAME}:${PORT}${TRPC_PATH}`,
+  });
   const client = createTRPCProxyClient<Router>({
     links: [wsLink({ client: wsClient })],
   });
@@ -39,7 +35,7 @@ try {
     sessionStorage.setItem("pala-code-verifier", codeVerifier);
 
     const url = new URL(as.authorization_endpoint);
-    url.searchParams.set("client_id", CLIENT.client_id);
+    url.searchParams.set("client_id", FRONTEND_CLIENT.client_id);
     url.searchParams.set("redirect_uri", location.origin);
     url.searchParams.set("response_type", "code");
     url.searchParams.set("scope", "openid email");
@@ -55,7 +51,7 @@ try {
 
     const params = validateAuthResponse(
       as,
-      CLIENT,
+      FRONTEND_CLIENT,
       new URL(location.href),
       skipStateCheck,
     );
@@ -65,12 +61,12 @@ try {
 
     const result = await authorizationCodeGrantRequest(
       as,
-      CLIENT,
+      FRONTEND_CLIENT,
       params,
       location.origin,
       codeVerifier,
     ).then((response) =>
-      processAuthorizationCodeOpenIDResponse(as, CLIENT, response),
+      processAuthorizationCodeOpenIDResponse(as, FRONTEND_CLIENT, response),
     );
     if (isOAuth2Error(result)) {
       throw new Error(result.error);

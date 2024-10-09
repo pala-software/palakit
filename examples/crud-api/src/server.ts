@@ -6,10 +6,7 @@ import { z } from "zod";
 import { DataType } from "@palakit/db";
 import { CrudResourceRegistry } from "@palakit/crud";
 import { KoaHttpServerFeature } from "@palakit/koa";
-
-const PORT = 3000;
-const HOSTNAME = "localhost";
-const SECRET = "bad secret";
+import { HOSTNAME, PORT, SECRET, TRPC_PATH } from "./config";
 
 const MyCrudApi = createPart(
   "MyCrudApi",
@@ -62,7 +59,7 @@ export const app = await resolveApplication({
     }),
     ...KoaHttpServerFeature.configure({ port: PORT, hostname: HOSTNAME }),
     ...TrpcResourceServerFeature.configure({
-      path: "/trpc",
+      path: TRPC_PATH,
       clientPath: import.meta.dirname + "/../build/trpc.ts",
     }),
     CrudResourceRegistry,
