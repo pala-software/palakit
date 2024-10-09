@@ -21,10 +21,10 @@ try {
     links: [wsLink({ client: wsClient })],
   });
 
-  const as = await discoveryRequest(ISSUER).then((response) =>
+  const idp = await discoveryRequest(ISSUER).then((response) =>
     processDiscoveryResponse(ISSUER, response),
   );
-  if (!as.authorization_endpoint) {
+  if (!idp.authorization_endpoint) {
     throw new Error("No authorization_endpoint");
   }
 
@@ -34,7 +34,7 @@ try {
     const codeChallenge = await calculatePKCECodeChallenge(codeVerifier);
     sessionStorage.setItem("pala-code-verifier", codeVerifier);
 
-    const url = new URL(as.authorization_endpoint);
+    const url = new URL(idp.authorization_endpoint);
     url.searchParams.set("client_id", FRONTEND_CLIENT.client_id);
     url.searchParams.set("redirect_uri", location.origin);
     url.searchParams.set("response_type", "code");
@@ -50,7 +50,7 @@ try {
     }
 
     const params = validateAuthResponse(
-      as,
+      idp,
       FRONTEND_CLIENT,
       new URL(location.href),
       skipStateCheck,
@@ -60,13 +60,13 @@ try {
     }
 
     const result = await authorizationCodeGrantRequest(
-      as,
+      idp,
       FRONTEND_CLIENT,
       params,
       location.origin,
       codeVerifier,
     ).then((response) =>
-      processAuthorizationCodeOpenIDResponse(as, FRONTEND_CLIENT, response),
+      processAuthorizationCodeOpenIDResponse(idp, FRONTEND_CLIENT, response),
     );
     if (isOAuth2Error(result)) {
       throw new Error(result.error);
