@@ -11,7 +11,7 @@ type ApplicationConfiguration = {
   name: string;
 };
 
-const ApplicationConfiguration = createPart<ApplicationConfiguration>(
+export const ApplicationConfiguration = createPart<ApplicationConfiguration>(
   "ApplicationConfiguration",
 );
 

@@ -2,6 +2,7 @@
   "name": "@palakit/core",
   "version": "0.1.0",
   "main": "src/index.ts",
+  "type": "module",
   "dependencies": {
     "part-di": "^2.0.0"
   }
