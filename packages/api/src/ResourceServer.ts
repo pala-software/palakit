@@ -172,7 +172,7 @@ export const ResourceServer = createPart(
           inputValidator: createValidator(options.input),
           outputValidator: createValidator(options.output),
           handler: runtime.createFunction(
-            `ResourceServer.${options.name}.operations.${options.name}`,
+            `ResourceServer.operations.${options.name}`,
             options.handler,
           ),
         };
@@ -194,7 +194,7 @@ export const ResourceServer = createPart(
           inputValidator: createValidator(options.input),
           outputValidator: createValidator(options.output),
           handler: runtime.createFunction(
-            `ResourceServer.${options.name}.operations.${options.name}`,
+            `ResourceServer.operations.${options.name}`,
             options.handler,
           ),
         };
@@ -216,7 +216,7 @@ export const ResourceServer = createPart(
           inputValidator: createValidator(options.input),
           outputValidator: createValidator(options.output),
           handler: runtime.createFunction(
-            `ResourceServer.${options.name}.operations.${options.name}`,
+            `ResourceServer.operations.${options.name}`,
             options.handler,
           ),
         };

@@ -20,4 +20,5 @@ check:
   script:
     - pnpm install
     - pnpm lint
+    - pnpm run check
     - pnpm test

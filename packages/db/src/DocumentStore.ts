@@ -136,7 +136,9 @@ export type Collection<
 > = {
   name: string;
   fields: Fields;
-  create: (values: ShapeOf<Fields>) => Promise<DocumentHandle<ShapeOf<Fields>>>;
+  create: (
+    values: ShapeOf<Fields> & { id?: string },
+  ) => Promise<DocumentHandle<ShapeOf<Fields>>>;
   find: (options?: {
     where?: Where<ShapeOf<Fields>>;
     order?: SortingRule<ShapeOf<Fields>>[];

@@ -31,7 +31,17 @@ export const OidcProviderDatabaseAdapter = createPart(
   "OidcProviderDatabaseAdapter",
   [DocumentStore],
   ([db]): AdapterFactory => {
-    const collections = new Map<string, Collection>();
+    const collections = new Map<
+      string,
+      Collection<{
+        grantId?: { dataType: DataType.STRING; nullable: false };
+        userCode?: { dataType: DataType.STRING; nullable: false };
+        uid?: { dataType: DataType.STRING; nullable: false };
+        data: { dataType: DataType.STRING; nullable: false };
+        expiresAt: { dataType: DataType.DATE; nullable: false };
+        consumedAt: { dataType: DataType.DATE; nullable: true };
+      }>
+    >();
     for (const name of models) {
       const collection = db.createCollection({
         name: "oidc" + name,
@@ -63,12 +73,10 @@ export const OidcProviderDatabaseAdapter = createPart(
         upsert: async (id, data, expiresIn) => {
           const values = {
             data: JSON.stringify(data),
+            expiresAt: new Date(Date.now() + expiresIn * 1000),
             ...(data.grantId && { grantId: data.grantId }),
             ...(data.userCode && { userCode: data.userCode }),
             ...(data.uid && { uid: data.uid }),
-            ...(expiresIn && {
-              expiresAt: new Date(Date.now() + expiresIn * 1000),
-            }),
           };
 
           const [document] = await collection.find({
