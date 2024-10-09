@@ -7,7 +7,7 @@
     "prepare": "husky",
     "test": "jest",
     "check-types": "tsc --allowJs --noemit --skipLibCheck",
-    "check": "pnpm run '/^(lint|check-types)$/'"
+    "check": "pnpm run \"/^(lint|check-types)$/\""
   },
   "devDependencies": {
     "@eslint/js": "^9.11.1",

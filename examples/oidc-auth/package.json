@@ -7,7 +7,7 @@
     "generate-client": "tsx watch scripts/generate-client.ts",
     "start-client": "vite",
     "start-server": "tsx watch scripts/start-server.ts",
-    "start": "pnpm run --filter . --parallel '/^(generate|start)-(client|server)$/'"
+    "start": "pnpm run --filter . --parallel \"/^(generate|start)-(client|server)$/\""
   },
   "dependencies": {
     "@palakit/api": "workspace:*",
