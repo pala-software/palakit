@@ -4,6 +4,8 @@
     "target": "ESNext",
     "module": "Preserve",
     "allowJs": true,
-    "skipLibCheck": true
+    "checkJs": true,
+    "skipLibCheck": true,
+    "noEmit": true
   }
 }
