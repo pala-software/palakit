@@ -19,7 +19,7 @@ export type OpenIdConnectIdentityProviderConfiguration = {
   issuer: URL;
   clients: ClientMetadata[];
   jwks?: JWKS;
-  cookieKeys: (string | Buffer)[];
+  cookieKeys?: (string | Buffer)[];
   ttl?: {
     AccessToken?: number;
     AuthorizationCode?: number;
