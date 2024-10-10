@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "lint": "eslint .",
-    "check-types": "tsc --allowJs --noemit --skipLibCheck",
+    "check-types": "tsc --noemit",
     "check": "pnpm run '/^(lint|check-types)$/'",
     "prepare": "husky"
   },
