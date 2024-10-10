@@ -1,11 +1,62 @@
 import { SequelizeDocumentStoreFeature } from "@palakit/sequelize";
-import { ResourceServer } from "@palakit/api";
+import { ResourceServer, ResourceEndpoint } from "@palakit/api";
 import { TrpcResourceServerFeature } from "@palakit/trpc";
 import { LocalRuntime, createPart, resolveApplication } from "@palakit/core";
 import { DataType, DocumentStore } from "@palakit/db";
 import { CrudHelper } from "@palakit/crud";
 import { KoaHttpServerFeature } from "@palakit/koa";
-import { HOSTNAME, PORT, TRPC_PATH } from "./config";
+import { HOSTNAME, PORT, TRPC_PATH, SECRET } from "./config";
+import { toJSONSchema } from "@typeschema/main";
+
+const requireSecret = <T extends ResourceEndpoint>({
+  endpointName,
+  endpoint,
+  operationNames,
+}: {
+  endpointName: string;
+  endpoint: T;
+  operationNames?: (keyof T["operations"])[];
+}) => {
+  if (!operationNames) {
+    operationNames = Object.keys(endpoint.operations);
+  }
+
+  for (const operationName of operationNames as string[]) {
+    endpoint.operations[operationName].getInputSchema.after(
+      `${endpointName}.operations.${operationName.toString()}.getInputSchema.after`,
+      async (value) => {
+        if (value === null) {
+          return null;
+        }
+
+        const { name } = value;
+        const schema = await toJSONSchema(value.schema);
+        schema.properties = {
+          ...schema.properties,
+          authorization: { type: "string" },
+        };
+        schema.required = [...(schema.required ?? []), "authorization"];
+
+        return { name, schema };
+      },
+    );
+
+    endpoint.operations[operationName].handler.before(
+      `${endpointName}.operations.${operationName.toString()}.handler.before`,
+      (request) => {
+        if (
+          typeof request.input !== "object" ||
+          !request.input ||
+          !("authorization" in request.input) ||
+          request.input.authorization !== SECRET
+        ) {
+          throw new Error("Unauthorized");
+        }
+        return [request];
+      },
+    );
+  }
+};
 
 const MyCrudApi = createPart(
   "MyCrudApi",
@@ -24,9 +75,11 @@ const MyCrudApi = createPart(
 
     const endpoint = server.createEndpoint({
       name: "names",
-      operations: {
-        ...(await crud.createCrudOperations({ name: "name", collection })),
-      },
+      operations: await crud.createCrudOperations({ name: "name", collection }),
+    });
+    requireSecret({
+      endpointName: "MyCrudApi.endpoint",
+      endpoint,
     });
 
     return {

@@ -74,6 +74,9 @@ importers:
       '@types/ws':
         specifier: ^8.5.12
         version: 8.5.12
+      '@typeschema/main':
+        specifier: ^0.14.0
+        version: 0.14.0(@types/json-schema@7.0.15)(@typeschema/json@0.14.0(@types/json-schema@7.0.15)(ajv@8.17.1)(json-schema-to-ts@3.1.1))(@typeschema/zod@0.14.0(@types/json-schema@7.0.15)(zod-to-json-schema@3.23.3(zod@3.23.8))(zod@3.23.8))
       '@typeschema/zod':
         specifier: ^0.14.0
         version: 0.14.0(@types/json-schema@7.0.15)(zod-to-json-schema@3.23.3(zod@3.23.8))(zod@3.23.8)
