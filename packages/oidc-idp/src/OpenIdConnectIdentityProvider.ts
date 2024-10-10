@@ -4,6 +4,7 @@ import Provider, {
   Configuration,
   Grant,
   Interaction,
+  JWKS,
   errors,
 } from "oidc-provider";
 import { KoaHttpServer } from "@palakit/koa";
@@ -17,6 +18,20 @@ import { compare, hash } from "bcrypt";
 export type OpenIdConnectIdentityProviderConfiguration = {
   issuer: URL;
   clients: ClientMetadata[];
+  jwks?: JWKS;
+  cookieKeys: (string | Buffer)[];
+  ttl?: {
+    AccessToken?: number;
+    AuthorizationCode?: number;
+    ClientCredentials?: number;
+    DeviceCode?: number;
+    BackchannelAuthenticationRequest?: number;
+    IdToken?: number;
+    RefreshToken?: number;
+    Interaction?: number;
+    Session?: number;
+    Grant?: number;
+  };
 };
 
 export const OpenIdConnectIdentityProviderConfiguration =
@@ -124,13 +139,20 @@ export const OpenIdConnectIdentityProvider = createPart(
     const providerConfig: Configuration = {
       adapter,
       clients: config.clients,
+      jwks: config.jwks,
+      cookies: { keys: config.cookieKeys },
+      ttl: config.ttl,
       interactions: {
         url: (_ctx, interaction) =>
           prefix(`/interaction/${interaction.uid}`).href,
       },
       features: {
         devInteractions: { enabled: false },
-        introspection: { enabled: true },
+        introspection: {
+          enabled: true,
+          allowedPolicy: (_ctx, client) =>
+            client.tokenEndpointAuthMethod !== "none",
+        },
       },
       findAccount: async (_ctx, id) => {
         const [account] = await accounts.find({
@@ -188,7 +210,7 @@ export const OpenIdConnectIdentityProvider = createPart(
         return grant;
       },
     };
-    const provider = new Provider(config.issuer.href, providerConfig);
+    let provider: Provider;
 
     const interactionRouter = new Router<{ interaction: Interaction }>({
       host: config.issuer.host,
@@ -261,10 +283,12 @@ export const OpenIdConnectIdentityProvider = createPart(
       },
     );
 
-    http.use(interactionRouter.routes());
-    http.use(mount(config.issuer.pathname, provider.app));
-
     return {
+      start: db.connect.after("OpenIdConnectIdentityProvider.start", () => {
+        provider = new Provider(config.issuer.href, providerConfig);
+        http.use(interactionRouter.routes());
+        http.use(mount(config.issuer.pathname, provider.app));
+      }),
       accounts,
       createPasswordHash: (password: string) => hash(password, 10),
     };

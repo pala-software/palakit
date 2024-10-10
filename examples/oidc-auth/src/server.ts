@@ -10,34 +10,15 @@ import {
 } from "@palakit/oidc-idp";
 import { IdentityProvider } from "@palakit/oidc-client";
 import { KoaHttpServerFeature } from "@palakit/koa";
-import { Client } from "oauth4webapi";
-
-const PORT = 3000;
-const HOSTNAME = "localhost";
-const TRPC_PATH = "/trpc";
-const AUTH_PATH = "/id";
-const ISSUER = new URL(`http://${HOSTNAME}:${PORT}${AUTH_PATH}`);
-
-const ACCOUNTS = [{ email: "test@example.com", password: "test" }] satisfies {
-  email: string;
-  password: string;
-}[];
-
-const BACKEND_CLIENT = {
-  client_id: "pala-backend",
-  client_secret: crypto.randomUUID(),
-  redirect_uris: [],
-  response_types: [],
-  grant_types: [],
-} satisfies Client;
-
-const FRONTEND_CLIENT = {
-  client_id: "pala-frontend",
-  redirect_uris: ["http://localhost:5173"],
-  token_endpoint_auth_method: "none",
-} satisfies Client;
-
-const CLIENTS = [BACKEND_CLIENT, FRONTEND_CLIENT] satisfies Client[];
+import {
+  ACCOUNTS,
+  BACKEND_CLIENT,
+  CLIENTS,
+  HOSTNAME,
+  ISSUER,
+  PORT,
+  TRPC_PATH,
+} from "./config";
 
 const MyApi = createPart(
   "MyApi",
@@ -83,16 +64,18 @@ const MyApi = createPart(
       },
     });
 
-    for (const { email, password } of ACCOUNTS) {
-      idp.accounts.create({
-        email,
-        passwordHash: await idp.createPasswordHash(password),
-      });
-    }
-
     return {
       serverStarted: server.start.after("MyApi.serverStarted", async () => {
         console.log(`Server running is running on port ${PORT}!`);
+      }),
+      idpStarted: idp.start.after("MyApi.idpStarted", async () => {
+        for (const { email, password } of ACCOUNTS) {
+          idp.accounts.create({
+            email,
+            passwordHash: await idp.createPasswordHash(password),
+          });
+        }
+
         idpOptions = await auth.discover({
           issuer: ISSUER,
           client: BACKEND_CLIENT,
