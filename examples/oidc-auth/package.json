@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "prepare": "tsx scripts/generate-client.ts",
     "generate-client": "tsx watch scripts/generate-client.ts",
     "start-client": "vite",
     "start-server": "tsx watch scripts/start-server.ts",
-    "start": "pnpm run --filter . --parallel \"/^(generate|start)-(client|server)$/\""
+    "start": "pnpm run --filter . --parallel '/^(generate|start)-(client|server)$/'"
   },
   "dependencies": {
     "@palakit/api": "workspace:*",
@@ -24,6 +25,7 @@
     "zod-to-json-schema": "^3.23.2"
   },
   "devDependencies": {
+    "@sinclair/typebox": "^0.33.15",
     "tsx": "^4.18.0",
     "vite": "^5.4.2"
   }

@@ -1,8 +1,11 @@
 {
   "name": "@palakit/monorepo",
   "private": true,
+  "type": "module",
   "scripts": {
     "lint": "eslint .",
+    "check-types": "tsc --allowJs --noemit --skipLibCheck",
+    "check": "pnpm run '/^(lint|check-types)$/'",
     "prepare": "husky"
   },
   "devDependencies": {
@@ -15,6 +18,7 @@
     "lint-staged": "^15.2.10",
     "prettier": "^3.3.3",
     "prettier-plugin-jsdoc": "^1.3.0",
+    "typescript": "^5.6.2",
     "typescript-eslint": "^8.7.0"
   },
   "packageManager": "pnpm@9.12.0+sha512.4abf725084d7bcbafbd728bfc7bee61f2f791f977fd87542b3579dcb23504d170d46337945e4c66485cd12d588a0c0e570ed9c477e7ccdd8507cf05f3f92eaca"
