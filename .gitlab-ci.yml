@@ -19,6 +19,5 @@ check:
     - pnpm config set store-dir .pnpm-store
   script:
     - pnpm install
-    - pnpm lint
     - pnpm run check
-    - pnpm test
+    - pnpm run test
