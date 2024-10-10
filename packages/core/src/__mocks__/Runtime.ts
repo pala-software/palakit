@@ -1,7 +1,7 @@
 import { createPart } from "part-di";
 import { Runtime as RuntimeDefinition } from "../Runtime";
 
-export const Runtime = createPart(RuntimeDefinition, [], () => {
+export const MockRuntime = createPart(RuntimeDefinition, [], () => {
   const createFunction = jest.fn(() =>
     Object.assign(jest.fn(), {
       before: createFunction,

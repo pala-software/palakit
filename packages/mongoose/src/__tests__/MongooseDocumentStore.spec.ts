@@ -1,5 +1,5 @@
 import { resolveApplication } from "@palakit/core";
-import { Application } from "@palakit/core/src/__mocks__/Application";
+import { MockApplication } from "@palakit/core/src/__mocks__/Application";
 import { DataType, IntegerField, StringField } from "@palakit/db";
 import { ConnectOptions } from "mongoose";
 import {
@@ -13,12 +13,12 @@ const mockMongoose = jest.requireMock("mongoose");
 describe("MongooseDocumentStore", () => {
   const mockConnectionString = "mock-connection-string";
   const mockConnectionOptions = { someKey: "someValue" } as ConnectOptions;
-  const resolveApp = async () =>
+  const resolveDocumentStore = async () =>
     (
       await resolveApplication({
         name: "MockMongoApp",
         parts: [
-          Application,
+          MockApplication,
           ...MongooseDocumentStoreFeature.configure({
             connectionString: mockConnectionString,
             connectOptions: mockConnectionOptions,
@@ -29,7 +29,7 @@ describe("MongooseDocumentStore", () => {
 
   describe("connect", () => {
     it("can connect to mongoose with correct connection string and options", async () => {
-      const ds = await resolveApp();
+      const ds = await resolveDocumentStore();
       expect(mockMongoose.connect).not.toHaveBeenCalled();
       ds.connect();
       expect(mockMongoose.connect).toHaveBeenCalledTimes(1);
@@ -48,7 +48,7 @@ describe("MongooseDocumentStore", () => {
     };
 
     const createCollection = async () =>
-      (await resolveApp()).createCollection({
+      (await resolveDocumentStore()).createCollection({
         name: mockCollectionName,
         fields: mockFields,
       });
