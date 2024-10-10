@@ -9,7 +9,10 @@ export type Function<Arguments extends unknown[], Return> = ((
   ) => Function<Arguments, Arguments>;
   after: (
     hookName: string,
-    hook: (value: Awaited<Return>, ...args: Arguments) => Return,
+    hook: (
+      value: Awaited<Return>,
+      ...args: Arguments
+    ) => Awaited<Return> | Promise<Awaited<Return>>,
   ) => Function<[Awaited<Return>, ...Arguments], Return>;
 };
 

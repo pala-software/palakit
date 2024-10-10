@@ -51,7 +51,9 @@ export type Response<Output = any> = OkResponse<Output> | ErrorResponse;
 export const isResponse = (value: unknown): value is Response =>
   isOkResponse(value) || isErrorResponse(value);
 
-export type Validator<T = unknown> = (value: unknown) => Promise<T>;
+export type Validator = Function<[ResourceSchema | null, unknown], unknown>;
+
+export type SchemaGetter = Function<[], ResourceSchema | null>;
 
 export type OperationOptions<
   InputSchema extends ResourceSchema | null = ResourceSchema | null,
@@ -65,11 +67,11 @@ export type OperationOptions<
 
 export type Operation = {
   type: string;
-  inputSchema: ResourceSchema | null;
-  outputSchema: ResourceSchema | null;
-  inputValidator: Validator;
-  outputValidator: Validator;
-  handler: Function<[Request], Response | Promise<Response>>;
+  getInputSchema: SchemaGetter;
+  getOutputSchema: SchemaGetter;
+  validateInput: Validator;
+  validateOutput: Validator;
+  handler: Function<[Request], Response>;
 };
 
 export type QueryOperationOptions<
@@ -88,14 +90,11 @@ export type QueryOperationOptions<
 
 export type QueryOperation<Input = unknown, Output = unknown> = {
   type: "query";
-  inputSchema: ResourceSchema | null;
-  outputSchema: ResourceSchema | null;
-  inputValidator: Validator<Input>;
-  outputValidator: Validator<Output>;
-  handler: Function<
-    [Request<Input>],
-    Response<Output> | Promise<Response<Output>>
-  >;
+  getInputSchema: SchemaGetter;
+  getOutputSchema: SchemaGetter;
+  validateInput: Validator;
+  validateOutput: Validator;
+  handler: Function<[Request<Input>], Response<Output>>;
 };
 
 export const isQueryOperation = (
@@ -118,14 +117,11 @@ export type MutationOperationOptions<
 
 export type MutationOperation<Input = unknown, Output = unknown> = {
   type: "mutation";
-  inputSchema: ResourceSchema | null;
-  outputSchema: ResourceSchema | null;
-  inputValidator: Validator<Input>;
-  outputValidator: Validator<Output>;
-  handler: Function<
-    [Request<Input>],
-    Response<Output> | Promise<Response<Output>>
-  >;
+  getInputSchema: SchemaGetter;
+  getOutputSchema: SchemaGetter;
+  validateInput: Validator;
+  validateOutput: Validator;
+  handler: Function<[Request<Input>], Response<Output>>;
 };
 
 export const isMutationOperation = (
@@ -154,14 +150,11 @@ export type SubscriptionOperationOptions<
 
 export type SubscriptionOperation<Input = unknown, Output = unknown> = {
   type: "subscription";
-  inputSchema: ResourceSchema | null;
-  outputSchema: ResourceSchema | null;
-  inputValidator: Validator<Input>;
-  outputValidator: Validator<Output>;
-  handler: Function<
-    [Request<Input>],
-    Response<Observable<Output>> | Promise<Response<Observable<Output>>>
-  >;
+  getInputSchema: SchemaGetter;
+  getOutputSchema: SchemaGetter;
+  validateInput: Validator;
+  validateOutput: Validator;
+  handler: Function<[Request<Input>], Response<Observable<Output>>>;
 };
 
 export const isSubscriptionOperation = (

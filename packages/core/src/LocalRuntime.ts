@@ -31,7 +31,10 @@ export const LocalRuntime = createPart(Runtime, [], () => {
         },
         after: (
           hookName: string,
-          hook: (value: Awaited<Return>, ...args: Arguments) => Return,
+          hook: (
+            value: Awaited<Return>,
+            ...args: Arguments
+          ) => Awaited<Return> | Promise<Return>,
         ) => {
           const fn = createFunction(hookName, hook);
           afterHooks.push(fn);
