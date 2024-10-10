@@ -2,7 +2,7 @@ import { createTRPCProxyClient, createWSClient, wsLink } from "@trpc/client";
 import Router from "../build/trpc";
 import { connect } from "net";
 import { WebSocket } from "ws";
-import { HOSTNAME, PORT, SECRET, TRPC_PATH } from "./config";
+import { HOSTNAME, PORT, TRPC_PATH } from "./config";
 
 const firstNames = [
   "Matti",
@@ -35,12 +35,12 @@ const pick = <T>(array: T[]): T | undefined =>
 
 const createName = async () => {
   const name = `${pick(firstNames)} ${pick(lastNames)}`;
-  await client.names.create.mutate({ data: { name }, authorization: SECRET });
+  await client.names.create.mutate({ data: { name } });
   console.log("Created a new name: " + name);
 };
 
 const updateName = async () => {
-  const documents = await client.names.find.query({ authorization: SECRET });
+  const documents = await client.names.find.query({});
   const oldDocument = pick(documents);
   if (!oldDocument) return;
   const { name: oldName } = oldDocument;
@@ -54,17 +54,16 @@ const updateName = async () => {
     data: {
       name: newName,
     },
-    authorization: SECRET,
   });
   newName = newDocument.name;
   console.log(`Updated ${oldName} to: ${newName}`);
 };
 
 const deleteName = async () => {
-  const documents = await client.names.find.query({ authorization: SECRET });
+  const documents = await client.names.find.query({});
   const document = pick(documents);
   if (!document) return;
-  await client.names.delete.mutate({ id: document.id, authorization: SECRET });
+  await client.names.delete.mutate({ id: document.id });
   console.log("Deleted: " + document.name);
 };
 
@@ -73,7 +72,6 @@ const mutations = [createName, updateName, deleteName];
 const listNames = async () => {
   for (const { name } of await client.names.find.query({
     order: [["name", "ASC"]],
-    authorization: SECRET,
   })) {
     console.log("- " + name);
   }
@@ -112,7 +110,7 @@ const client = createTRPCProxyClient<Router>({
 });
 
 const loop = async () => {
-  const count = await client.names.count.query({ authorization: SECRET });
+  const count = await client.names.count.query({});
   console.log("Current count of names: " + count);
 
   if (count > 0) {

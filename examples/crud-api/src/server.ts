@@ -2,48 +2,39 @@ import { SequelizeDocumentStoreFeature } from "@palakit/sequelize";
 import { ResourceServer } from "@palakit/api";
 import { TrpcResourceServerFeature } from "@palakit/trpc";
 import { LocalRuntime, createPart, resolveApplication } from "@palakit/core";
-import { z } from "zod";
-import { DataType } from "@palakit/db";
-import { CrudResourceRegistry } from "@palakit/crud";
+import { DataType, DocumentStore } from "@palakit/db";
+import { CrudHelper } from "@palakit/crud";
 import { KoaHttpServerFeature } from "@palakit/koa";
-import { HOSTNAME, PORT, SECRET, TRPC_PATH } from "./config";
+import { HOSTNAME, PORT, TRPC_PATH } from "./config";
 
 const MyCrudApi = createPart(
   "MyCrudApi",
-  [ResourceServer, CrudResourceRegistry],
-  async ([server, crud]) => {
-    const names = await crud.createResource({
-      name: { singular: "name", plural: "names" },
+  [DocumentStore, ResourceServer, CrudHelper],
+  async ([db, server, crud]) => {
+    const collection = await db.createCollection({
+      name: "names",
       fields: {
         name: {
           dataType: DataType.STRING,
           length: 255,
-          schema: z.string(),
+          nullable: false,
         },
       },
-      requireAuthorization: true,
     });
 
-    names.endpoint.operation.before(
-      "MyCrudApi.names.endpoint.operation.before",
-      ({ request }) => {
-        if (
-          typeof request.input !== "object" ||
-          !request.input ||
-          !("authorization" in request.input) ||
-          request.input.authorization !== SECRET
-        ) {
-          throw new Error("Unauthorized");
-        }
-        return request;
+    const endpoint = server.createEndpoint({
+      name: "names",
+      operations: {
+        ...(await crud.createCrudOperations({ name: "name", collection })),
       },
-    );
+    });
 
     return {
       serverStarted: server.start.after("MyCrudApi.serverStarted", () => {
         console.log(`Server running is running on port ${PORT}!`);
       }),
-      names,
+      collection,
+      endpoint,
     };
   },
 );
@@ -62,7 +53,7 @@ export const app = await resolveApplication({
       path: TRPC_PATH,
       clientPath: import.meta.dirname + "/../build/trpc.ts",
     }),
-    CrudResourceRegistry,
+    CrudHelper,
     MyCrudApi,
   ],
 });

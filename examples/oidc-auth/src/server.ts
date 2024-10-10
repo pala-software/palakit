@@ -3,7 +3,6 @@ import { ResourceServer } from "@palakit/api";
 import { TrpcResourceServerFeature } from "@palakit/trpc";
 import { LocalRuntime, createPart, resolveApplication } from "@palakit/core";
 import { z } from "zod";
-import { CrudResourceRegistry } from "@palakit/crud";
 import { OpenIdConnectAuthenticator } from "@palakit/oidc-client";
 import {
   OpenIdConnectIdentityProvider,
@@ -31,6 +30,7 @@ const MyApi = createPart(
       name: "public",
       operations: {
         read: server.createQuery({
+          name: "public.read",
           input: null,
           output: null,
           handler: () => {
@@ -44,6 +44,7 @@ const MyApi = createPart(
       name: "protected",
       operations: {
         read: server.createQuery({
+          name: "protected.read",
           input: { schema: z.object({ token: z.string() }) },
           output: null,
           handler: async ({ input }) => {
@@ -107,7 +108,6 @@ export const app = await resolveApplication({
       issuer: ISSUER,
       clients: CLIENTS,
     }),
-    CrudResourceRegistry,
     MyApi,
   ],
 });

@@ -1,4 +1,4 @@
-import { Schema } from "@typeschema/main";
+import { Infer, Schema } from "@typeschema/main";
 import { createPart, Function } from "@palakit/core";
 
 export enum DataType {
@@ -65,10 +65,36 @@ export type Field =
   | BlobField
   | ReferenceField;
 
+type TypeOfField<T extends Field> = T["schema"] extends Schema
+  ? Infer<T["schema"]>
+  : T extends StringField | ReferenceField
+    ? string
+    : T extends BooleanField
+      ? boolean
+      : T extends IntegerField | FloatField
+        ? number
+        : T extends DateField
+          ? Date
+          : T extends BlobField
+            ? Buffer
+            : never;
+
+type NonNullableFieldKey<T extends Record<string, Field>> = {
+  [K in keyof T]: T[K]["nullable"] extends false ? K : never;
+}[keyof T];
+
+type NullableFieldKey<T extends Record<string, Field>> = Exclude<
+  keyof T,
+  NonNullableFieldKey<T>
+>;
+
 export type Shape = Record<string, unknown>;
 
-export type ShapeOf<T extends Collection> =
-  T extends Collection<infer Shape> ? Shape : never;
+export type ShapeOf<Fields extends Record<string, Field>> = {
+  [K in NonNullableFieldKey<Fields>]: TypeOfField<Fields[K]>;
+} & {
+  [K in NullableFieldKey<Fields>]?: TypeOfField<Fields[K]>;
+};
 
 export type Document<T extends Shape> = {
   id: string;
@@ -105,51 +131,27 @@ export type SortingRule<T extends Shape> = [
   "ASC" | "DESC",
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Collection<T extends Shape = any> = {
-  create: (values: T) => Promise<DocumentHandle<T>>;
+export type Collection<
+  Fields extends Record<string, Field> = Record<string, Field>,
+> = {
+  name: string;
+  fields: Fields;
+  create: (values: ShapeOf<Fields>) => Promise<DocumentHandle<ShapeOf<Fields>>>;
   find: (options?: {
-    where?: Where<T>;
-    order?: SortingRule<T>[];
+    where?: Where<ShapeOf<Fields>>;
+    order?: SortingRule<ShapeOf<Fields>>[];
     limit?: number;
     offset?: number;
-  }) => Promise<DocumentHandle<T>[]>;
-  count: (options?: { where?: Where<T> }) => Promise<number>;
+  }) => Promise<DocumentHandle<ShapeOf<Fields>>[]>;
+  count: (options?: { where?: Where<ShapeOf<Fields>> }) => Promise<number>;
 };
-
-type TypeOfField<T extends Field> = T extends StringField | ReferenceField
-  ? string
-  : T extends BooleanField
-    ? boolean
-    : T extends IntegerField | FloatField
-      ? number
-      : T extends DateField
-        ? Date
-        : T extends BlobField
-          ? Buffer
-          : never;
-
-type NonNullableFieldKey<T extends Record<string, Field>> = {
-  [K in keyof T]: T[K]["nullable"] extends false ? K : never;
-}[keyof T];
-
-type NullableFieldKey<T extends Record<string, Field>> = Exclude<
-  keyof T,
-  NonNullableFieldKey<T>
->;
 
 export type DocumentStore = {
   connect: Function<[], void>;
   createCollection: <Fields extends Record<string, Field>>(options: {
     name: string;
     fields: Fields;
-  }) => Collection<
-    {
-      [K in NonNullableFieldKey<Fields>]: TypeOfField<Fields[K]>;
-    } & {
-      [K in NullableFieldKey<Fields>]?: TypeOfField<Fields[K]>;
-    }
-  >;
+  }) => Collection<Fields>;
 };
 
 export const DocumentStore = createPart<DocumentStore>("DocumentStore");

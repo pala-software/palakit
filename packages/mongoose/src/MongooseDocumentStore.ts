@@ -11,7 +11,7 @@ import {
   Where,
   DocumentHandle,
   Shape,
-  Field,
+  ShapeOf,
 } from "@palakit/db";
 import { validate } from "@typeschema/main";
 import mongoose, {
@@ -53,10 +53,7 @@ export const MongooseDocumentStore = createPart(
         },
       ),
 
-      createCollection: <T extends Shape>(options: {
-        name: string;
-        fields: Record<string, Field>;
-      }): Collection<T> => {
+      createCollection: (options) => {
         const Model = mongoose.model(
           options.name,
           new mongoose.Schema(
@@ -222,17 +219,20 @@ export const MongooseDocumentStore = createPart(
           return { $and: conditions };
         };
 
-        const collection: Collection<T> = {
+        type Fields = (typeof options)["fields"];
+        const collection: Collection<Fields> = {
+          name: options.name,
+          fields: options.fields,
           create: async (values) => {
             await connected;
-            return toDocument<T>(await new Model(values).save());
+            return toDocument<ShapeOf<Fields>>(await new Model(values).save());
           },
           find: async (options) => {
             await connected;
             return (
               await Model.find(
                 options && "where" in options && options.where
-                  ? transformWhere<T>(options.where)
+                  ? transformWhere<ShapeOf<Fields>>(options.where)
                   : {},
                 {},
                 { limit: options?.limit, skip: options?.offset },
@@ -242,19 +242,19 @@ export const MongooseDocumentStore = createPart(
                   item[1].toLowerCase() as "asc" | "desc",
                 ]),
               )
-            ).map(toDocument<T>);
+            ).map(toDocument<ShapeOf<Fields>>);
           },
           count: async (options) => {
             await connected;
             return await Model.countDocuments(
               options && "where" in options && options.where
-                ? transformWhere<T>(options.where)
+                ? transformWhere<ShapeOf<Fields>>(options.where)
                 : {},
             );
           },
         };
 
-        meta.set(collection, { name: options.name });
+        meta.set(collection as Collection, { name: options.name });
 
         return collection;
       },

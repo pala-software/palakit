@@ -10,12 +10,11 @@ import {
   isQueryOperation,
   isSubscriptionOperation,
 } from "@palakit/api";
-import { ResourceSchema } from "@palakit/api";
 import { createConfiguration, createFeature, createPart } from "@palakit/core";
 import { AnyRouter, initTRPC } from "@trpc/server";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { observable } from "@trpc/server/observable";
-import { toJSONSchema, validate } from "@typeschema/main";
+import { toJSONSchema } from "@typeschema/main";
 import { writeFile } from "fs/promises";
 import { JSONSchema, compile } from "json-schema-to-typescript";
 import { WebSocketServer } from "ws";
@@ -57,62 +56,30 @@ export const TrpcResourceServer = createPart(
       }
     };
 
-    const createValidator =
-      (schema: ResourceSchema | null) => async (value: unknown) => {
-        if (!schema) {
-          if (value === undefined) {
-            return undefined;
-          } else {
-            throw new Error("Validation failed, expected nothing");
-          }
-        }
-
-        const result = await validate(schema.schema, value);
-        if (result.success) {
-          return value;
-        } else {
-          throw new Error(
-            "Validation failed with following issues: \n" +
-              result.issues
-                .map(
-                  ({ message, path }) =>
-                    ` - ${message}` +
-                    (path?.length ? ` (at ${path.join(".")})` : ""),
-                )
-                .join("\n"),
-          );
-        }
-      };
     const createQuery = (operation: QueryOperation) =>
       t.procedure
-        .input(createValidator(operation.input))
-        .output(createValidator(operation.output))
+        .input(operation.inputValidator)
+        .output(operation.outputValidator)
         .query(async ({ input }) => executeOperation({ operation, input }));
 
     const createMutation = (operation: MutationOperation) =>
       t.procedure
-        .input(createValidator(operation.input))
-        .output(createValidator(operation.output))
+        .input(operation.inputValidator)
+        .output(operation.outputValidator)
         .mutation(async ({ input }) => executeOperation({ operation, input }));
 
     const createSubscription = (operation: SubscriptionOperation) =>
       t.procedure
-        .input(createValidator(operation.input))
+        .input(operation.inputValidator)
         .subscription(async ({ input }) => {
           const run = (await executeOperation({
             operation,
             input,
           })) as Observable;
-          const validate = createValidator(operation.output);
+          const validate = operation.outputValidator;
           return observable(({ next, complete, error }) =>
             run({
               next: async (value) => {
-                if (!operation.output) {
-                  // No validation, allow anything.
-                  next(value);
-                  return;
-                }
-
                 try {
                   await validate(value);
                   next(value);
@@ -221,16 +188,17 @@ export const TrpcResourceServer = createPart(
             operation: Operation,
             target: "input" | "output",
           ) => {
-            if (!operation[target]) {
+            const schema = operation[`${target}Schema`];
+            if (!schema) {
               typeAliases[target].set(operation, "void");
               return;
             }
 
             const jsonSchema = (await toJSONSchema(
-              operation[target].schema,
+              schema.schema,
             )) as JSONSchema;
-            const typeName = operation[target].name
-              ? createTypeName([operation[target].name])
+            const typeName = schema.name
+              ? createTypeName([schema.name])
               : createTypeName([target, "of", endpointName, operationName]);
 
             // Do not create multiple types with the same name.

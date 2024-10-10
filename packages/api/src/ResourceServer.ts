@@ -1,8 +1,13 @@
 import { Application, Function, Runtime } from "@palakit/core";
 import { createPart } from "@palakit/core";
 import {
+  InputFromResourceSchema,
+  MutationOperation,
   MutationOperationOptions,
+  Operation,
   OperationRecord,
+  OutputFromResourceSchema,
+  QueryOperation,
   QueryOperationOptions,
   Request,
   ResourceEndpoint,
@@ -11,12 +16,38 @@ import {
   ResourceSchema,
   ResourceServerAdapter,
   Response,
+  SubscriptionOperation,
   SubscriptionOperationOptions,
-  TypedMutationOperationOptions,
-  TypedOperationOptions,
-  TypedQueryOperationOptions,
-  TypedSubscriptionOperationOptions,
 } from "./types";
+import { validate } from "@typeschema/main";
+
+const createValidator =
+  <T extends ResourceSchema | null>(schema: T) =>
+  async (value: unknown): Promise<OutputFromResourceSchema<T>> => {
+    if (!schema) {
+      if (value === undefined) {
+        return undefined as OutputFromResourceSchema<T>;
+      } else {
+        throw new Error("Validation failed, expected nothing");
+      }
+    }
+
+    const result = await validate(schema.schema, value);
+    if (result.success) {
+      return value as OutputFromResourceSchema<T>;
+    } else {
+      throw new Error(
+        "Validation failed with following issues: \n" +
+          result.issues
+            .map(
+              ({ message, path }) =>
+                ` - ${message}` +
+                (path?.length ? ` (at ${path.join(".")})` : ""),
+            )
+            .join("\n"),
+      );
+    }
+  };
 
 export const ResourceServer = createPart(
   "ResourceServer",
@@ -68,20 +99,9 @@ export const ResourceServer = createPart(
         const endpoint = {
           name: options.name,
           operations: Object.fromEntries(
-            Object.entries(options.operations)
-              .filter(
-                (entry): entry is [string, TypedOperationOptions] => !!entry[1],
-              )
-              .map(([operationName, operationOptions]) => [
-                operationName,
-                {
-                  ...operationOptions,
-                  handler: runtime.createFunction(
-                    `ResourceServer.${options.name}.operations.${operationName}`,
-                    operationOptions.handler,
-                  ),
-                },
-              ]),
+            Object.entries(options.operations).filter(
+              (entry): entry is [string, Operation] => !!entry[1],
+            ),
           ),
           operation: {
             before: (hookName, hook) => {
@@ -141,8 +161,21 @@ export const ResourceServer = createPart(
         OutputSchema extends ResourceSchema | null,
       >(
         options: QueryOperationOptions<InputSchema, OutputSchema>,
-      ): TypedQueryOperationOptions<InputSchema, OutputSchema> => {
-        return { ...options, type: "query" };
+      ): QueryOperation<
+        OutputFromResourceSchema<InputSchema>,
+        InputFromResourceSchema<OutputSchema>
+      > => {
+        return {
+          type: "query",
+          inputSchema: options.input,
+          outputSchema: options.output,
+          inputValidator: createValidator(options.input),
+          outputValidator: createValidator(options.output),
+          handler: runtime.createFunction(
+            `ResourceServer.operations.${options.name}`,
+            options.handler,
+          ),
+        };
       },
 
       createMutation: <
@@ -150,8 +183,21 @@ export const ResourceServer = createPart(
         OutputSchema extends ResourceSchema | null,
       >(
         options: MutationOperationOptions<InputSchema, OutputSchema>,
-      ): TypedMutationOperationOptions<InputSchema, OutputSchema> => {
-        return { ...options, type: "mutation" };
+      ): MutationOperation<
+        OutputFromResourceSchema<InputSchema>,
+        InputFromResourceSchema<OutputSchema>
+      > => {
+        return {
+          type: "mutation",
+          inputSchema: options.input,
+          outputSchema: options.output,
+          inputValidator: createValidator(options.input),
+          outputValidator: createValidator(options.output),
+          handler: runtime.createFunction(
+            `ResourceServer.operations.${options.name}`,
+            options.handler,
+          ),
+        };
       },
 
       createSubscription: <
@@ -159,8 +205,21 @@ export const ResourceServer = createPart(
         OutputSchema extends ResourceSchema | null,
       >(
         options: SubscriptionOperationOptions<InputSchema, OutputSchema>,
-      ): TypedSubscriptionOperationOptions<InputSchema, OutputSchema> => {
-        return { ...options, type: "subscription" };
+      ): SubscriptionOperation<
+        OutputFromResourceSchema<InputSchema>,
+        InputFromResourceSchema<OutputSchema>
+      > => {
+        return {
+          type: "subscription",
+          inputSchema: options.input,
+          outputSchema: options.output,
+          inputValidator: createValidator(options.input),
+          outputValidator: createValidator(options.output),
+          handler: runtime.createFunction(
+            `ResourceServer.operations.${options.name}`,
+            options.handler,
+          ),
+        };
       },
 
       generateClients: async (): Promise<void> => {
