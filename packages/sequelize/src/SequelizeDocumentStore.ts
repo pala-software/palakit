@@ -1,4 +1,9 @@
-import { Application, createPart } from "@palakit/core";
+import {
+  Application,
+  createConfiguration,
+  createFeature,
+  createPart,
+} from "@palakit/core";
 import {
   Collection,
   DataType,
@@ -20,9 +25,18 @@ import {
   WhereOptions,
 } from "sequelize";
 
-export const createSequelizeDocumentStore = (options: Options) =>
-  createPart(DocumentStore, [Application], ([application]) => {
-    const sequelize = new Sequelize(options);
+export type SequelizeDocumentStoreConfiguration = Options;
+
+export const SequelizeDocumentStoreConfiguration =
+  createConfiguration<SequelizeDocumentStoreConfiguration>(
+    "SequelizeDocumentStoreConfiguration",
+  );
+
+export const SequelizeDocumentStore = createPart(
+  DocumentStore,
+  [SequelizeDocumentStoreConfiguration, Application],
+  ([config, application]) => {
+    const sequelize = new Sequelize(config);
     let setSynchronized: () => void;
     const synchronized = new Promise<void>((resolve) => {
       setSynchronized = resolve;
@@ -31,8 +45,7 @@ export const createSequelizeDocumentStore = (options: Options) =>
     const toDocument = <T extends Shape>(instance: Model) =>
       ({
         get: async () => {
-          const { id, ...values } = instance.get();
-          return { id: id.toString(), ...values };
+          return instance.get();
         },
         update: async (values) => {
           await instance.update(values);
@@ -120,7 +133,7 @@ export const createSequelizeDocumentStore = (options: Options) =>
         fields: Record<string, Field>;
       }): Collection<T> => {
         const toColumns = (fields: Record<string, Field>) =>
-          Object.entries(fields).reduce(
+          Object.entries(fields).reduce<ModelAttributes>(
             (obj, [fieldName, field]) => ({
               ...obj,
               [fieldName]: {
@@ -186,86 +199,92 @@ export const createSequelizeDocumentStore = (options: Options) =>
                 allowNull: field.nullable ?? true,
                 unique: field.unique ?? false,
                 validate: {
-                  ...(field.schema && {
-                    hasCorrectType: (input: unknown) => {
-                      switch (field.dataType) {
-                        case DataType.STRING:
-                          if (typeof input !== "string") {
-                            throw new Error(
-                              `Field value for ${fieldName} is not a string`,
-                            );
-                          }
-                          if (
-                            field.length !== undefined &&
-                            input.length > field.length
-                          ) {
-                            throw new Error(
-                              `Field value for ${fieldName} has length more` +
-                                " than allowed maximum",
-                            );
-                          }
-                          break;
-                        case DataType.BOOLEAN:
-                          if (typeof input !== "boolean") {
-                            throw new Error(
-                              `Field value for ${fieldName} is not a boolean`,
-                            );
-                          }
-                          break;
-                        case DataType.INTEGER: {
-                          if (
-                            typeof input !== "number" ||
-                            Number.isNaN(input)
-                          ) {
-                            throw new Error(
-                              `Field value for ${fieldName} is not a number`,
-                            );
-                          }
-                          if (input % 1 !== 0) {
-                            throw new Error(
-                              `Field value for ${fieldName} is not an integer`,
-                            );
-                          }
+                  hasCorrectType: (input: unknown) => {
+                    if ((field.nullable ?? true) && input === undefined) {
+                      // No input for nullable field. That's ok.
+                      return;
+                    }
 
-                          if (
-                            field.size !== undefined &&
-                            Math.abs(input) > maxInteger(field.size)
-                          ) {
-                            throw new Error(
-                              `Field value for ${fieldName} does not fit as a` +
-                                ` ${field.size} bit integer`,
-                            );
-                          }
-                          break;
+                    switch (field.dataType) {
+                      case DataType.STRING:
+                        if (typeof input !== "string") {
+                          throw new Error(
+                            `Field value for ${fieldName} is not a string`,
+                          );
                         }
-                        case DataType.FLOAT:
-                          if (typeof input !== "number") {
-                            throw new Error(
-                              `Field value for ${fieldName} is not a number`,
-                            );
-                          }
+                        if (
+                          field.length !== undefined &&
+                          input.length > field.length
+                        ) {
+                          throw new Error(
+                            `Field value for ${fieldName} has length more` +
+                              " than allowed maximum",
+                          );
+                        }
+                        break;
+                      case DataType.BOOLEAN:
+                        if (typeof input !== "boolean") {
+                          throw new Error(
+                            `Field value for ${fieldName} is not a boolean`,
+                          );
+                        }
+                        break;
+                      case DataType.INTEGER: {
+                        if (typeof input !== "number" || Number.isNaN(input)) {
+                          throw new Error(
+                            `Field value for ${fieldName} is not a number`,
+                          );
+                        }
+                        if (input % 1 !== 0) {
+                          throw new Error(
+                            `Field value for ${fieldName} is not an integer`,
+                          );
+                        }
 
-                          // NOTE: I don't think there's a need to validate size
-                          // of floating point numbers as they usually aren't used
-                          // absolute precision in mind.
-                          break;
-                        case DataType.DATE:
-                          if (!(input instanceof Date)) {
-                            throw new Error(
-                              `Field value for ${fieldName} is not a Date`,
-                            );
-                          }
-                          break;
-                        case DataType.BLOB:
-                          if (!(input instanceof Buffer)) {
-                            throw new Error(
-                              `Field value for ${fieldName} is not a Buffer`,
-                            );
-                          }
-                          break;
+                        if (
+                          field.size !== undefined &&
+                          Math.abs(input) > maxInteger(field.size)
+                        ) {
+                          throw new Error(
+                            `Field value for ${fieldName} does not fit as a` +
+                              ` ${field.size} bit integer`,
+                          );
+                        }
+                        break;
                       }
-                    },
+                      case DataType.FLOAT:
+                        if (typeof input !== "number") {
+                          throw new Error(
+                            `Field value for ${fieldName} is not a number`,
+                          );
+                        }
+
+                        // NOTE: I don't think there's a need to validate size
+                        // of floating point numbers as they usually aren't used
+                        // absolute precision in mind.
+                        break;
+                      case DataType.DATE:
+                        if (!(input instanceof Date)) {
+                          throw new Error(
+                            `Field value for ${fieldName} is not a Date`,
+                          );
+                        }
+                        break;
+                      case DataType.BLOB:
+                        if (!(input instanceof Buffer)) {
+                          throw new Error(
+                            `Field value for ${fieldName} is not a Buffer`,
+                          );
+                        }
+                        break;
+                    }
+                  },
+                  ...(field.schema && {
                     isValid: async (input: unknown) => {
+                      if (!field.schema) {
+                        throw new Error("No schema");
+                      }
+
                       const result = await validate(field.schema, input);
                       if (!result.success) {
                         throw new Error(
@@ -286,7 +305,14 @@ export const createSequelizeDocumentStore = (options: Options) =>
                 },
               } satisfies ModelAttributes[string],
             }),
-            {},
+            {
+              id: {
+                type: DataTypes.UUIDV4,
+                defaultValue: DataTypes.UUIDV4,
+                primaryKey: true,
+                allowNull: false,
+              },
+            },
           );
 
         const model = sequelize.define(
@@ -331,4 +357,10 @@ export const createSequelizeDocumentStore = (options: Options) =>
         return collection;
       },
     };
-  });
+  },
+);
+
+export const SequelizeDocumentStoreFeature = createFeature(
+  [SequelizeDocumentStore],
+  SequelizeDocumentStoreConfiguration,
+);

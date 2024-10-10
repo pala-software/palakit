@@ -1,4 +1,9 @@
-import { Application, createPart } from "@palakit/core";
+import {
+  Application,
+  createConfiguration,
+  createFeature,
+  createPart,
+} from "@palakit/core";
 import {
   DataType,
   DocumentStore,
@@ -15,14 +20,20 @@ import mongoose, {
   SchemaDefinition,
 } from "mongoose";
 
-export const createMongooseDocumentStore = ({
-  connectionString,
-  connectOptions = {},
-}: {
+export type MongooseDocumentStoreConfiguration = {
   connectionString: string;
   connectOptions?: ConnectOptions;
-}) =>
-  createPart(DocumentStore, [Application], ([application]) => {
+};
+
+export const MongooseDocumentStoreConfiguration =
+  createConfiguration<MongooseDocumentStoreConfiguration>(
+    "MongooseDocumentStoreConfiguration",
+  );
+
+export const MongooseDocumentStore = createPart(
+  DocumentStore,
+  [MongooseDocumentStoreConfiguration, Application],
+  ([config, application]) => {
     let setConnected: () => void;
     const connected = new Promise<void>((resolve) => {
       setConnected = resolve;
@@ -34,7 +45,10 @@ export const createMongooseDocumentStore = ({
       connect: application.start.on(
         "MongooseDocumentStore.connect",
         async () => {
-          await mongoose.connect(connectionString, connectOptions);
+          await mongoose.connect(
+            config.connectionString,
+            config.connectOptions,
+          );
           setConnected();
         },
       ),
@@ -245,4 +259,10 @@ export const createMongooseDocumentStore = ({
         return collection;
       },
     };
-  });
+  },
+);
+
+export const MongooseDocumentStoreFeature = createFeature(
+  [MongooseDocumentStore],
+  MongooseDocumentStoreConfiguration,
+);

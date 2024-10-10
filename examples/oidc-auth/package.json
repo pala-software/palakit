@@ -1,28 +1,30 @@
 {
-  "name": "@palakit/crud-api-example",
+  "name": "@palakit/oidc-auth-example",
   "version": "0.1.0",
   "type": "module",
   "scripts": {
     "generate-client": "tsx watch scripts/generate-client.ts",
-    "start-client": "tsx watch scripts/start-client.ts",
+    "start-client": "vite",
     "start-server": "tsx watch scripts/start-server.ts",
     "start": "pnpm run --filter . --parallel \"/^(generate|start)-(client|server)$/\""
   },
-  "devDependencies": {
+  "dependencies": {
     "@palakit/api": "workspace:*",
     "@palakit/core": "workspace:*",
     "@palakit/crud": "workspace:*",
-    "@palakit/db": "workspace:*",
     "@palakit/koa": "workspace:*",
+    "@palakit/oidc-client": "workspace:*",
+    "@palakit/oidc-idp": "workspace:*",
     "@palakit/sequelize": "workspace:*",
     "@palakit/trpc": "workspace:*",
     "@trpc/client": "^10.45.2",
-    "@types/ws": "^8.5.12",
-    "@typeschema/zod": "^0.14.0",
-    "sqlite3": "^5.1.7",
-    "tsx": "^4.19.1",
-    "ws": "^8.18.0",
+    "@typeschema/zod": "^0.13.3",
+    "oauth4webapi": "^2.12.0",
     "zod": "^3.23.8",
-    "zod-to-json-schema": "^3.23.3"
+    "zod-to-json-schema": "^3.23.2"
+  },
+  "devDependencies": {
+    "tsx": "^4.18.0",
+    "vite": "^5.4.2"
   }
 }

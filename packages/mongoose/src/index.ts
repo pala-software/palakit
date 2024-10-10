@@ -1,1 +1,5 @@
-export { createMongooseDocumentStore } from "./MongooseDocumentStore";
+export {
+  MongooseDocumentStore,
+  MongooseDocumentStoreConfiguration,
+  MongooseDocumentStoreFeature,
+} from "./MongooseDocumentStore";
