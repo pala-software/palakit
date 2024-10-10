@@ -11,6 +11,10 @@ export const Runtime = createPart(RuntimeDefinition, [], () => {
 
   return {
     createFunction,
-    createTrigger: jest.fn(),
+    createTrigger: jest.fn(() =>
+      Object.assign(jest.fn(), {
+        on: createFunction,
+      }),
+    ),
   };
 });
