@@ -1,4 +1,4 @@
-lint:
+check:
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
@@ -19,4 +19,5 @@ lint:
     - pnpm config set store-dir .pnpm-store
   script:
     - pnpm install
-    - pnpm lint
+    - pnpm run check
+    - pnpm run test

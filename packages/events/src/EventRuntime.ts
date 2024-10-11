@@ -74,7 +74,10 @@ export const EventRuntime = createPart(Runtime, [EventBus], ([eventBus]) => {
         },
         after: (
           hookName: string,
-          hook: (value: Awaited<Return>, ...args: Arguments) => Return,
+          hook: (
+            value: Awaited<Return>,
+            ...args: Arguments
+          ) => Awaited<Return> | Promise<Return>,
         ) => {
           const fn = createFunction(hookName, hook);
           afterHooks.push(fn);

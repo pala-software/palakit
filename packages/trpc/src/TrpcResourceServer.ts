@@ -1,35 +1,48 @@
+import Router from "@koa/router";
 import {
   MutationOperation,
   Observable,
   Operation,
   QueryOperation,
   ResourceEndpoint,
-  ResourceSchema,
   ResourceServer,
   SubscriptionOperation,
   isMutationOperation,
   isQueryOperation,
   isSubscriptionOperation,
 } from "@palakit/api";
-import { Logger, createPart } from "@palakit/core";
+import {
+  Logger,
+  createConfiguration,
+  createFeature,
+  createPart,
+} from "@palakit/core";
+import { KoaHttpServer } from "@palakit/koa";
 import { AnyRouter, initTRPC } from "@trpc/server";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { observable } from "@trpc/server/observable";
-import { toJSONSchema, validate } from "@typeschema/main";
+import { toJSONSchema } from "@typeschema/main";
 import { writeFile } from "fs/promises";
 import { JSONSchema, compile } from "json-schema-to-typescript";
 import { WebSocketServer } from "ws";
 
-export type Options = {
-  /** Port where to host the tRPC WebSocket server. */
-  port: number;
+export type TrpcResourceServerConfiguration = {
+  /** URL path where to mount tRPC server. */
+  path: string;
 
   /** Path where to generate client code. */
   clientPath?: string;
 };
 
-export const createTrpcResourceServer = (options: Options) =>
-  createPart("TrpcServer", [ResourceServer, Logger], ([server, lg]) => {
+export const TrpcResourceServerConfiguration =
+  createConfiguration<TrpcResourceServerConfiguration>(
+    "TrpcResourceServerConfiguration",
+  );
+
+export const TrpcResourceServer = createPart(
+  "TrpcServer",
+  [TrpcResourceServerConfiguration, ResourceServer, KoaHttpServer, Logger],
+  ([config, server, http, lg]) => {
     const t = initTRPC.create();
     const endpoints: ResourceEndpoint[] = [];
     const logger = lg.createLogger("TrpcServer");
@@ -50,66 +63,41 @@ export const createTrpcResourceServer = (options: Options) =>
       }
     };
 
-    const createValidator =
-      (schema: ResourceSchema | null) => async (value: unknown) => {
-        if (!schema) {
-          if (value === undefined) {
-            return undefined;
-          } else {
-            const e = new Error("Validation failed, expected nothing");
-            logger.error(e);
-            throw e;
-          }
-        }
-
-        const result = await validate(schema.schema, value);
-        if (result.success) {
-          return value;
-        } else {
-          const e = new Error(
-            "Validation failed with following issues: \n" +
-              result.issues
-                .map(
-                  ({ message, path }) =>
-                    ` - ${message}` +
-                    (path?.length ? ` (at ${path.join(".")})` : ""),
-                )
-                .join("\n"),
-          );
-          logger.error(e);
-          throw e;
-        }
-      };
     const createQuery = (operation: QueryOperation) =>
       t.procedure
-        .input(createValidator(operation.input))
-        .output(createValidator(operation.output))
+        .input(async (value) =>
+          operation.validateInput(await operation.getInputSchema(), value),
+        )
+        .output(async (value) =>
+          operation.validateOutput(await operation.getOutputSchema(), value),
+        )
         .query(async ({ input }) => executeOperation({ operation, input }));
 
     const createMutation = (operation: MutationOperation) =>
       t.procedure
-        .input(createValidator(operation.input))
-        .output(createValidator(operation.output))
+        .input(async (value) =>
+          operation.validateInput(await operation.getInputSchema(), value),
+        )
+        .output(async (value) =>
+          operation.validateOutput(await operation.getOutputSchema(), value),
+        )
         .mutation(async ({ input }) => executeOperation({ operation, input }));
 
     const createSubscription = (operation: SubscriptionOperation) =>
       t.procedure
-        .input(createValidator(operation.input))
+        .input(async (value) =>
+          operation.validateInput(await operation.getInputSchema(), value),
+        )
         .subscription(async ({ input }) => {
           const run = (await executeOperation({
             operation,
             input,
           })) as Observable;
-          const validate = createValidator(operation.output);
+          const validate = async (value: unknown) =>
+            operation.validateOutput(await operation.getOutputSchema(), value);
           return observable(({ next, complete, error }) =>
             run({
               next: async (value) => {
-                if (!operation.output) {
-                  // No validation, allow anything.
-                  next(value);
-                  return;
-                }
-
                 try {
                   await validate(value);
                   next(value);
@@ -180,12 +168,31 @@ export const createTrpcResourceServer = (options: Options) =>
             });
           }
 
-          const wss = new WebSocketServer({ port: options.port });
+          const wss = new WebSocketServer({ noServer: true });
           applyWSSHandler({ wss, router: t.router(routers) });
+
+          const router = new Router();
+          router.get(config.path, (ctx) => {
+            if (ctx.req.headers.upgrade !== "websocket") {
+              ctx.req.statusCode = 426;
+              return;
+            }
+
+            wss.handleUpgrade(
+              ctx.req,
+              ctx.socket,
+              Buffer.alloc(0),
+              (client, request) => {
+                wss.emit("connection", client, request);
+              },
+            );
+            ctx.respond = false;
+          });
+          http.use(router.routes());
         },
 
         generateClient: async () => {
-          if (!options.clientPath) {
+          if (!config.clientPath) {
             const e = new Error(
               "Cannot generate client, because option 'clientPath' was not provided.",
             );
@@ -204,16 +211,20 @@ export const createTrpcResourceServer = (options: Options) =>
             operation: Operation,
             target: "input" | "output",
           ) => {
-            if (!operation[target]) {
+            const schema = await {
+              input: operation.getInputSchema,
+              output: operation.getOutputSchema,
+            }[target]();
+            if (!schema) {
               typeAliases[target].set(operation, "void");
               return;
             }
 
             const jsonSchema = (await toJSONSchema(
-              operation[target].schema,
+              schema.schema,
             )) as JSONSchema;
-            const typeName = operation[target].name
-              ? createTypeName([operation[target].name])
+            const typeName = schema.name
+              ? createTypeName([schema.name])
               : createTypeName([target, "of", endpointName, operationName]);
 
             // Do not create multiple types with the same name.
@@ -268,8 +279,14 @@ export const createTrpcResourceServer = (options: Options) =>
           contents += `\n`;
           contents += `export default GeneratedRouter;\n`;
 
-          await writeFile(options.clientPath, contents);
+          await writeFile(config.clientPath, contents);
         },
       }),
     };
-  });
+  },
+);
+
+export const TrpcResourceServerFeature = createFeature(
+  [ResourceServer, TrpcResourceServer],
+  TrpcResourceServerConfiguration,
+);

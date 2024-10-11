@@ -6,9 +6,9 @@ export type ResourceSchema = {
   name?: string;
 };
 
-type InputFromResourceSchema<T extends ResourceSchema | null> =
+export type InputFromResourceSchema<T extends ResourceSchema | null> =
   T extends ResourceSchema ? InferIn<T["schema"]> : void;
-type OutputFromResourceSchema<T extends ResourceSchema | null> =
+export type OutputFromResourceSchema<T extends ResourceSchema | null> =
   T extends ResourceSchema ? Infer<T["schema"]> : void;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -51,36 +51,34 @@ export type Response<Output = any> = OkResponse<Output> | ErrorResponse;
 export const isResponse = (value: unknown): value is Response =>
   isOkResponse(value) || isErrorResponse(value);
 
+export type Validator = Function<[ResourceSchema | null, unknown], unknown>;
+
+export type SchemaGetter = Function<[], ResourceSchema | null>;
+
 export type OperationOptions<
   InputSchema extends ResourceSchema | null = ResourceSchema | null,
   OutputSchema extends ResourceSchema | null = ResourceSchema | null,
 > = {
+  name: string;
   input: InputSchema;
   output: OutputSchema;
   handler: (request: Request) => Response | Promise<Response>;
 };
 
-export type TypedOperationOptions<
-  InputSchema extends ResourceSchema | null = ResourceSchema | null,
-  OutputSchema extends ResourceSchema | null = ResourceSchema | null,
-> = OperationOptions<InputSchema, OutputSchema> & {
+export type Operation = {
   type: string;
-};
-
-export type Operation<
-  InputSchema extends ResourceSchema | null = ResourceSchema | null,
-  OutputSchema extends ResourceSchema | null = ResourceSchema | null,
-> = {
-  type: string;
-  input: InputSchema;
-  output: OutputSchema;
-  handler: Function<[Request], Response | Promise<Response>>;
+  getInputSchema: SchemaGetter;
+  getOutputSchema: SchemaGetter;
+  validateInput: Validator;
+  validateOutput: Validator;
+  handler: Function<[Request], Response>;
 };
 
 export type QueryOperationOptions<
   InputSchema extends ResourceSchema | null = ResourceSchema | null,
   OutputSchema extends ResourceSchema | null = ResourceSchema | null,
 > = {
+  name: string;
   input: InputSchema;
   output: OutputSchema;
   handler: (
@@ -90,25 +88,13 @@ export type QueryOperationOptions<
     | Promise<Response<InputFromResourceSchema<OutputSchema>>>;
 };
 
-export type TypedQueryOperationOptions<
-  InputSchema extends ResourceSchema | null = ResourceSchema | null,
-  OutputSchema extends ResourceSchema | null = ResourceSchema | null,
-> = QueryOperationOptions<InputSchema, OutputSchema> & {
+export type QueryOperation<Input = unknown, Output = unknown> = {
   type: "query";
-};
-
-export type QueryOperation<
-  InputSchema extends ResourceSchema | null = ResourceSchema | null,
-  OutputSchema extends ResourceSchema | null = ResourceSchema | null,
-> = {
-  type: "query";
-  input: InputSchema;
-  output: OutputSchema;
-  handler: Function<
-    [Request<OutputFromResourceSchema<InputSchema>>],
-    | Response<InputFromResourceSchema<OutputSchema>>
-    | Promise<Response<InputFromResourceSchema<OutputSchema>>>
-  >;
+  getInputSchema: SchemaGetter;
+  getOutputSchema: SchemaGetter;
+  validateInput: Validator;
+  validateOutput: Validator;
+  handler: Function<[Request<Input>], Response<Output>>;
 };
 
 export const isQueryOperation = (
@@ -119,6 +105,7 @@ export type MutationOperationOptions<
   InputSchema extends ResourceSchema | null = ResourceSchema | null,
   OutputSchema extends ResourceSchema | null = ResourceSchema | null,
 > = {
+  name: string;
   input: InputSchema;
   output: OutputSchema;
   handler: (
@@ -128,25 +115,13 @@ export type MutationOperationOptions<
     | Promise<Response<InputFromResourceSchema<OutputSchema>>>;
 };
 
-export type TypedMutationOperationOptions<
-  InputSchema extends ResourceSchema | null = ResourceSchema | null,
-  OutputSchema extends ResourceSchema | null = ResourceSchema | null,
-> = MutationOperationOptions<InputSchema, OutputSchema> & {
+export type MutationOperation<Input = unknown, Output = unknown> = {
   type: "mutation";
-};
-
-export type MutationOperation<
-  InputSchema extends ResourceSchema | null = ResourceSchema | null,
-  OutputSchema extends ResourceSchema | null = ResourceSchema | null,
-> = {
-  type: "mutation";
-  input: InputSchema;
-  output: OutputSchema;
-  handler: Function<
-    [Request<OutputFromResourceSchema<InputSchema>>],
-    | Response<InputFromResourceSchema<OutputSchema>>
-    | Promise<Response<InputFromResourceSchema<OutputSchema>>>
-  >;
+  getInputSchema: SchemaGetter;
+  getOutputSchema: SchemaGetter;
+  validateInput: Validator;
+  validateOutput: Validator;
+  handler: Function<[Request<Input>], Response<Output>>;
 };
 
 export const isMutationOperation = (
@@ -163,8 +138,9 @@ export type SubscriptionOperationOptions<
   InputSchema extends ResourceSchema | null = ResourceSchema | null,
   OutputSchema extends ResourceSchema | null = ResourceSchema | null,
 > = {
-  input: InputSchema | null;
-  output: OutputSchema | null;
+  name: string;
+  input: InputSchema;
+  output: OutputSchema;
   handler: (
     request: Request<OutputFromResourceSchema<InputSchema>>,
   ) =>
@@ -172,56 +148,23 @@ export type SubscriptionOperationOptions<
     | Promise<Response<Observable<OutputFromResourceSchema<OutputSchema>>>>;
 };
 
-export type TypedSubscriptionOperationOptions<
-  InputSchema extends ResourceSchema | null = ResourceSchema | null,
-  OutputSchema extends ResourceSchema | null = ResourceSchema | null,
-> = SubscriptionOperationOptions<InputSchema, OutputSchema> & {
+export type SubscriptionOperation<Input = unknown, Output = unknown> = {
   type: "subscription";
-};
-
-export type SubscriptionOperation<
-  InputSchema extends ResourceSchema | null = ResourceSchema | null,
-  OutputSchema extends ResourceSchema | null = ResourceSchema | null,
-> = {
-  type: "subscription";
-  input: InputSchema | null;
-  output: OutputSchema | null;
-  handler: Function<
-    [Request<OutputFromResourceSchema<InputSchema>>],
-    | Response<Observable<OutputFromResourceSchema<OutputSchema>>>
-    | Promise<Response<Observable<OutputFromResourceSchema<OutputSchema>>>>
-  >;
+  getInputSchema: SchemaGetter;
+  getOutputSchema: SchemaGetter;
+  validateInput: Validator;
+  validateOutput: Validator;
+  handler: Function<[Request<Input>], Response<Observable<Output>>>;
 };
 
 export const isSubscriptionOperation = (
   operation: Operation,
 ): operation is SubscriptionOperation => operation.type === "subscription";
 
-export type TypedOperationOptionRecord = Record<string, TypedOperationOptions>;
-
 export type OperationRecord = Record<string, Operation>;
 
-export type OperationRecordFromOptions<T extends TypedOperationOptionRecord> = {
-  [K in keyof T]: T[K] extends TypedQueryOperationOptions<
-    infer InputSchema,
-    infer OutputSchema
-  >
-    ? QueryOperation<InputSchema, OutputSchema>
-    : T[K] extends TypedMutationOperationOptions<
-          infer InputSchema,
-          infer OutputSchema
-        >
-      ? MutationOperation<InputSchema, OutputSchema>
-      : T[K] extends TypedSubscriptionOperationOptions<
-            infer InputSchema,
-            infer OutputSchema
-          >
-        ? SubscriptionOperation<InputSchema, OutputSchema>
-        : never;
-};
-
 export type ResourceEndpointOptions<
-  Operations extends TypedOperationOptionRecord = TypedOperationOptionRecord,
+  Operations extends OperationRecord = OperationRecord,
 > = {
   name: string;
   operations: Operations;
@@ -250,7 +193,7 @@ export type ResourceEndpoint<
 
 export type ResourceEndpointFromOptions<T extends ResourceEndpointOptions> = {
   name: string;
-  operations: OperationRecordFromOptions<T["operations"]>;
+  operations: T["operations"];
   operation: {
     before: (
       hookName: string,

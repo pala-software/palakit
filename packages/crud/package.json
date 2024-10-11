@@ -1,11 +1,13 @@
 {
   "name": "@palakit/crud",
   "version": "0.1.0",
+  "type": "module",
   "main": "src/index.ts",
   "dependencies": {
     "@palakit/api": "workspace:*",
     "@palakit/core": "workspace:*",
     "@palakit/db": "workspace:*",
+    "@typeschema/core": "^0.14.0",
     "@typeschema/json": "^0.14.0",
     "@typeschema/main": "^0.14.0",
     "ajv": "^8.17.1",

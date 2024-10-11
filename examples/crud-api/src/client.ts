@@ -1,15 +1,8 @@
 import { createTRPCProxyClient, createWSClient, wsLink } from "@trpc/client";
-import Router from "../generated/trpc";
+import Router from "../build/trpc";
 import { connect } from "net";
 import { WebSocket } from "ws";
-
-/**
- * Secret that is used as a way of authentication. Both server and client knows
- * it. I wouldn't suggest implementing this kind of authentication in production
- * applications. For this example you can try and change the secret to see that
- * they are required to match.
- */
-const SECRET = "bad secret";
+import { HOSTNAME, PORT, TRPC_PATH, SECRET } from "./config";
 
 const firstNames = [
   "Matti",
@@ -42,7 +35,10 @@ const pick = <T>(array: T[]): T | undefined =>
 
 const createName = async () => {
   const name = `${pick(firstNames)} ${pick(lastNames)}`;
-  await client.names.create.mutate({ data: { name }, authorization: SECRET });
+  await client.names.create.mutate({
+    data: { name },
+    authorization: SECRET,
+  });
   console.log("Created a new name: " + name);
 };
 
@@ -71,7 +67,10 @@ const deleteName = async () => {
   const documents = await client.names.find.query({ authorization: SECRET });
   const document = pick(documents);
   if (!document) return;
-  await client.names.delete.mutate({ id: document.id, authorization: SECRET });
+  await client.names.delete.mutate({
+    id: document.id,
+    authorization: SECRET,
+  });
   console.log("Deleted: " + document.name);
 };
 
@@ -91,7 +90,7 @@ while (true) {
   await new Promise<void>((resolve) => setTimeout(resolve, 100));
   try {
     await new Promise<void>((resolve, reject) => {
-      const socket = connect(3000, "127.0.0.1");
+      const socket = connect(PORT, HOSTNAME);
       socket.on("connectionAttemptFailed", () => {
         socket.destroy();
         reject();
@@ -109,7 +108,7 @@ while (true) {
 }
 
 const wsClient = createWSClient({
-  url: "ws://localhost:3000/",
+  url: `ws://${HOSTNAME}:${PORT}${TRPC_PATH}`,
   // NOTE: I couldn't get the types to align here.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   WebSocket: WebSocket as any,

@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "generate-client": "tsx scripts/generate-client.ts",
-    "start-both": "pnpm run --parallel \"/^start-(client|server)$/\"",
-    "start-client": "tsx scripts/start-client.ts",
-    "start-server": "tsx scripts/start-server.ts",
-    "start": "pnpm run generate-client && pnpm run start-both"
+    "prepare": "tsx scripts/generate-client.ts",
+    "generate-client": "tsx watch scripts/generate-client.ts",
+    "start-client": "tsx watch scripts/start-client.ts",
+    "start-server": "tsx watch scripts/start-server.ts",
+    "start": "pnpm run --filter . --parallel \"/^(generate|start)-(client|server)$/\""
   },
   "devDependencies": {
     "@types/ws": "^8.5.12",
@@ -19,10 +19,12 @@
     "@palakit/crud": "workspace:*",
     "@palakit/db": "workspace:*",
     "@palakit/pino": "workspace:*",
+    "@palakit/koa": "workspace:*",
     "@palakit/sequelize": "workspace:*",
     "@palakit/trpc": "workspace:*",
     "@trpc/client": "^10.45.2",
     "@types/ws": "^8.5.12",
+    "@typeschema/main": "^0.14.0",
     "@typeschema/zod": "^0.14.0",
     "pino-pretty": "^11.2.2",
     "sqlite3": "^5.1.7",

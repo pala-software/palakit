@@ -1,8 +1,13 @@
 import { Application, Function, Runtime } from "@palakit/core";
 import { createPart } from "@palakit/core";
 import {
+  InputFromResourceSchema,
+  MutationOperation,
   MutationOperationOptions,
+  Operation,
   OperationRecord,
+  OutputFromResourceSchema,
+  QueryOperation,
   QueryOperationOptions,
   Request,
   ResourceEndpoint,
@@ -11,12 +16,12 @@ import {
   ResourceSchema,
   ResourceServerAdapter,
   Response,
+  SchemaGetter,
+  SubscriptionOperation,
   SubscriptionOperationOptions,
-  TypedMutationOperationOptions,
-  TypedOperationOptions,
-  TypedQueryOperationOptions,
-  TypedSubscriptionOperationOptions,
+  Validator,
 } from "./types";
+import { validate } from "@typeschema/main";
 
 export const ResourceServer = createPart(
   "ResourceServer",
@@ -35,6 +40,38 @@ export const ResourceServer = createPart(
         }
       }
     };
+
+    const createSchemaGetter = (
+      name: string,
+      schema: ResourceSchema | null,
+    ): SchemaGetter => runtime.createFunction(name, () => schema);
+
+    const createValidator = (name: string): Validator =>
+      runtime.createFunction(name, async (schema, value) => {
+        if (!schema) {
+          if (value === undefined) {
+            return undefined;
+          } else {
+            throw new Error("Validation failed, expected nothing");
+          }
+        }
+
+        const result = await validate(schema.schema, value);
+        if (result.success) {
+          return value;
+        } else {
+          throw new Error(
+            "Validation failed with following issues: \n" +
+              result.issues
+                .map(
+                  ({ message, path }) =>
+                    ` - ${message}` +
+                    (path?.length ? ` (at ${path.join(".")})` : ""),
+                )
+                .join("\n"),
+          );
+        }
+      });
 
     return {
       start: application.start.on("ResourceServer.start", () => {
@@ -68,20 +105,9 @@ export const ResourceServer = createPart(
         const endpoint = {
           name: options.name,
           operations: Object.fromEntries(
-            Object.entries(options.operations)
-              .filter(
-                (entry): entry is [string, TypedOperationOptions] => !!entry[1],
-              )
-              .map(([operationName, operationOptions]) => [
-                operationName,
-                {
-                  ...operationOptions,
-                  handler: runtime.createFunction(
-                    `ResourceServer.${options.name}.operations.${operationName}`,
-                    operationOptions.handler,
-                  ),
-                },
-              ]),
+            Object.entries(options.operations).filter(
+              (entry): entry is [string, Operation] => !!entry[1],
+            ),
           ),
           operation: {
             before: (hookName, hook) => {
@@ -141,8 +167,31 @@ export const ResourceServer = createPart(
         OutputSchema extends ResourceSchema | null,
       >(
         options: QueryOperationOptions<InputSchema, OutputSchema>,
-      ): TypedQueryOperationOptions<InputSchema, OutputSchema> => {
-        return { ...options, type: "query" };
+      ): QueryOperation<
+        OutputFromResourceSchema<InputSchema>,
+        InputFromResourceSchema<OutputSchema>
+      > => {
+        return {
+          type: "query",
+          getInputSchema: createSchemaGetter(
+            `ResourceServer.operations.${options.name}.getInputSchema`,
+            options.input,
+          ),
+          getOutputSchema: createSchemaGetter(
+            `ResourceServer.operations.${options.name}.getOutputSchema`,
+            options.output,
+          ),
+          validateInput: createValidator(
+            `ResourceServer.operations.${options.name}.validateInput`,
+          ),
+          validateOutput: createValidator(
+            `ResourceServer.operations.${options.name}.validateOutput`,
+          ),
+          handler: runtime.createFunction(
+            `ResourceServer.operations.${options.name}.handler`,
+            options.handler,
+          ),
+        };
       },
 
       createMutation: <
@@ -150,8 +199,31 @@ export const ResourceServer = createPart(
         OutputSchema extends ResourceSchema | null,
       >(
         options: MutationOperationOptions<InputSchema, OutputSchema>,
-      ): TypedMutationOperationOptions<InputSchema, OutputSchema> => {
-        return { ...options, type: "mutation" };
+      ): MutationOperation<
+        OutputFromResourceSchema<InputSchema>,
+        InputFromResourceSchema<OutputSchema>
+      > => {
+        return {
+          type: "mutation",
+          getInputSchema: createSchemaGetter(
+            `ResourceServer.operations.${options.name}.getInputSchema`,
+            options.input,
+          ),
+          getOutputSchema: createSchemaGetter(
+            `ResourceServer.operations.${options.name}.getOutputSchema`,
+            options.output,
+          ),
+          validateInput: createValidator(
+            `ResourceServer.operations.${options.name}.validateInput`,
+          ),
+          validateOutput: createValidator(
+            `ResourceServer.operations.${options.name}.validateOutput`,
+          ),
+          handler: runtime.createFunction(
+            `ResourceServer.operations.${options.name}.handler`,
+            options.handler,
+          ),
+        };
       },
 
       createSubscription: <
@@ -159,8 +231,31 @@ export const ResourceServer = createPart(
         OutputSchema extends ResourceSchema | null,
       >(
         options: SubscriptionOperationOptions<InputSchema, OutputSchema>,
-      ): TypedSubscriptionOperationOptions<InputSchema, OutputSchema> => {
-        return { ...options, type: "subscription" };
+      ): SubscriptionOperation<
+        OutputFromResourceSchema<InputSchema>,
+        InputFromResourceSchema<OutputSchema>
+      > => {
+        return {
+          type: "subscription",
+          getInputSchema: createSchemaGetter(
+            `ResourceServer.operations.${options.name}.getInputSchema`,
+            options.input,
+          ),
+          getOutputSchema: createSchemaGetter(
+            `ResourceServer.operations.${options.name}.getOutputSchema`,
+            options.output,
+          ),
+          validateInput: createValidator(
+            `ResourceServer.operations.${options.name}.validateInput`,
+          ),
+          validateOutput: createValidator(
+            `ResourceServer.operations.${options.name}.validateOutput`,
+          ),
+          handler: runtime.createFunction(
+            `ResourceServer.operations.${options.name}.handler`,
+            options.handler,
+          ),
+        };
       },
 
       generateClients: async (): Promise<void> => {
