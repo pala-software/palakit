@@ -1,5 +1,6 @@
 export {
   CrudHelper,
+  type OperationFactoryOptions,
   type CountOptions,
   type CreateOptions,
   type DeleteOptions,

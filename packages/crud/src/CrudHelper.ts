@@ -24,6 +24,11 @@ type NullableJsonSchema = JSONSchema7 & {
   nullable?: boolean;
 };
 
+export type OperationFactoryOptions<Fields extends Record<string, Field>> = {
+  name: string;
+  collection: Collection<Fields>;
+};
+
 export type CreateOptions<T extends Shape> = {
   data: T;
 };
@@ -243,10 +248,7 @@ export const CrudHelper = createPart(
     const createCreateOperation = async <Fields extends Record<string, Field>>({
       name,
       collection,
-    }: {
-      name: string;
-      collection: Collection<Fields>;
-    }) => {
+    }: OperationFactoryOptions<Fields>) => {
       const { value, document } = await getSchemas({
         name,
         collection,
@@ -287,10 +289,7 @@ export const CrudHelper = createPart(
     const createUpdateOperation = async <Fields extends Record<string, Field>>({
       name,
       collection,
-    }: {
-      name: string;
-      collection: Collection<Fields>;
-    }) => {
+    }: OperationFactoryOptions<Fields>) => {
       const { partialValue, document } = await getSchemas({
         name,
         collection,
@@ -344,10 +343,7 @@ export const CrudHelper = createPart(
     const createDeleteOperation = async <Fields extends Record<string, Field>>({
       name,
       collection,
-    }: {
-      name: string;
-      collection: Collection<Fields>;
-    }) => {
+    }: OperationFactoryOptions<Fields>) => {
       const deleteOptions = {
         name: capitalize(name) + "DeleteOptions",
         schema: {
@@ -390,10 +386,7 @@ export const CrudHelper = createPart(
     const createFindOperation = async <Fields extends Record<string, Field>>({
       name,
       collection,
-    }: {
-      name: string;
-      collection: Collection<Fields>;
-    }) => {
+    }: OperationFactoryOptions<Fields>) => {
       const { filter, order, list } = await getSchemas({ name, collection });
       const findOptions = {
         name: capitalize(name) + "FindOptions",
@@ -439,10 +432,7 @@ export const CrudHelper = createPart(
     const createCountOperation = async <Fields extends Record<string, Field>>({
       name,
       collection,
-    }: {
-      name: string;
-      collection: Collection<Fields>;
-    }) => {
+    }: OperationFactoryOptions<Fields>) => {
       const { filter, count } = await getSchemas({ name, collection });
       const countOptions = {
         name: capitalize(name) + "CountOptions",
@@ -474,18 +464,14 @@ export const CrudHelper = createPart(
       >;
     };
 
-    const createCrudOperations = async <Fields extends Record<string, Field>>({
-      name,
-      collection,
-    }: {
-      name: string;
-      collection: Collection<Fields>;
-    }) => ({
-      create: await createCreateOperation({ name, collection }),
-      update: await createUpdateOperation({ name, collection }),
-      delete: await createDeleteOperation({ name, collection }),
-      find: await createFindOperation({ name, collection }),
-      count: await createCountOperation({ name, collection }),
+    const createCrudOperations = async <Fields extends Record<string, Field>>(
+      options: OperationFactoryOptions<Fields>,
+    ) => ({
+      create: await createCreateOperation(options),
+      update: await createUpdateOperation(options),
+      delete: await createDeleteOperation(options),
+      find: await createFindOperation(options),
+      count: await createCountOperation(options),
     });
 
     return {

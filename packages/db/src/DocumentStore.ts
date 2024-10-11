@@ -1,5 +1,5 @@
 import { Infer, Schema } from "@typeschema/main";
-import { createPart } from "@palakit/core";
+import { createPart, Function } from "@palakit/core";
 
 export enum DataType {
   STRING,
@@ -149,7 +149,7 @@ export type Collection<
 };
 
 export type DocumentStore = {
-  connect: () => Promise<void> | void;
+  connect: Function<[], void>;
   createCollection: <Fields extends Record<string, Field>>(options: {
     name: string;
     fields: Fields;
