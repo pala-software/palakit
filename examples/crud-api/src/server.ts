@@ -23,7 +23,7 @@ const requireSecret = <T extends ResourceEndpoint>({
 
   for (const operationName of operationNames as string[]) {
     endpoint.operations[operationName].getInputSchema.after(
-      `${endpointName}.operations.${operationName.toString()}.getInputSchema.after`,
+      `${endpointName}.operations.${operationName}.getInputSchema.after`,
       async (value) => {
         if (value === null) {
           return null;
@@ -42,7 +42,7 @@ const requireSecret = <T extends ResourceEndpoint>({
     );
 
     endpoint.operations[operationName].handler.before(
-      `${endpointName}.operations.${operationName.toString()}.handler.before`,
+      `${endpointName}.operations.${operationName}.handler.before`,
       (request) => {
         if (
           typeof request.input !== "object" ||
