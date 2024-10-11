@@ -4,12 +4,13 @@
   "type": "module",
   "scripts": {
     "lint": "eslint .",
-    "check-types": "tsc --allowJs --noemit --skipLibCheck",
+    "check-types": "tsc --noemit",
     "check": "pnpm run '/^(lint|check-types)$/'",
     "prepare": "husky"
   },
   "devDependencies": {
     "@eslint/js": "^9.11.1",
+    "@types/eslint__js": "^8.42.3",
     "@types/node": "^22.7.4",
     "eslint": "^9.11.1",
     "eslint-config-prettier": "^9.1.0",
