@@ -20,3 +20,4 @@ check:
   script:
     - pnpm install
     - pnpm run check
+    - pnpm run test
