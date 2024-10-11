@@ -58,25 +58,36 @@ export const TrpcResourceServer = createPart(
 
     const createQuery = (operation: QueryOperation) =>
       t.procedure
-        .input(operation.inputValidator)
-        .output(operation.outputValidator)
+        .input(async (value) =>
+          operation.validateInput(await operation.getInputSchema(), value),
+        )
+        .output(async (value) =>
+          operation.validateOutput(await operation.getOutputSchema(), value),
+        )
         .query(async ({ input }) => executeOperation({ operation, input }));
 
     const createMutation = (operation: MutationOperation) =>
       t.procedure
-        .input(operation.inputValidator)
-        .output(operation.outputValidator)
+        .input(async (value) =>
+          operation.validateInput(await operation.getInputSchema(), value),
+        )
+        .output(async (value) =>
+          operation.validateOutput(await operation.getOutputSchema(), value),
+        )
         .mutation(async ({ input }) => executeOperation({ operation, input }));
 
     const createSubscription = (operation: SubscriptionOperation) =>
       t.procedure
-        .input(operation.inputValidator)
+        .input(async (value) =>
+          operation.validateInput(await operation.getInputSchema(), value),
+        )
         .subscription(async ({ input }) => {
           const run = (await executeOperation({
             operation,
             input,
           })) as Observable;
-          const validate = operation.outputValidator;
+          const validate = async (value: unknown) =>
+            operation.validateOutput(await operation.getOutputSchema(), value);
           return observable(({ next, complete, error }) =>
             run({
               next: async (value) => {
@@ -188,7 +199,10 @@ export const TrpcResourceServer = createPart(
             operation: Operation,
             target: "input" | "output",
           ) => {
-            const schema = operation[`${target}Schema`];
+            const schema = await {
+              input: operation.getInputSchema,
+              output: operation.getOutputSchema,
+            }[target]();
             if (!schema) {
               typeAliases[target].set(operation, "void");
               return;

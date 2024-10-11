@@ -16,38 +16,12 @@ import {
   ResourceSchema,
   ResourceServerAdapter,
   Response,
+  SchemaGetter,
   SubscriptionOperation,
   SubscriptionOperationOptions,
+  Validator,
 } from "./types";
 import { validate } from "@typeschema/main";
-
-const createValidator =
-  <T extends ResourceSchema | null>(schema: T) =>
-  async (value: unknown): Promise<OutputFromResourceSchema<T>> => {
-    if (!schema) {
-      if (value === undefined) {
-        return undefined as OutputFromResourceSchema<T>;
-      } else {
-        throw new Error("Validation failed, expected nothing");
-      }
-    }
-
-    const result = await validate(schema.schema, value);
-    if (result.success) {
-      return value as OutputFromResourceSchema<T>;
-    } else {
-      throw new Error(
-        "Validation failed with following issues: \n" +
-          result.issues
-            .map(
-              ({ message, path }) =>
-                ` - ${message}` +
-                (path?.length ? ` (at ${path.join(".")})` : ""),
-            )
-            .join("\n"),
-      );
-    }
-  };
 
 export const ResourceServer = createPart(
   "ResourceServer",
@@ -66,6 +40,38 @@ export const ResourceServer = createPart(
         }
       }
     };
+
+    const createSchemaGetter = (
+      name: string,
+      schema: ResourceSchema | null,
+    ): SchemaGetter => runtime.createFunction(name, () => schema);
+
+    const createValidator = (name: string): Validator =>
+      runtime.createFunction(name, async (schema, value) => {
+        if (!schema) {
+          if (value === undefined) {
+            return undefined;
+          } else {
+            throw new Error("Validation failed, expected nothing");
+          }
+        }
+
+        const result = await validate(schema.schema, value);
+        if (result.success) {
+          return value;
+        } else {
+          throw new Error(
+            "Validation failed with following issues: \n" +
+              result.issues
+                .map(
+                  ({ message, path }) =>
+                    ` - ${message}` +
+                    (path?.length ? ` (at ${path.join(".")})` : ""),
+                )
+                .join("\n"),
+          );
+        }
+      });
 
     return {
       start: application.start.on("ResourceServer.start", () => {
@@ -167,12 +173,22 @@ export const ResourceServer = createPart(
       > => {
         return {
           type: "query",
-          inputSchema: options.input,
-          outputSchema: options.output,
-          inputValidator: createValidator(options.input),
-          outputValidator: createValidator(options.output),
+          getInputSchema: createSchemaGetter(
+            `ResourceServer.operations.${options.name}.getInputSchema`,
+            options.input,
+          ),
+          getOutputSchema: createSchemaGetter(
+            `ResourceServer.operations.${options.name}.getOutputSchema`,
+            options.output,
+          ),
+          validateInput: createValidator(
+            `ResourceServer.operations.${options.name}.validateInput`,
+          ),
+          validateOutput: createValidator(
+            `ResourceServer.operations.${options.name}.validateOutput`,
+          ),
           handler: runtime.createFunction(
-            `ResourceServer.operations.${options.name}`,
+            `ResourceServer.operations.${options.name}.handler`,
             options.handler,
           ),
         };
@@ -189,12 +205,22 @@ export const ResourceServer = createPart(
       > => {
         return {
           type: "mutation",
-          inputSchema: options.input,
-          outputSchema: options.output,
-          inputValidator: createValidator(options.input),
-          outputValidator: createValidator(options.output),
+          getInputSchema: createSchemaGetter(
+            `ResourceServer.operations.${options.name}.getInputSchema`,
+            options.input,
+          ),
+          getOutputSchema: createSchemaGetter(
+            `ResourceServer.operations.${options.name}.getOutputSchema`,
+            options.output,
+          ),
+          validateInput: createValidator(
+            `ResourceServer.operations.${options.name}.validateInput`,
+          ),
+          validateOutput: createValidator(
+            `ResourceServer.operations.${options.name}.validateOutput`,
+          ),
           handler: runtime.createFunction(
-            `ResourceServer.operations.${options.name}`,
+            `ResourceServer.operations.${options.name}.handler`,
             options.handler,
           ),
         };
@@ -211,12 +237,22 @@ export const ResourceServer = createPart(
       > => {
         return {
           type: "subscription",
-          inputSchema: options.input,
-          outputSchema: options.output,
-          inputValidator: createValidator(options.input),
-          outputValidator: createValidator(options.output),
+          getInputSchema: createSchemaGetter(
+            `ResourceServer.operations.${options.name}.getInputSchema`,
+            options.input,
+          ),
+          getOutputSchema: createSchemaGetter(
+            `ResourceServer.operations.${options.name}.getOutputSchema`,
+            options.output,
+          ),
+          validateInput: createValidator(
+            `ResourceServer.operations.${options.name}.validateInput`,
+          ),
+          validateOutput: createValidator(
+            `ResourceServer.operations.${options.name}.validateOutput`,
+          ),
           handler: runtime.createFunction(
-            `ResourceServer.operations.${options.name}`,
+            `ResourceServer.operations.${options.name}.handler`,
             options.handler,
           ),
         };
