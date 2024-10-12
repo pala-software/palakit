@@ -131,11 +131,15 @@ export type SortingRule<T extends Shape> = [
   "ASC" | "DESC",
 ];
 
-export type Collection<
-  Fields extends Record<string, Field> = Record<string, Field>,
-> = {
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export type Collection<Fields extends Record<string, Field> = {}> = {
   name: string;
   fields: Fields;
+  addField: <T extends Field, Name extends string>(
+    field: T & { name: Name },
+  ) => Collection<Omit<Fields, Name> & Record<Name, T>>;
+  removeField: <T extends keyof Fields>(name: T) => Collection<Omit<Fields, T>>;
+  sync: () => Promise<Collection<Fields>>;
   create: (
     values: ShapeOf<Fields> & { id?: string },
   ) => Promise<DocumentHandle<ShapeOf<Fields>>>;
@@ -150,10 +154,7 @@ export type Collection<
 
 export type DocumentStore = {
   connect: Function<[], void>;
-  createCollection: <Fields extends Record<string, Field>>(options: {
-    name: string;
-    fields: Fields;
-  }) => Collection<Fields>;
+  createCollection: (options: { name: string }) => Collection;
 };
 
 export const DocumentStore = createPart<DocumentStore>("DocumentStore");

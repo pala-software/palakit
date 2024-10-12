@@ -42,21 +42,36 @@ describe("MongooseDocumentStore", () => {
 
   describe("createCollection", () => {
     const mockCollectionName = "mock-collection-name";
-    const mockFields = {
-      mockStringField: { dataType: DataType.STRING } satisfies StringField,
-      mockIntegerField: { dataType: DataType.INTEGER } satisfies IntegerField,
-    };
+    const mockFields = [
+      {
+        name: "mockStringField",
+        dataType: DataType.STRING,
+      } satisfies StringField & { name: string },
+      {
+        name: "mockIntegerField",
+        dataType: DataType.INTEGER,
+      } satisfies IntegerField & { name: string },
+    ];
 
-    const createCollection = async () =>
-      (await resolveDocumentStore()).createCollection({
+    const createCollection = async () => {
+      const collection = (await resolveDocumentStore()).createCollection({
         name: mockCollectionName,
-        fields: mockFields,
       });
+
+      for (const field of mockFields) {
+        collection.addField(field);
+      }
+
+      return collection;
+    };
 
     it("can create a collection with correct name and fields", async () => {
       const col = await createCollection();
       expect(col.name).toEqual(mockCollectionName);
-      expect(col.fields).toEqual(mockFields);
+      expect(col.fields).toEqual({
+        mockStringField: { dataType: DataType.STRING },
+        mockIntegerField: { dataType: DataType.INTEGER },
+      });
     });
   });
 });

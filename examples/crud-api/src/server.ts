@@ -62,16 +62,16 @@ const MyCrudApi = createPart(
   "MyCrudApi",
   [DocumentStore, ResourceServer, CrudHelper],
   async ([db, server, crud]) => {
-    const collection = await db.createCollection({
-      name: "names",
-      fields: {
-        name: {
-          dataType: DataType.STRING,
-          length: 255,
-          nullable: false,
-        },
-      },
-    });
+    const collection = await db
+      .createCollection({
+        name: "names",
+      })
+      .addField({
+        name: "name",
+        dataType: DataType.STRING,
+        length: 255,
+        nullable: false,
+      });
 
     const endpoint = server.createEndpoint({
       name: "names",
@@ -85,6 +85,9 @@ const MyCrudApi = createPart(
     return {
       serverStarted: server.start.after("MyCrudApi.serverStarted", () => {
         console.log(`Server running is running on port ${PORT}!`);
+      }),
+      dbConnected: db.connect.after("MyCrudApi.dbConnected", async () => {
+        await collection.sync();
       }),
       collection,
       endpoint,
