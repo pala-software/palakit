@@ -3,6 +3,7 @@ import {
   createConfiguration,
   createFeature,
   createPart,
+  LocalRuntime,
 } from "@palakit/core";
 import {
   DocumentStore,
@@ -32,8 +33,8 @@ export const MongooseDocumentStoreConfiguration =
 
 export const MongooseDocumentStore = createPart(
   DocumentStore,
-  [MongooseDocumentStoreConfiguration, Application],
-  ([config, application]) => {
+  [MongooseDocumentStoreConfiguration, Application, LocalRuntime],
+  ([config, application, runtime]) => {
     const meta = new Map<Collection, { name: string }>();
 
     const toDocument = <T extends Shape>(m: mongoose.Document) =>
@@ -210,6 +211,13 @@ export const MongooseDocumentStore = createPart(
             config.connectionString,
             config.connectOptions,
           );
+        },
+      ),
+
+      disconnect: runtime.createFunction(
+        "MongooseDocumentStore.disconnect",
+        async () => {
+          await mongoose.disconnect();
         },
       ),
 

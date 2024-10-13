@@ -8,5 +8,8 @@
     "@palakit/db": "workspace:*",
     "@typeschema/main": "^0.14.0",
     "mongoose": "^8.7.0"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^10.1.2"
   }
 }

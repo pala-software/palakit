@@ -154,6 +154,7 @@ export type Collection<Fields extends Record<string, Field> = {}> = {
 
 export type DocumentStore = {
   connect: Function<[], void>;
+  disconnect: Function<[], void>;
   createCollection: (options: { name: string }) => Collection;
 };
 

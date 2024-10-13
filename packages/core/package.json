@@ -4,6 +4,6 @@
   "main": "src/index.ts",
   "type": "module",
   "dependencies": {
-    "part-di": "^2.0.4"
+    "part-di": "^2.1.0"
   }
 }
