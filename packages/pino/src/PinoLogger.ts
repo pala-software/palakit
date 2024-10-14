@@ -1,12 +1,24 @@
-import { createPart } from "part-di";
 import pino, { DestinationStream, LoggerOptions } from "pino";
-import { Logger } from "@palakit/core";
+import {
+  createConfiguration,
+  createFeature,
+  createPart,
+  Logger,
+} from "@palakit/core";
 
-export const createPinoLogger = (
-  options: DestinationStream | LoggerOptions | undefined,
-) =>
-  createPart(Logger, [], () => {
-    const logger = pino(options);
+export type PinoLoggerConfiguration =
+  | DestinationStream
+  | LoggerOptions
+  | undefined;
+
+export const PinoLoggerConfiguration =
+  createConfiguration<PinoLoggerConfiguration>("PinoLoggerConfiguration");
+
+export const PinoLogger = createPart(
+  Logger,
+  [PinoLoggerConfiguration],
+  ([config]) => {
+    const logger = pino(config);
     return {
       createLogger: (category) => {
         const childLogger = logger.child({ category });
@@ -19,4 +31,10 @@ export const createPinoLogger = (
         };
       },
     };
-  });
+  },
+);
+
+export const PinoLoggerFeature = createFeature(
+  [PinoLogger],
+  PinoLoggerConfiguration,
+);

@@ -327,9 +327,6 @@ importers:
       '@palakit/core':
         specifier: workspace:*
         version: link:../core
-      part-di:
-        specifier: ^2.0.0
-        version: 2.0.4
       pino:
         specifier: ^9.4.0
         version: 9.4.0

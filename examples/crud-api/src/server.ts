@@ -3,7 +3,7 @@ import { LocalRuntime, createPart, resolveApplication } from "@palakit/core";
 import { CrudHelper } from "@palakit/crud";
 import { DataType, DocumentStore } from "@palakit/db";
 import { KoaHttpServerFeature } from "@palakit/koa";
-import { createPinoLogger } from "@palakit/pino";
+import { PinoLoggerFeature } from "@palakit/pino";
 import { SequelizeDocumentStoreFeature } from "@palakit/sequelize";
 import { TrpcResourceServerFeature } from "@palakit/trpc";
 import { toJSONSchema } from "@typeschema/main";
@@ -109,7 +109,7 @@ export const app = await resolveApplication({
     }),
     CrudHelper,
     MyCrudApi,
-    createPinoLogger({
+    ...PinoLoggerFeature.configure({
       base: null,
       transport: {
         targets: [
