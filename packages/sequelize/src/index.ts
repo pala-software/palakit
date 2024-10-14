@@ -1,4 +1,5 @@
 export {
+  SequelizeConnection,
   SequelizeDocumentStore,
   SequelizeDocumentStoreConfiguration,
   SequelizeDocumentStoreFeature,

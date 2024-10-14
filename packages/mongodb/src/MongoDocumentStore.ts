@@ -33,16 +33,16 @@ export const MongoDocumentStoreConfiguration =
     "MongooseDocumentStoreConfiguration",
   );
 
+export const MongoConnection = createPart(
+  "MongoConnection",
+  [MongoDocumentStoreConfiguration],
+  ([config]) => new MongoClient(config.url, config.options),
+);
+
 export const MongoDocumentStore = createPart(
   DocumentStore,
-  [
-    MongoDocumentStoreConfiguration,
-    Application,
-    LocalRuntime,
-    DocumentStoreUtils,
-  ],
-  ([config, application, runtime, utils]) => {
-    const client = new MongoClient(config.url, config.options);
+  [MongoConnection, Application, LocalRuntime, DocumentStoreUtils],
+  ([client, application, runtime, utils]) => {
     const db = client.db(undefined);
     const meta = new Map<Collection, { name: string }>();
 
@@ -240,6 +240,6 @@ export const MongoDocumentStore = createPart(
 );
 
 export const MongoDocumentStoreFeature = createFeature(
-  [MongoDocumentStore, DocumentStoreUtils],
+  [MongoConnection, MongoDocumentStore, DocumentStoreUtils],
   MongoDocumentStoreConfiguration,
 );
