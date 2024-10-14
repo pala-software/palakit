@@ -240,7 +240,7 @@ importers:
         specifier: ^2.15.0
         version: 2.15.0
 
-  packages/mongoose:
+  packages/mongodb:
     dependencies:
       '@palakit/core':
         specifier: workspace:*
@@ -248,12 +248,9 @@ importers:
       '@palakit/db':
         specifier: workspace:*
         version: link:../db
-      '@typeschema/main':
-        specifier: ^0.14.0
-        version: 0.14.0(@types/json-schema@7.0.15)(@typeschema/json@0.14.0(@types/json-schema@7.0.15)(ajv@8.17.1)(json-schema-to-ts@3.1.1))(@typeschema/zod@0.14.0(@types/json-schema@7.0.15)(zod-to-json-schema@3.23.3(zod@3.23.8))(zod@3.23.8))
-      mongoose:
-        specifier: ^8.7.0
-        version: 8.7.0(socks@2.8.3)
+      mongodb:
+        specifier: ^6.9.0
+        version: 6.9.0(socks@2.8.3)
     devDependencies:
       mongodb-memory-server:
         specifier: ^10.1.2
@@ -328,9 +325,6 @@ importers:
       '@palakit/db':
         specifier: workspace:*
         version: link:../db
-      '@typeschema/main':
-        specifier: ^0.14.0
-        version: 0.14.0(@types/json-schema@7.0.15)(@typeschema/json@0.14.0(@types/json-schema@7.0.15)(ajv@8.17.1)(json-schema-to-ts@3.1.1))(@typeschema/zod@0.14.0(@types/json-schema@7.0.15)(zod-to-json-schema@3.23.3(zod@3.23.8))(zod@3.23.8))
       sequelize:
         specifier: ^6.37.3
         version: 6.37.3
@@ -2704,10 +2698,6 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
-  kareem@2.6.3:
-    resolution: {integrity: sha512-C3iHfuGUXK2u8/ipq9LfjFfXFxAZMQJJq7vLS45r3D9Y2xQ/m4S8zaR4zMLFWh9AsNPXmcFfUDhTEO8UIC/V6Q==}
-    engines: {node: '>=12.0.0'}
-
   keygrip@1.1.0:
     resolution: {integrity: sha512-iYSchDJ+liQ8iwbSI2QqsQOvqv58eJCEanyJPJi+Khyu8smkcKSFUCbPwzFcL7YVtZ6eONjqRX/38caJ7QjRAQ==}
     engines: {node: '>= 0.6'}
@@ -3034,18 +3024,6 @@ packages:
         optional: true
       socks:
         optional: true
-
-  mongoose@8.7.0:
-    resolution: {integrity: sha512-rUCSF1mMYQXjXYdqEQLLlMD3xbcj2j1/hRn+9VnVj7ipzru/UoUZxlj/hWmteKMAh4EFnDZ+BIrmma9l/0Hi1g==}
-    engines: {node: '>=16.20.1'}
-
-  mpath@0.9.0:
-    resolution: {integrity: sha512-ikJRQTk8hw5DEoFVxHG1Gn9T/xcjtdnOKIU1JTmGjZZlg9LST2mBLmcX3/ICIbgJydT2GOc15RnNy5mHmzfSew==}
-    engines: {node: '>=4.0.0'}
-
-  mquery@5.0.0:
-    resolution: {integrity: sha512-iQMncpmEK8R8ncT8HJGsGc9Dsp8xcgYMVSbs5jgnm1lFHTZqMJTUWTDx1LBO8+mK3tPNZWFLBghQEIOULSTHZg==}
-    engines: {node: '>=14.0.0'}
 
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
@@ -3524,9 +3502,6 @@ packages:
   side-channel@1.0.6:
     resolution: {integrity: sha512-fDW/EZ6Q9RiO8eFG8Hj+7u/oW+XrPTIChwCOM2+th2A6OblDtYYIpve9m+KvI9Z4C9qSEXlaGR6bTEYHReuglA==}
     engines: {node: '>= 0.4'}
-
-  sift@17.1.3:
-    resolution: {integrity: sha512-Rtlj66/b0ICeFzYTuNvX/EF1igRbbnGSvEyT79McoZa/DeGhMyC5pWKOEsZKnpkqtSeovd5FL/bjHWC3CIIvCQ==}
 
   signal-exit@3.0.7:
     resolution: {integrity: sha512-wnD2ZE+l+SPC/uoS0vXeE9L1+0wuaMqKlfz9AMUo38JsyLSBWSFcHR1Rri62LZc12vLr1gb3jl7iwQhgwpAbGQ==}
@@ -6592,8 +6567,6 @@ snapshots:
 
   json5@2.2.3: {}
 
-  kareem@2.6.3: {}
-
   keygrip@1.1.0:
     dependencies:
       tsscmp: 1.0.6
@@ -7064,33 +7037,6 @@ snapshots:
     optionalDependencies:
       socks: 2.8.3
 
-  mongoose@8.7.0(socks@2.8.3):
-    dependencies:
-      bson: 6.8.0
-      kareem: 2.6.3
-      mongodb: 6.9.0(socks@2.8.3)
-      mpath: 0.9.0
-      mquery: 5.0.0
-      ms: 2.1.3
-      sift: 17.1.3
-    transitivePeerDependencies:
-      - '@aws-sdk/credential-providers'
-      - '@mongodb-js/zstd'
-      - gcp-metadata
-      - kerberos
-      - mongodb-client-encryption
-      - snappy
-      - socks
-      - supports-color
-
-  mpath@0.9.0: {}
-
-  mquery@5.0.0:
-    dependencies:
-      debug: 4.3.7
-    transitivePeerDependencies:
-      - supports-color
-
   ms@2.1.3: {}
 
   nanoid@3.3.7: {}
@@ -7548,8 +7494,6 @@ snapshots:
       es-errors: 1.3.0
       get-intrinsic: 1.2.4
       object-inspect: 1.13.2
-
-  sift@17.1.3: {}
 
   signal-exit@3.0.7: {}
 

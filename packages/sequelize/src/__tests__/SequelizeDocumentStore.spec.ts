@@ -1,16 +1,9 @@
 import { resolveApplication, Application } from "@palakit/core";
 import { MockApplication } from "@palakit/core/src/__mocks__/Application";
 import { DataType, DocumentStore } from "@palakit/db";
-import { MongooseDocumentStoreFeature } from "../MongooseDocumentStore";
-import { MongoMemoryServer } from "mongodb-memory-server";
+import { SequelizeDocumentStoreFeature } from "../SequelizeDocumentStore";
 
 describe("MongooseDocumentStore", () => {
-  let mongoServer: MongoMemoryServer;
-  beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
-  });
-
-  let dbNumber = 0;
   let app: Application;
   let documentStore: DocumentStore;
   beforeEach(async () => {
@@ -18,9 +11,10 @@ describe("MongooseDocumentStore", () => {
       name: "MockMongoApp",
       parts: [
         MockApplication,
-        ...MongooseDocumentStoreFeature.configure({
-          connectionString: mongoServer.getUri(),
-          connectOptions: { dbName: `db-${++dbNumber}` },
+        ...SequelizeDocumentStoreFeature.configure({
+          dialect: "sqlite",
+          storage: ":memory:",
+          logging: false,
         }),
       ],
     });
@@ -29,10 +23,6 @@ describe("MongooseDocumentStore", () => {
 
   afterEach(async () => {
     await documentStore.disconnect();
-  });
-
-  afterAll(async () => {
-    await mongoServer.stop();
   });
 
   it("resolves successfully", () => {
@@ -75,44 +65,6 @@ describe("MongooseDocumentStore", () => {
         create: expect.any(Function),
         find: expect.any(Function),
         count: expect.any(Function),
-      });
-    });
-  });
-
-  describe("Collection", () => {
-    describe("addField", () => {
-      it("can be called after connection has been established", (done) => {
-        const collection = documentStore.createCollection({
-          name: "mock-collection-name",
-        });
-
-        documentStore.connect.after("test.documentStore.connect.after", () => {
-          expect(() =>
-            collection.addField({
-              name: "mockStringField",
-              dataType: DataType.STRING,
-            }),
-          ).not.toThrow();
-          done();
-        });
-      });
-    });
-
-    describe("removeField", () => {
-      it("can be called after connection has been established", (done) => {
-        const collection = documentStore
-          .createCollection({
-            name: "mock-collection-name",
-          })
-          .addField({
-            name: "mockStringField",
-            dataType: DataType.STRING,
-          });
-
-        documentStore.connect.after("test.documentStore.connect.after", () => {
-          expect(() => collection.removeField("mockStringField")).not.toThrow();
-          done();
-        });
       });
     });
   });

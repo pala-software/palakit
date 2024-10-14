@@ -16,3 +16,4 @@ export type {
   Shape,
   ShapeOf,
 } from "./DocumentStore";
+export { DocumentStoreUtils } from "./DocumentStoreUtils";

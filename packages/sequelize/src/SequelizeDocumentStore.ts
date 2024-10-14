@@ -3,17 +3,18 @@ import {
   createConfiguration,
   createFeature,
   createPart,
+  LocalRuntime,
 } from "@palakit/core";
 import {
   Collection,
   DataType,
   DocumentHandle,
   DocumentStore,
+  DocumentStoreUtils,
   Field,
   Shape,
   Where,
 } from "@palakit/db";
-import { validate } from "@typeschema/main";
 import {
   DataTypes,
   Model,
@@ -34,11 +35,14 @@ export const SequelizeDocumentStoreConfiguration =
 
 export const SequelizeDocumentStore = createPart(
   DocumentStore,
-  [SequelizeDocumentStoreConfiguration, Application],
-  ([config, application]) => {
+  [
+    SequelizeDocumentStoreConfiguration,
+    Application,
+    LocalRuntime,
+    DocumentStoreUtils,
+  ],
+  ([config, application, runtime, utils]) => {
     const sequelize = new Sequelize(config);
-
-    const maxInteger = (bits: number) => 2 ** (bits - 1) - 1;
     const meta = new Map<Collection, { model: ModelStatic<Model> }>();
 
     const toDocument = <T extends Shape>(instance: Model) =>
@@ -183,107 +187,8 @@ export const SequelizeDocumentStore = createPart(
             allowNull: field.nullable ?? true,
             unique: field.unique ?? false,
             validate: {
-              hasCorrectType: (input: unknown) => {
-                if ((field.nullable ?? true) && input === undefined) {
-                  // No input for nullable field. That's ok.
-                  return;
-                }
-
-                switch (field.dataType) {
-                  case DataType.STRING:
-                    if (typeof input !== "string") {
-                      throw new Error(
-                        `Field value for ${fieldName} is not a string`,
-                      );
-                    }
-                    if (
-                      field.length !== undefined &&
-                      input.length > field.length
-                    ) {
-                      throw new Error(
-                        `Field value for ${fieldName} has length more` +
-                          " than allowed maximum",
-                      );
-                    }
-                    break;
-                  case DataType.BOOLEAN:
-                    if (typeof input !== "boolean") {
-                      throw new Error(
-                        `Field value for ${fieldName} is not a boolean`,
-                      );
-                    }
-                    break;
-                  case DataType.INTEGER: {
-                    if (typeof input !== "number" || Number.isNaN(input)) {
-                      throw new Error(
-                        `Field value for ${fieldName} is not a number`,
-                      );
-                    }
-                    if (input % 1 !== 0) {
-                      throw new Error(
-                        `Field value for ${fieldName} is not an integer`,
-                      );
-                    }
-
-                    if (
-                      field.size !== undefined &&
-                      Math.abs(input) > maxInteger(field.size)
-                    ) {
-                      throw new Error(
-                        `Field value for ${fieldName} does not fit as a` +
-                          ` ${field.size} bit integer`,
-                      );
-                    }
-                    break;
-                  }
-                  case DataType.FLOAT:
-                    if (typeof input !== "number") {
-                      throw new Error(
-                        `Field value for ${fieldName} is not a number`,
-                      );
-                    }
-
-                    // NOTE: I don't think there's a need to validate size
-                    // of floating point numbers as they usually aren't used
-                    // absolute precision in mind.
-                    break;
-                  case DataType.DATE:
-                    if (!(input instanceof Date)) {
-                      throw new Error(
-                        `Field value for ${fieldName} is not a Date`,
-                      );
-                    }
-                    break;
-                  case DataType.BLOB:
-                    if (!(input instanceof Buffer)) {
-                      throw new Error(
-                        `Field value for ${fieldName} is not a Buffer`,
-                      );
-                    }
-                    break;
-                }
-              },
-              ...(field.schema && {
-                isValid: async (input: unknown) => {
-                  if (!field.schema) {
-                    throw new Error("No schema");
-                  }
-
-                  const result = await validate(field.schema, input);
-                  if (!result.success) {
-                    throw new Error(
-                      "Validation failed with following issues: \n" +
-                        result.issues
-                          .map(
-                            ({ message, path }) =>
-                              ` - ${message}` +
-                              (path?.length ? ` (at ${path.join(".")})` : ""),
-                          )
-                          .join("\n"),
-                    );
-                  }
-                },
-              }),
+              isValid: (input: unknown) =>
+                utils.validateField({ ...field, name: fieldName }, input),
             },
           } satisfies ModelAttributes[string],
         }),
@@ -304,11 +209,17 @@ export const SequelizeDocumentStore = createPart(
           await sequelize.authenticate();
         },
       ),
+      disconnect: runtime.createFunction(
+        "SequelizeDocumentStore.disconnect",
+        async () => {
+          await sequelize.close();
+        },
+      ),
       createCollection: (options) => {
         const fields: Record<string, Field> = {};
         let model: ModelStatic<Model>;
 
-        const collection: Collection = {
+        const collection: Collection<Record<string, Field>> = {
           name: options.name,
           fields,
           addField: ({ name, ...field }) => {
@@ -320,7 +231,8 @@ export const SequelizeDocumentStore = createPart(
           removeField: (name) => {
             delete fields[name];
             updateModel();
-            return collection;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return collection as any;
           },
           sync: async () => {
             await model.sync();
@@ -337,7 +249,8 @@ export const SequelizeDocumentStore = createPart(
               limit: options?.limit,
               offset: options?.offset,
             });
-            return instances.map(toDocument);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return instances.map(toDocument) as any;
           },
           count: async (options) => {
             const count = await model.count({
@@ -362,6 +275,6 @@ export const SequelizeDocumentStore = createPart(
 );
 
 export const SequelizeDocumentStoreFeature = createFeature(
-  [SequelizeDocumentStore],
+  [SequelizeDocumentStore, DocumentStoreUtils],
   SequelizeDocumentStoreConfiguration,
 );
