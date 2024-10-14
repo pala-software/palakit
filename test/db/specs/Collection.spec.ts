@@ -1,9 +1,9 @@
 import { describeDocumentStore } from "../utils/describeDocumentStore";
-import { Collection, DataType } from "@palakit/db";
+import { Collection } from "@palakit/db";
 
 describeDocumentStore((getDocumentStore) => {
   describe("Collection", () => {
-    let collection: Collection<{ number?: { dataType: DataType.INTEGER } }>;
+    let collection: Collection<{ number?: { dataType: "integer" } }>;
     beforeEach(async () => {
       await getDocumentStore().connect();
       collection = getDocumentStore().createCollection({
@@ -18,22 +18,22 @@ describeDocumentStore((getDocumentStore) => {
     describe("addField", () => {
       it("returns the collection", () => {
         expect(
-          collection.addField({ name: "number", dataType: DataType.INTEGER }),
+          collection.addField({ name: "number", dataType: "integer" }),
         ).toBe(collection);
       });
 
       it("adds the field", () => {
         expect(collection.fields).toEqual({});
-        collection.addField({ name: "number", dataType: DataType.INTEGER });
+        collection.addField({ name: "number", dataType: "integer" });
         expect(collection.fields).toEqual({
-          number: { dataType: DataType.INTEGER },
+          number: { dataType: "integer" },
         });
       });
 
       it("succeeds after sync", async () => {
         await collection.sync();
         expect(
-          collection.addField({ name: "number", dataType: DataType.INTEGER }),
+          collection.addField({ name: "number", dataType: "integer" }),
         ).toBe(collection);
         await collection.sync();
       });
@@ -41,7 +41,7 @@ describeDocumentStore((getDocumentStore) => {
 
     describe("removeField", () => {
       beforeEach(() => {
-        collection.addField({ name: "number", dataType: DataType.INTEGER });
+        collection.addField({ name: "number", dataType: "integer" });
       });
 
       it("returns the collection", () => {
@@ -50,7 +50,7 @@ describeDocumentStore((getDocumentStore) => {
 
       it("removes the field", () => {
         expect(collection.fields).toEqual({
-          number: { dataType: DataType.INTEGER },
+          number: { dataType: "integer" },
         });
         collection.removeField("number");
         expect(collection.fields).toEqual({});

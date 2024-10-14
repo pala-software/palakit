@@ -1,58 +1,48 @@
 import { Infer, Schema } from "@typeschema/main";
 import { createPart, Function } from "@palakit/core";
 
-export enum DataType {
-  STRING,
-  BOOLEAN,
-  INTEGER,
-  FLOAT,
-  DATE,
-  BLOB,
-  REFERENCE,
-}
-
 type BaseField = {
-  dataType: DataType;
+  dataType: string;
   schema?: Schema;
   nullable?: boolean;
   unique?: boolean;
 };
 
 export type StringField = BaseField & {
-  dataType: DataType.STRING;
+  dataType: "string";
 
   /** @default unlimited */
   length?: number;
 };
 
 export type BooleanField = BaseField & {
-  dataType: DataType.BOOLEAN;
+  dataType: "boolean";
 };
 
 export type IntegerField = BaseField & {
-  dataType: DataType.INTEGER;
+  dataType: "integer";
 
   /** @default 32 */
   size?: 8 | 16 | 24 | 32 | 64;
 };
 
 export type FloatField = BaseField & {
-  dataType: DataType.FLOAT;
+  dataType: "float";
 
   /** @default 32 */
   size?: 32 | 64;
 };
 
 export type DateField = BaseField & {
-  dataType: DataType.DATE;
+  dataType: "date";
 };
 
 export type BlobField = BaseField & {
-  dataType: DataType.BLOB;
+  dataType: "blob";
 };
 
 export type ReferenceField = BaseField & {
-  dataType: DataType.REFERENCE;
+  dataType: "reference";
   targetCollection: Collection;
 };
 

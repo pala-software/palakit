@@ -12,7 +12,7 @@ import Router from "@koa/router";
 import mount from "koa-mount";
 import { koaBody } from "koa-body";
 import { OidcProviderDatabaseAdapter } from "./OidcProviderDatabaseAdapter";
-import { DataType, DocumentStore } from "@palakit/db";
+import { DocumentStore } from "@palakit/db";
 import { compare, hash } from "bcrypt";
 
 export type OpenIdConnectIdentityProviderConfiguration = {
@@ -126,12 +126,12 @@ export const OpenIdConnectIdentityProvider = createPart(
       .createCollection({ name: "oidcAccounts" })
       .addField({
         name: "email",
-        dataType: DataType.STRING,
+        dataType: "string",
         nullable: false,
       })
       .addField({
         name: "passwordHash",
-        dataType: DataType.STRING,
+        dataType: "string",
         nullable: false,
       });
 

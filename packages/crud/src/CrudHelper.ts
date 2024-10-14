@@ -8,7 +8,6 @@ import {
 } from "@palakit/api";
 import { createPart } from "@palakit/core";
 import {
-  DataType,
   Field,
   Shape,
   Where,
@@ -65,28 +64,28 @@ const schemaFromField = async (field: Field): Promise<NullableJsonSchema> => {
   }
 
   switch (field.dataType) {
-    case DataType.STRING:
+    case "string":
       return {
         type: "string",
         nullable: field.nullable,
         maxLength: field.length,
       };
-    case DataType.BOOLEAN:
+    case "boolean":
       return { type: "boolean", nullable: field.nullable };
-    case DataType.INTEGER:
+    case "integer":
       return {
         type: "integer",
         nullable: field.nullable,
       };
-    case DataType.FLOAT:
+    case "float":
       return { type: "number", nullable: field.nullable };
-    case DataType.BLOB:
+    case "blob":
       // TODO: Support blobs
       return { type: "null", nullable: field.nullable };
-    case DataType.DATE:
+    case "date":
       // TODO: Support date
       return { type: "null", nullable: field.nullable };
-    case DataType.REFERENCE:
+    case "reference":
       return {
         type: "string",
         nullable: field.nullable,

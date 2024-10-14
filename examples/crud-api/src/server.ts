@@ -2,7 +2,7 @@ import { SequelizeDocumentStoreFeature } from "@palakit/sequelize";
 import { ResourceServer, ResourceEndpoint } from "@palakit/api";
 import { TrpcResourceServerFeature } from "@palakit/trpc";
 import { LocalRuntime, createPart, resolveApplication } from "@palakit/core";
-import { DataType, DocumentStore } from "@palakit/db";
+import { DocumentStore } from "@palakit/db";
 import { CrudHelper } from "@palakit/crud";
 import { KoaHttpServerFeature } from "@palakit/koa";
 import { HOSTNAME, PORT, TRPC_PATH, SECRET } from "./config";
@@ -68,7 +68,7 @@ const MyCrudApi = createPart(
       })
       .addField({
         name: "name",
-        dataType: DataType.STRING,
+        dataType: "string",
         length: 255,
         nullable: false,
       });

@@ -7,7 +7,6 @@ import {
 } from "@palakit/core";
 import {
   Collection,
-  DataType,
   DocumentHandle,
   DocumentStore,
   DocumentStoreUtils,
@@ -127,14 +126,14 @@ export const SequelizeDocumentStore = createPart(
           [fieldName]: {
             ...(() => {
               switch (field.dataType) {
-                case DataType.STRING:
+                case "string":
                   if (field.length === undefined) {
                     return { type: DataTypes.TEXT };
                   }
                   return { type: DataTypes.STRING(field.length) };
-                case DataType.BOOLEAN:
+                case "boolean":
                   return { type: DataTypes.BOOLEAN };
-                case DataType.INTEGER:
+                case "integer":
                   return {
                     type: (() => {
                       switch (field.size) {
@@ -152,7 +151,7 @@ export const SequelizeDocumentStore = createPart(
                       }
                     })(),
                   };
-                case DataType.FLOAT:
+                case "float":
                   return {
                     type: (() => {
                       switch (field.size) {
@@ -164,11 +163,11 @@ export const SequelizeDocumentStore = createPart(
                       }
                     })(),
                   };
-                case DataType.DATE:
+                case "date":
                   return { type: DataTypes.DATE };
-                case DataType.BLOB:
+                case "blob":
                   return { type: DataTypes.BLOB };
-                case DataType.REFERENCE:
+                case "reference":
                   return {
                     type: DataTypes.INTEGER,
                     references: {
