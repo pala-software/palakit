@@ -1,12 +1,14 @@
 {
-  "name": "@palakit/mongoose",
+  "name": "@palakit/mongodb",
   "version": "0.1.0",
   "type": "module",
   "main": "src/index.ts",
   "dependencies": {
     "@palakit/core": "workspace:*",
     "@palakit/db": "workspace:*",
-    "@typeschema/main": "^0.14.0",
-    "mongoose": "^8.7.0"
+    "mongodb": "^6.9.0"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^10.1.2"
   }
 }

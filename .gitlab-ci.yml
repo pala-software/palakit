@@ -4,7 +4,7 @@ check:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   stage: test
   image:
-    name: node:22-alpine
+    name: node:22
   cache:
     - key:
         files:

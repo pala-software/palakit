@@ -4,6 +4,7 @@ import {
   createPart,
   getName,
   resolvePart,
+  Resolved,
 } from "part-di";
 import { LocalRuntime } from "./LocalRuntime";
 
@@ -46,6 +47,8 @@ export const Application = createPart(
     };
   },
 );
+
+export type Application = Resolved<typeof Application>;
 
 export type ApplicationOptions = {
   name: string;
