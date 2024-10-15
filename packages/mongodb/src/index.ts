@@ -1,4 +1,5 @@
 export {
+  MongoConnection,
   MongoDocumentStore,
   MongoDocumentStoreConfiguration,
   MongoDocumentStoreFeature,
