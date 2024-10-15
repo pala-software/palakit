@@ -1,5 +1,4 @@
-import { createPart } from "part-di";
-import { Runtime } from "@palakit/core";
+import { createPart, Runtime } from "@palakit/core";
 
 export const MockRuntime = createPart(Runtime, [], () => {
   const createFunction = jest.fn(() =>
