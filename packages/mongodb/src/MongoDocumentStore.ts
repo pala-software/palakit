@@ -30,7 +30,7 @@ type Document = MongoDocument & { _id?: string };
 
 export const MongoDocumentStoreConfiguration =
   createConfiguration<MongoDocumentStoreConfiguration>(
-    "MongooseDocumentStoreConfiguration",
+    "MongoDocumentStoreConfiguration",
   );
 
 export const MongoDocumentStore = createPart(
@@ -126,15 +126,12 @@ export const MongoDocumentStore = createPart(
     };
 
     return {
-      connect: application.start.on(
-        "MongooseDocumentStore.connect",
-        async () => {
-          await client.connect();
-        },
-      ),
+      connect: application.start.on("MongoDocumentStore.connect", async () => {
+        await client.connect();
+      }),
 
       disconnect: runtime.createFunction(
-        "MongooseDocumentStore.disconnect",
+        "MongoDocumentStore.disconnect",
         async () => {
           await client.close();
         },

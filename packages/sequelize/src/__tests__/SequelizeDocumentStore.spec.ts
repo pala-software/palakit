@@ -3,12 +3,12 @@ import { MockApplication } from "@palakit/core/src/__mocks__/Application";
 import { DataType, DocumentStore } from "@palakit/db";
 import { SequelizeDocumentStoreFeature } from "../SequelizeDocumentStore";
 
-describe("MongooseDocumentStore", () => {
+describe("SequelizeDocumentStore", () => {
   let app: Application;
   let documentStore: DocumentStore;
   beforeEach(async () => {
     app = await resolveApplication({
-      name: "MockMongoApp",
+      name: "MockSequelizeApp",
       parts: [
         MockApplication,
         ...SequelizeDocumentStoreFeature.configure({
