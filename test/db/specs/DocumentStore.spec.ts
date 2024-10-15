@@ -10,6 +10,10 @@ beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
 });
 
+afterAll(async () => {
+  await mongoServer.stop();
+});
+
 describe.each([
   [
     "MongoDocumentStore",
@@ -40,10 +44,6 @@ describe.each([
 
   afterEach(async () => {
     await documentStore.disconnect();
-  });
-
-  afterAll(async () => {
-    await mongoServer.stop();
   });
 
   it("resolves successfully", () => {
