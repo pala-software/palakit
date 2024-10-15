@@ -1,53 +1,9 @@
-import { resolveApplication, Application } from "@palakit/core";
-import { DataType, DocumentStore } from "@palakit/db";
-import { MongoDocumentStoreFeature } from "@palakit/mongodb";
-import { MongoMemoryServer } from "mongodb-memory-server";
-import { SequelizeDocumentStoreFeature } from "@palakit/sequelize";
+import { DataType } from "@palakit/db";
+import { describeDocumentStore } from "../utils/describeDocumentStore";
 
-let dbNumber = 0;
-let mongoServer: MongoMemoryServer;
-beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
-});
-
-afterAll(async () => {
-  await mongoServer.stop();
-});
-
-describe.each([
-  [
-    "MongoDocumentStore",
-    () =>
-      MongoDocumentStoreFeature.configure({
-        url: mongoServer.getUri(`db-${++dbNumber}`),
-      }),
-  ],
-  [
-    "SequelizeDocumentStore",
-    () =>
-      SequelizeDocumentStoreFeature.configure({
-        dialect: "sqlite",
-        storage: ":memory:",
-        logging: false,
-      }),
-  ],
-])("%s", (_name, getDocumentStoreFeature) => {
-  let app: Application;
-  let documentStore: DocumentStore;
-  beforeEach(async () => {
-    app = await resolveApplication({
-      name: "test",
-      parts: [...getDocumentStoreFeature()],
-    });
-    documentStore = app.resolve(DocumentStore);
-  });
-
-  afterEach(async () => {
-    await documentStore.disconnect();
-  });
-
+describeDocumentStore((getDocumentStore) => {
   it("resolves successfully", () => {
-    expect(documentStore).toEqual({
+    expect(getDocumentStore()).toEqual({
       connect: expect.any(Function),
       disconnect: expect.any(Function),
       createCollection: expect.any(Function),
@@ -55,30 +11,34 @@ describe.each([
   });
 
   describe("connect", () => {
+    afterEach(async () => {
+      await getDocumentStore().disconnect();
+    });
+
     it("connects successfully", async () => {
-      await expect(documentStore.connect()).resolves.toBeUndefined();
+      await expect(getDocumentStore().connect()).resolves.toBeUndefined();
     });
   });
 
   describe("createCollection", () => {
     it("returns collection", async () => {
-      const collection = documentStore
+      const collection = getDocumentStore()
         .createCollection({
-          name: "mock-collection-name",
+          name: "test",
         })
         .addField({
-          name: "mockStringField",
+          name: "string",
           dataType: DataType.STRING,
         })
         .addField({
-          name: "mockIntegerField",
+          name: "integer",
           dataType: DataType.INTEGER,
         });
       expect(collection).toEqual({
-        name: "mock-collection-name",
+        name: "test",
         fields: {
-          mockStringField: { dataType: DataType.STRING },
-          mockIntegerField: { dataType: DataType.INTEGER },
+          string: { dataType: DataType.STRING },
+          integer: { dataType: DataType.INTEGER },
         },
         addField: expect.any(Function),
         removeField: expect.any(Function),
