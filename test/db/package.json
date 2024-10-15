@@ -1,0 +1,12 @@
+{
+  "name": "@palakit/db-test",
+  "version": "0.1.0",
+  "type": "module",
+  "devDependencies": {
+    "@palakit/core": "workspace:*",
+    "@palakit/db": "workspace:*",
+    "@palakit/sequelize": "workspace:*",
+    "@palakit/mongodb": "workspace:*",
+    "mongodb-memory-server": "^10.1.2"
+  }
+}

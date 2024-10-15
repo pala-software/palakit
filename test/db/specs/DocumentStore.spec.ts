@@ -1,28 +1,49 @@
 import { resolveApplication, Application } from "@palakit/core";
-import { MockApplication } from "@palakit/core/src/__mocks__/Application";
 import { DataType, DocumentStore } from "@palakit/db";
-import { SequelizeDocumentStoreFeature } from "../SequelizeDocumentStore";
+import { MongoDocumentStoreFeature } from "@palakit/mongodb";
+import { MongoMemoryServer } from "mongodb-memory-server";
+import { SequelizeDocumentStoreFeature } from "@palakit/sequelize";
 
-describe("SequelizeDocumentStore", () => {
+let dbNumber = 0;
+let mongoServer: MongoMemoryServer;
+beforeAll(async () => {
+  mongoServer = await MongoMemoryServer.create();
+});
+
+describe.each([
+  [
+    "MongoDocumentStore",
+    () =>
+      MongoDocumentStoreFeature.configure({
+        url: mongoServer.getUri(`db-${++dbNumber}`),
+      }),
+  ],
+  [
+    "SequelizeDocumentStore",
+    () =>
+      SequelizeDocumentStoreFeature.configure({
+        dialect: "sqlite",
+        storage: ":memory:",
+        logging: false,
+      }),
+  ],
+])("%s", (_name, getDocumentStoreFeature) => {
   let app: Application;
   let documentStore: DocumentStore;
   beforeEach(async () => {
     app = await resolveApplication({
-      name: "MockSequelizeApp",
-      parts: [
-        MockApplication,
-        ...SequelizeDocumentStoreFeature.configure({
-          dialect: "sqlite",
-          storage: ":memory:",
-          logging: false,
-        }),
-      ],
+      name: "test",
+      parts: [...getDocumentStoreFeature()],
     });
     documentStore = app.resolve(DocumentStore);
   });
 
   afterEach(async () => {
     await documentStore.disconnect();
+  });
+
+  afterAll(async () => {
+    await mongoServer.stop();
   });
 
   it("resolves successfully", () => {

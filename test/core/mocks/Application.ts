@@ -1,6 +1,6 @@
 import { createPart } from "part-di";
 import { MockRuntime } from "./Runtime";
-import { ApplicationConfiguration } from "../Application";
+import { ApplicationConfiguration } from "@palakit/core";
 
 export const MockApplication = createPart(
   "Application",
