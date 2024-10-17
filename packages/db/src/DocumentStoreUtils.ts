@@ -7,7 +7,7 @@ export type DocumentStoreUtils = Resolved<typeof DocumentStoreUtils>;
 const maxInteger = (bits: number) => 2 ** (bits - 1) - 1;
 
 export const DocumentStoreUtils = createPart("DocumentStoreUtils", [], () => ({
-  validateField: async (
+  validateFieldSchema: async (
     field: Field & { name: string },
     input: unknown,
   ): Promise<void> => {
@@ -26,7 +26,11 @@ export const DocumentStoreUtils = createPart("DocumentStoreUtils", [], () => ({
         );
       }
     }
-
+  },
+  validateFieldType: async (
+    field: Field & { name: string },
+    input: unknown,
+  ): Promise<void> => {
     if ((field.nullable ?? true) && input === undefined) {
       // No input for nullable field. That's ok.
       return;

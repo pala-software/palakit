@@ -6,6 +6,8 @@ type BaseField = {
   schema?: Schema;
   nullable?: boolean;
   unique?: boolean;
+  serialize?: (value: unknown) => unknown | Promise<unknown>;
+  deserialize?: (value: unknown) => unknown | Promise<unknown>;
 };
 
 export type StringField = BaseField & {

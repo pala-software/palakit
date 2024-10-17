@@ -44,19 +44,6 @@ export const SequelizeDocumentStore = createPart(
   ([sequelize, application, runtime, utils]) => {
     const meta = new Map<Collection, { model: ModelStatic<Model> }>();
 
-    const toDocument = <T extends Shape>(instance: Model) =>
-      ({
-        get: async () => {
-          return instance.get();
-        },
-        update: async (values) => {
-          await instance.update(values);
-        },
-        delete: async () => {
-          await instance.destroy();
-        },
-      }) as DocumentHandle<T>;
-
     const transformWhere = <T extends Shape>(where: Where<T>): WhereOptions => {
       if (where.and) {
         return {
@@ -185,10 +172,6 @@ export const SequelizeDocumentStore = createPart(
             })(),
             allowNull: field.nullable ?? true,
             unique: field.unique ?? false,
-            validate: {
-              isValid: (input: unknown) =>
-                utils.validateField({ ...field, name: fieldName }, input),
-            },
           } satisfies ModelAttributes[string],
         }),
         {
@@ -218,6 +201,71 @@ export const SequelizeDocumentStore = createPart(
         const fields: Record<string, Field> = {};
         let model: ModelStatic<Model>;
 
+        const toDocument = <T extends Shape>(instance: Model) =>
+          ({
+            get: async () => {
+              const values = instance.get();
+              if (!values) {
+                throw new Error("Could not find document");
+              }
+
+              for (const fieldName in fields) {
+                await utils.validateFieldType(
+                  { ...fields[fieldName], name: fieldName },
+                  values[fieldName],
+                );
+                if (fields[fieldName].deserialize) {
+                  values[fieldName] = await fields[fieldName].deserialize(
+                    values[fieldName],
+                  );
+                }
+                await utils.validateFieldSchema(
+                  { ...fields[fieldName], name: fieldName },
+                  values[fieldName],
+                );
+              }
+              for (const fieldName in values) {
+                if (fieldName === "id") {
+                  continue;
+                }
+                if (!(fieldName in fields)) {
+                  throw new Error("Unexpected value in unknown field");
+                }
+              }
+
+              return values;
+            },
+            update: async (values: Record<string, unknown>) => {
+              for (const fieldName in values) {
+                if (fieldName === "id") {
+                  throw new Error("ID field cannot be updated");
+                }
+                if (!(fieldName in fields)) {
+                  throw new Error("Unexpected value for unknown field");
+                }
+
+                await utils.validateFieldSchema(
+                  { ...fields[fieldName], name: fieldName },
+                  values[fieldName],
+                );
+                if (fields[fieldName].serialize) {
+                  values[fieldName] = await fields[fieldName].serialize(
+                    values[fieldName],
+                  );
+                }
+                await utils.validateFieldType(
+                  { ...fields[fieldName], name: fieldName },
+                  values[fieldName],
+                );
+              }
+
+              await instance.update(values);
+            },
+            delete: async () => {
+              await instance.destroy();
+            },
+          }) as DocumentHandle<T>;
+
         const collection: Collection<Record<string, Field>> = {
           name: options.name,
           fields,
@@ -237,7 +285,31 @@ export const SequelizeDocumentStore = createPart(
             await model.sync();
             return collection;
           },
-          create: async (values) => {
+          create: async (values: Record<string, unknown>) => {
+            for (const fieldName in fields) {
+              await utils.validateFieldSchema(
+                { ...fields[fieldName], name: fieldName },
+                values[fieldName],
+              );
+              if (fields[fieldName].serialize) {
+                values[fieldName] = await fields[fieldName].serialize(
+                  values[fieldName],
+                );
+              }
+              await utils.validateFieldType(
+                { ...fields[fieldName], name: fieldName },
+                values[fieldName],
+              );
+            }
+            for (const fieldName in values) {
+              if (fieldName === "id") {
+                continue;
+              }
+              if (!(fieldName in fields)) {
+                throw new Error("Unexpected value for unknown field");
+              }
+            }
+
             const instance = await model.create(values);
             return toDocument(instance);
           },

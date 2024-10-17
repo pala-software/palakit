@@ -149,16 +149,58 @@ export const MongoDocumentStore = createPart(
                 throw new Error("Could not find document");
               }
 
+              for (const fieldName in fields) {
+                await utils.validateFieldType(
+                  { ...fields[fieldName], name: fieldName },
+                  values[fieldName],
+                );
+                if (fields[fieldName].deserialize) {
+                  values[fieldName] = await fields[fieldName].deserialize(
+                    values[fieldName],
+                  );
+                }
+                await utils.validateFieldSchema(
+                  { ...fields[fieldName], name: fieldName },
+                  values[fieldName],
+                );
+              }
+              for (const fieldName in values) {
+                if (fieldName === "_id") {
+                  continue;
+                }
+                if (!(fieldName in fields)) {
+                  throw new Error("Unexpected value in unknown field");
+                }
+              }
+
               values.id = values._id;
               delete values._id;
               return values as T;
             },
-            update: async (values: Partial<T>) => {
-              const doc: Document = values;
-              if (doc.id) {
-                doc._id = doc.id;
-                delete doc.id;
+            update: async (values: Record<string, unknown>) => {
+              for (const fieldName in values) {
+                if (fieldName === "id") {
+                  throw new Error("ID field cannot be updated");
+                }
+                if (!(fieldName in fields)) {
+                  throw new Error("Unexpected value for unknown field");
+                }
+
+                await utils.validateFieldSchema(
+                  { ...fields[fieldName], name: fieldName },
+                  values[fieldName],
+                );
+                if (fields[fieldName].serialize) {
+                  values[fieldName] = await fields[fieldName].serialize(
+                    values[fieldName],
+                  );
+                }
+                await utils.validateFieldType(
+                  { ...fields[fieldName], name: fieldName },
+                  values[fieldName],
+                );
               }
+
               await col.updateOne({ _id }, { $set: values });
             },
             delete: async () => {
@@ -183,18 +225,36 @@ export const MongoDocumentStore = createPart(
             // Sync is not needed.
             return collection;
           },
-          create: async (values) => {
-            for (const [fieldName, field] of Object.entries(fields)) {
-              await utils.validateField(
-                { ...field, name: fieldName },
+          create: async (values: Record<string, unknown>) => {
+            for (const fieldName in fields) {
+              await utils.validateFieldSchema(
+                { ...fields[fieldName], name: fieldName },
+                values[fieldName],
+              );
+              if (fields[fieldName].serialize) {
+                values[fieldName] = await fields[fieldName].serialize(
+                  values[fieldName],
+                );
+              }
+              await utils.validateFieldType(
+                { ...fields[fieldName], name: fieldName },
                 values[fieldName],
               );
             }
+            for (const fieldName in values) {
+              if (fieldName === "id") {
+                continue;
+              }
+              if (!(fieldName in fields)) {
+                throw new Error("Unexpected value for unknown field");
+              }
+            }
 
-            values._id = values.id ?? crypto.randomUUID();
+            const id = (values.id as string | undefined) ?? crypto.randomUUID();
+            values._id = id;
             delete values.id;
             await col.insertOne(values, { forceServerObjectId: false });
-            return toDocument(values._id);
+            return toDocument(id);
           },
           find: async (options) => {
             const cursor = col
