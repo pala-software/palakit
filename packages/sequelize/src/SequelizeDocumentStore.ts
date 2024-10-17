@@ -33,16 +33,16 @@ export const SequelizeDocumentStoreConfiguration =
     "SequelizeDocumentStoreConfiguration",
   );
 
+export const SequelizeConnection = createPart(
+  "SequelizeConnection",
+  [SequelizeDocumentStoreConfiguration],
+  ([config]) => new Sequelize(config),
+);
+
 export const SequelizeDocumentStore = createPart(
   DocumentStore,
-  [
-    SequelizeDocumentStoreConfiguration,
-    Application,
-    LocalRuntime,
-    DocumentStoreUtils,
-  ],
-  ([config, application, runtime, utils]) => {
-    const sequelize = new Sequelize(config);
+  [SequelizeConnection, Application, LocalRuntime, DocumentStoreUtils],
+  ([sequelize, application, runtime, utils]) => {
     const meta = new Map<Collection, { model: ModelStatic<Model> }>();
 
     const toDocument = <T extends Shape>(instance: Model) =>
@@ -275,6 +275,6 @@ export const SequelizeDocumentStore = createPart(
 );
 
 export const SequelizeDocumentStoreFeature = createFeature(
-  [SequelizeDocumentStore, DocumentStoreUtils],
+  [SequelizeConnection, SequelizeDocumentStore, DocumentStoreUtils],
   SequelizeDocumentStoreConfiguration,
 );

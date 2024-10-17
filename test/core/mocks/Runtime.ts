@@ -1,13 +1,12 @@
-import { createPart } from "part-di";
-import { Runtime as RuntimeDefinition } from "../Runtime";
+import { createPart, Runtime } from "@palakit/core";
 
-export const MockRuntime = createPart(RuntimeDefinition, [], () => {
+export const MockRuntime = createPart(Runtime, [], () => {
   const createFunction = jest.fn(() =>
     Object.assign(jest.fn(), {
       before: createFunction,
       after: createFunction,
     }),
-  ) as unknown as jest.Mocked<RuntimeDefinition["createFunction"]>;
+  ) as unknown as jest.Mocked<Runtime["createFunction"]>;
 
   return {
     createFunction,

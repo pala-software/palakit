@@ -7,8 +7,5 @@
     "@palakit/core": "workspace:*",
     "@palakit/db": "workspace:*",
     "mongodb": "^6.9.0"
-  },
-  "devDependencies": {
-    "mongodb-memory-server": "^10.1.2"
   }
 }
