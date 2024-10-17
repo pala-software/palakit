@@ -43,25 +43,50 @@ export const OidcProviderDatabaseAdapter = createPart(
       }>
     >();
     for (const name of models) {
-      const collection = db.createCollection({
-        name: "oidc" + name,
-        fields: {
-          ...((grantable as string[]).includes(name) && {
-            grantId: { dataType: DataType.STRING, nullable: false },
-          }),
-          ...(name === "DeviceCode" && {
-            userCode: { dataType: DataType.STRING, nullable: false },
-          }),
-          ...(name === "Session" && {
-            uid: { dataType: DataType.STRING, nullable: false },
-          }),
-          data: { dataType: DataType.STRING, nullable: false },
-          expiresAt: { dataType: DataType.DATE, nullable: false },
-          consumedAt: { dataType: DataType.DATE, nullable: true },
-        },
-      });
+      const collection = db
+        .createCollection({ name: "oidc" + name })
+        .addField({ name: "data", dataType: DataType.STRING, nullable: false })
+        .addField({
+          name: "expiresAt",
+          dataType: DataType.DATE,
+          nullable: false,
+        })
+        .addField({
+          name: "consumedAt",
+          dataType: DataType.DATE,
+          nullable: true,
+        });
+
+      if ((grantable as string[]).includes(name)) {
+        collection.addField({
+          name: "grantId",
+          dataType: DataType.STRING,
+          nullable: false,
+        });
+      }
+      if (name === "DeviceCode") {
+        collection.addField({
+          name: "userCode",
+          dataType: DataType.STRING,
+          nullable: false,
+        });
+      }
+      if (name === "Session") {
+        collection.addField({
+          name: "uid",
+          dataType: DataType.STRING,
+          nullable: false,
+        });
+      }
+
       collections.set(name, collection);
     }
+
+    db.connect.after("OidcProviderDatabaseAdapter.dbConnected", async () => {
+      for (const collection of collections.values()) {
+        await collection.sync();
+      }
+    });
 
     return (name) => {
       const collection = collections.get(name);

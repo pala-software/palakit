@@ -1,4 +1,4 @@
 export default {
-  "*": () => "pnpm run lint",
-  "*.{js,ts}": () => "pnpm run check-types",
+  "*": () => "pnpm run check:lint",
+  "*.{js,ts}": () => "pnpm run check:types",
 };

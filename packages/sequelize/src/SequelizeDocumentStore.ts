@@ -3,18 +3,18 @@ import {
   createConfiguration,
   createFeature,
   createPart,
+  LocalRuntime,
 } from "@palakit/core";
 import {
   Collection,
   DataType,
   DocumentHandle,
   DocumentStore,
+  DocumentStoreUtils,
   Field,
   Shape,
-  ShapeOf,
   Where,
 } from "@palakit/db";
-import { validate } from "@typeschema/main";
 import {
   DataTypes,
   Model,
@@ -33,15 +33,17 @@ export const SequelizeDocumentStoreConfiguration =
     "SequelizeDocumentStoreConfiguration",
   );
 
+export const SequelizeConnection = createPart(
+  "SequelizeConnection",
+  [SequelizeDocumentStoreConfiguration],
+  ([config]) => new Sequelize(config),
+);
+
 export const SequelizeDocumentStore = createPart(
   DocumentStore,
-  [SequelizeDocumentStoreConfiguration, Application],
-  ([config, application]) => {
-    const sequelize = new Sequelize(config);
-    let setSynchronized: () => void;
-    const synchronized = new Promise<void>((resolve) => {
-      setSynchronized = resolve;
-    });
+  [SequelizeConnection, Application, LocalRuntime, DocumentStoreUtils],
+  ([sequelize, application, runtime, utils]) => {
+    const meta = new Map<Collection, { model: ModelStatic<Model> }>();
 
     const toDocument = <T extends Shape>(instance: Model) =>
       ({
@@ -118,242 +120,153 @@ export const SequelizeDocumentStore = createPart(
       return { [Op.and]: conditions };
     };
 
-    const maxInteger = (bits: number) => 2 ** (bits - 1) - 1;
-    const meta = new Map<Collection, { model: ModelStatic<Model> }>();
+    const toColumns = (fields: Record<string, Field>) =>
+      Object.entries(fields).reduce<ModelAttributes>(
+        (obj, [fieldName, field]) => ({
+          ...obj,
+          [fieldName]: {
+            ...(() => {
+              switch (field.dataType) {
+                case DataType.STRING:
+                  if (field.length === undefined) {
+                    return { type: DataTypes.TEXT };
+                  }
+                  return { type: DataTypes.STRING(field.length) };
+                case DataType.BOOLEAN:
+                  return { type: DataTypes.BOOLEAN };
+                case DataType.INTEGER:
+                  return {
+                    type: (() => {
+                      switch (field.size) {
+                        case 8:
+                          return DataTypes.TINYINT;
+                        case 16:
+                          return DataTypes.SMALLINT;
+                        case 24:
+                          return DataTypes.MEDIUMINT;
+                        default:
+                        case 32:
+                          return DataTypes.INTEGER;
+                        case 64:
+                          return DataTypes.BIGINT;
+                      }
+                    })(),
+                  };
+                case DataType.FLOAT:
+                  return {
+                    type: (() => {
+                      switch (field.size) {
+                        default:
+                        case 32:
+                          return DataTypes.FLOAT;
+                        case 64:
+                          return DataTypes.DOUBLE;
+                      }
+                    })(),
+                  };
+                case DataType.DATE:
+                  return { type: DataTypes.DATE };
+                case DataType.BLOB:
+                  return { type: DataTypes.BLOB };
+                case DataType.REFERENCE:
+                  return {
+                    type: DataTypes.INTEGER,
+                    references: {
+                      model: meta.get(field.targetCollection)?.model,
+                      key: "id",
+                    },
+                    get() {
+                      return this.getDataValue(fieldName).toString();
+                    },
+                    set(value: string) {
+                      this.setDataValue(fieldName, +value);
+                    },
+                  };
+              }
+            })(),
+            allowNull: field.nullable ?? true,
+            unique: field.unique ?? false,
+            validate: {
+              isValid: (input: unknown) =>
+                utils.validateField({ ...field, name: fieldName }, input),
+            },
+          } satisfies ModelAttributes[string],
+        }),
+        {
+          id: {
+            type: DataTypes.UUIDV4,
+            defaultValue: DataTypes.UUIDV4,
+            primaryKey: true,
+            allowNull: false,
+          },
+        },
+      );
 
     return {
       connect: application.start.on(
         "SequelizeDocumentStore.connect",
         async () => {
-          await sequelize.sync();
-          setSynchronized();
+          await sequelize.authenticate();
+        },
+      ),
+      disconnect: runtime.createFunction(
+        "SequelizeDocumentStore.disconnect",
+        async () => {
+          await sequelize.close();
         },
       ),
       createCollection: (options) => {
-        const toColumns = (fields: Record<string, Field>) =>
-          Object.entries(fields).reduce<ModelAttributes>(
-            (obj, [fieldName, field]) => ({
-              ...obj,
-              [fieldName]: {
-                ...(() => {
-                  switch (field.dataType) {
-                    case DataType.STRING:
-                      if (field.length === undefined) {
-                        return { type: DataTypes.TEXT };
-                      }
-                      return { type: DataTypes.STRING(field.length) };
-                    case DataType.BOOLEAN:
-                      return { type: DataTypes.BOOLEAN };
-                    case DataType.INTEGER:
-                      return {
-                        type: (() => {
-                          switch (field.size) {
-                            case 8:
-                              return DataTypes.TINYINT;
-                            case 16:
-                              return DataTypes.SMALLINT;
-                            case 24:
-                              return DataTypes.MEDIUMINT;
-                            default:
-                            case 32:
-                              return DataTypes.INTEGER;
-                            case 64:
-                              return DataTypes.BIGINT;
-                          }
-                        })(),
-                      };
-                    case DataType.FLOAT:
-                      return {
-                        type: (() => {
-                          switch (field.size) {
-                            default:
-                            case 32:
-                              return DataTypes.FLOAT;
-                            case 64:
-                              return DataTypes.DOUBLE;
-                          }
-                        })(),
-                      };
-                    case DataType.DATE:
-                      return { type: DataTypes.DATE };
-                    case DataType.BLOB:
-                      return { type: DataTypes.BLOB };
-                    case DataType.REFERENCE:
-                      return {
-                        type: DataTypes.INTEGER,
-                        references: {
-                          model: meta.get(field.targetCollection)?.model,
-                          key: "id",
-                        },
-                        get() {
-                          return this.getDataValue(fieldName).toString();
-                        },
-                        set(value: string) {
-                          this.setDataValue(fieldName, +value);
-                        },
-                      };
-                  }
-                })(),
-                allowNull: field.nullable ?? true,
-                unique: field.unique ?? false,
-                validate: {
-                  hasCorrectType: (input: unknown) => {
-                    if ((field.nullable ?? true) && input === undefined) {
-                      // No input for nullable field. That's ok.
-                      return;
-                    }
+        const fields: Record<string, Field> = {};
+        let model: ModelStatic<Model>;
 
-                    switch (field.dataType) {
-                      case DataType.STRING:
-                        if (typeof input !== "string") {
-                          throw new Error(
-                            `Field value for ${fieldName} is not a string`,
-                          );
-                        }
-                        if (
-                          field.length !== undefined &&
-                          input.length > field.length
-                        ) {
-                          throw new Error(
-                            `Field value for ${fieldName} has length more` +
-                              " than allowed maximum",
-                          );
-                        }
-                        break;
-                      case DataType.BOOLEAN:
-                        if (typeof input !== "boolean") {
-                          throw new Error(
-                            `Field value for ${fieldName} is not a boolean`,
-                          );
-                        }
-                        break;
-                      case DataType.INTEGER: {
-                        if (typeof input !== "number" || Number.isNaN(input)) {
-                          throw new Error(
-                            `Field value for ${fieldName} is not a number`,
-                          );
-                        }
-                        if (input % 1 !== 0) {
-                          throw new Error(
-                            `Field value for ${fieldName} is not an integer`,
-                          );
-                        }
-
-                        if (
-                          field.size !== undefined &&
-                          Math.abs(input) > maxInteger(field.size)
-                        ) {
-                          throw new Error(
-                            `Field value for ${fieldName} does not fit as a` +
-                              ` ${field.size} bit integer`,
-                          );
-                        }
-                        break;
-                      }
-                      case DataType.FLOAT:
-                        if (typeof input !== "number") {
-                          throw new Error(
-                            `Field value for ${fieldName} is not a number`,
-                          );
-                        }
-
-                        // NOTE: I don't think there's a need to validate size
-                        // of floating point numbers as they usually aren't used
-                        // absolute precision in mind.
-                        break;
-                      case DataType.DATE:
-                        if (!(input instanceof Date)) {
-                          throw new Error(
-                            `Field value for ${fieldName} is not a Date`,
-                          );
-                        }
-                        break;
-                      case DataType.BLOB:
-                        if (!(input instanceof Buffer)) {
-                          throw new Error(
-                            `Field value for ${fieldName} is not a Buffer`,
-                          );
-                        }
-                        break;
-                    }
-                  },
-                  ...(field.schema && {
-                    isValid: async (input: unknown) => {
-                      if (!field.schema) {
-                        throw new Error("No schema");
-                      }
-
-                      const result = await validate(field.schema, input);
-                      if (!result.success) {
-                        throw new Error(
-                          "Validation failed with following issues: \n" +
-                            result.issues
-                              .map(
-                                ({ message, path }) =>
-                                  ` - ${message}` +
-                                  (path?.length
-                                    ? ` (at ${path.join(".")})`
-                                    : ""),
-                              )
-                              .join("\n"),
-                        );
-                      }
-                    },
-                  }),
-                },
-              } satisfies ModelAttributes[string],
-            }),
-            {
-              id: {
-                type: DataTypes.UUIDV4,
-                defaultValue: DataTypes.UUIDV4,
-                primaryKey: true,
-                allowNull: false,
-              },
-            },
-          );
-
-        const model = sequelize.define(
-          options.name,
-          toColumns(options.fields),
-          {
-            timestamps: false,
-          },
-        );
-
-        type Fields = (typeof options)["fields"];
-        const collection: Collection<Fields> = {
+        const collection: Collection<Record<string, Field>> = {
           name: options.name,
-          fields: options.fields,
+          fields,
+          addField: ({ name, ...field }) => {
+            fields[name] = field as Field;
+            updateModel();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return collection as any;
+          },
+          removeField: (name) => {
+            delete fields[name];
+            updateModel();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return collection as any;
+          },
+          sync: async () => {
+            await model.sync();
+            return collection;
+          },
           create: async (values) => {
-            await synchronized;
             const instance = await model.create(values);
-            return toDocument<ShapeOf<Fields>>(instance);
+            return toDocument(instance);
           },
           find: async (options) => {
-            await synchronized;
             const instances = await model.findAll({
-              where: options?.where
-                ? transformWhere<ShapeOf<Fields>>(options.where)
-                : undefined,
+              where: options?.where ? transformWhere(options.where) : undefined,
               order: options?.order,
               limit: options?.limit,
               offset: options?.offset,
             });
-            return instances.map(toDocument<ShapeOf<Fields>>);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return instances.map(toDocument) as any;
           },
           count: async (options) => {
-            await synchronized;
             const count = await model.count({
-              where: options?.where
-                ? transformWhere<ShapeOf<Fields>>(options.where)
-                : undefined,
+              where: options?.where ? transformWhere(options.where) : undefined,
             });
             return count;
           },
         };
 
-        meta.set(collection as Collection, { model });
+        const updateModel = () => {
+          model = sequelize.define(options.name, toColumns(fields), {
+            timestamps: false,
+          });
+          meta.set(collection as Collection, { model });
+        };
+        updateModel();
 
         return collection;
       },
@@ -362,6 +275,6 @@ export const SequelizeDocumentStore = createPart(
 );
 
 export const SequelizeDocumentStoreFeature = createFeature(
-  [SequelizeDocumentStore],
+  [SequelizeConnection, SequelizeDocumentStore, DocumentStoreUtils],
   SequelizeDocumentStoreConfiguration,
 );

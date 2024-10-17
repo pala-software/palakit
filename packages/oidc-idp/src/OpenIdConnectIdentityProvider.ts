@@ -122,19 +122,18 @@ export const OpenIdConnectIdentityProvider = createPart(
     const prefix = (path: string) =>
       new URL(path.slice(1), config.issuer.href + "/");
 
-    const accounts = db.createCollection({
-      name: "oidcAccounts",
-      fields: {
-        email: {
-          dataType: DataType.STRING,
-          nullable: false,
-        },
-        passwordHash: {
-          dataType: DataType.STRING,
-          nullable: false,
-        },
-      },
-    });
+    const accounts = db
+      .createCollection({ name: "oidcAccounts" })
+      .addField({
+        name: "email",
+        dataType: DataType.STRING,
+        nullable: false,
+      })
+      .addField({
+        name: "passwordHash",
+        dataType: DataType.STRING,
+        nullable: false,
+      });
 
     const providerConfig: Configuration = {
       adapter,
@@ -284,11 +283,15 @@ export const OpenIdConnectIdentityProvider = createPart(
     );
 
     return {
-      start: db.connect.after("OpenIdConnectIdentityProvider.start", () => {
-        provider = new Provider(config.issuer.href, providerConfig);
-        http.use(interactionRouter.routes());
-        http.use(mount(config.issuer.pathname, provider.app));
-      }),
+      start: db.connect.after(
+        "OpenIdConnectIdentityProvider.start",
+        async () => {
+          await accounts.sync();
+          provider = new Provider(config.issuer.href, providerConfig);
+          http.use(interactionRouter.routes());
+          http.use(mount(config.issuer.pathname, provider.app));
+        },
+      ),
       accounts,
       createPasswordHash: (password: string) => hash(password, 10),
     };
