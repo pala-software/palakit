@@ -91,6 +91,15 @@ export const DocumentStoreUtils = createPart("DocumentStoreUtils", [], () => ({
           throw new Error(`Field value for ${field.name} is not a Buffer`);
         }
         break;
+      case "json":
+        // There's not much to validate here, because almost any value in
+        // JavaScript can be converted to JSON.
+        break;
+      case "reference":
+        if (typeof input !== "string") {
+          throw new Error(`Field value for ${field.name} is not a string`);
+        }
+        break;
     }
   },
 }));

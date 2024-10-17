@@ -15,5 +15,7 @@ export type {
   DateField,
   Shape,
   ShapeOf,
+  JsonField,
+  JsonValue,
 } from "./DocumentStore";
 export { DocumentStoreUtils } from "./DocumentStoreUtils";

@@ -43,6 +43,10 @@ export type BlobField = BaseField & {
   dataType: "blob";
 };
 
+export type JsonField = BaseField & {
+  dataType: "json";
+};
+
 export type ReferenceField = BaseField & {
   dataType: "reference";
   targetCollection: Collection;
@@ -55,7 +59,16 @@ export type Field =
   | FloatField
   | DateField
   | BlobField
+  | JsonField
   | ReferenceField;
+
+export type JsonValue =
+  | null
+  | boolean
+  | number
+  | string
+  | JsonValue[]
+  | { [key: string]: JsonValue };
 
 type TypeOfField<T extends Field> = T["schema"] extends Schema
   ? Infer<T["schema"]>
@@ -69,7 +82,9 @@ type TypeOfField<T extends Field> = T["schema"] extends Schema
           ? Date
           : T extends BlobField
             ? Buffer
-            : never;
+            : T extends JsonField
+              ? JsonValue
+              : never;
 
 type NonNullableFieldKey<T extends Record<string, Field>> = {
   [K in keyof T]: T[K]["nullable"] extends false ? K : never;

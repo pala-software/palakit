@@ -154,6 +154,8 @@ export const SequelizeDocumentStore = createPart(
                   return { type: DataTypes.DATE };
                 case "blob":
                   return { type: DataTypes.BLOB };
+                case "json":
+                  return { type: DataTypes.TEXT };
                 case "reference":
                   return {
                     type: DataTypes.INTEGER,
@@ -210,6 +212,9 @@ export const SequelizeDocumentStore = createPart(
               }
 
               for (const fieldName in fields) {
+                if (fields[fieldName].dataType === "json") {
+                  values[fieldName] = JSON.parse(values[fieldName]);
+                }
                 await utils.validateFieldType(
                   { ...fields[fieldName], name: fieldName },
                   values[fieldName],
@@ -257,6 +262,9 @@ export const SequelizeDocumentStore = createPart(
                   { ...fields[fieldName], name: fieldName },
                   values[fieldName],
                 );
+                if (fields[fieldName].dataType === "json") {
+                  values[fieldName] = JSON.stringify(values[fieldName]);
+                }
               }
 
               await instance.update(values);
@@ -300,6 +308,9 @@ export const SequelizeDocumentStore = createPart(
                 { ...fields[fieldName], name: fieldName },
                 values[fieldName],
               );
+              if (fields[fieldName].dataType === "json") {
+                values[fieldName] = JSON.stringify(values[fieldName]);
+              }
             }
             for (const fieldName in values) {
               if (fieldName === "id") {
