@@ -4,7 +4,9 @@ import {
   Client,
   ClientAuth,
   discoveryRequest,
+  DiscoveryRequestOptions,
   introspectionRequest,
+  IntrospectionRequestOptions,
   IntrospectionResponse,
   processDiscoveryResponse,
   processIntrospectionResponse,
@@ -25,6 +27,7 @@ export const OpenIdConnectAuthenticator = createPart(
         issuer,
         client,
         clientAuth,
+        requestOptions,
       }: {
         /** URL for expected issuer. */
         issuer: URL;
@@ -37,9 +40,11 @@ export const OpenIdConnectAuthenticator = createPart(
 
         /** Client authentication method. */
         clientAuth: ClientAuth;
+
+        requestOptions?: DiscoveryRequestOptions;
       }): Promise<IdentityProvider> => {
-        const server = await discoveryRequest(issuer).then((response) =>
-          processDiscoveryResponse(issuer, response),
+        const server = await discoveryRequest(issuer, requestOptions).then(
+          (response) => processDiscoveryResponse(issuer, response),
         );
         return { server, client, clientAuth };
       },
@@ -47,17 +52,21 @@ export const OpenIdConnectAuthenticator = createPart(
       verifyAccessToken: async ({
         idp,
         accessToken,
+        requestOptions,
       }: {
         idp: IdentityProvider;
 
         /** Access token from a client. */
         accessToken: string;
+
+        requestOptions?: IntrospectionRequestOptions;
       }): Promise<IntrospectionResponse> => {
         const introspection = await introspectionRequest(
           idp.server,
           idp.client,
           idp.clientAuth,
           accessToken,
+          requestOptions,
         ).then((response) =>
           processIntrospectionResponse(idp.server, idp.client, response),
         );

@@ -9,6 +9,7 @@ import {
   skipStateCheck,
   authorizationCodeGrantRequest,
   processAuthorizationCodeResponse,
+  allowInsecureRequests,
 } from "oauth4webapi";
 import {
   FRONTEND_CLIENT,
@@ -27,9 +28,9 @@ try {
     links: [wsLink({ client: wsClient })],
   });
 
-  const idp = await discoveryRequest(ISSUER).then((response) =>
-    processDiscoveryResponse(ISSUER, response),
-  );
+  const idp = await discoveryRequest(ISSUER, {
+    [allowInsecureRequests]: true,
+  }).then((response) => processDiscoveryResponse(ISSUER, response));
   if (!idp.authorization_endpoint) {
     throw new Error("No authorization_endpoint");
   }
@@ -69,6 +70,9 @@ try {
       params,
       location.origin,
       codeVerifier,
+      {
+        [allowInsecureRequests]: true,
+      },
     ).then((response) =>
       processAuthorizationCodeResponse(idp, FRONTEND_CLIENT, response),
     );
@@ -80,6 +84,7 @@ try {
     await client.protected.read.query({ token: result.access_token });
     document.body.textContent = "success";
   }
-} catch {
+} catch (error) {
   document.body.textContent = "error";
+  throw error;
 }

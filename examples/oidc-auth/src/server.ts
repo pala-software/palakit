@@ -20,6 +20,7 @@ import {
   PORT,
   TRPC_PATH,
 } from "./config";
+import { allowInsecureRequests } from "oauth4webapi";
 
 const MyApi = createPart(
   "MyApi",
@@ -53,6 +54,7 @@ const MyApi = createPart(
               const payload = await auth.verifyAccessToken({
                 idp: idpOptions,
                 accessToken: input.token,
+                requestOptions: { [allowInsecureRequests]: true },
               });
               console.log(payload);
               return { response: { type: "ok" } };
@@ -81,6 +83,7 @@ const MyApi = createPart(
           issuer: ISSUER,
           client: BACKEND_CLIENT,
           clientAuth: BACKEND_CLIENT_AUTH,
+          requestOptions: { [allowInsecureRequests]: true },
         });
       }),
       publicEndpoint,
