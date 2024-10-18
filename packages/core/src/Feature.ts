@@ -15,5 +15,30 @@ export const createFeature = <Parts extends Part[], Configuration>(
   );
 };
 
-export const createConfiguration = <Type>(name: string, defaults?: Type) =>
-  createPart<Type>(name, [], defaults && (() => defaults));
+export const createConfiguration = <Type>(
+  name: string,
+  {
+    optional,
+    defaults,
+  }: {
+    /**
+     * Force configuration to be optional without defining defaults. If true,
+     * type parameter must be assignable to undefined because the default value
+     * will be undefined.
+     *
+     * @default false
+     */
+    optional?: Type extends undefined ? boolean : false;
+
+    /**
+     * Default value for configuration. Defining this makes configuration
+     * optional.
+     */
+    defaults?: Type;
+  } = {},
+) =>
+  createPart<Type>(
+    name,
+    [],
+    optional || defaults !== undefined ? () => defaults as Type : undefined,
+  );
