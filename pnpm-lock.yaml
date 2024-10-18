@@ -101,9 +101,6 @@ importers:
       sqlite3:
         specifier: ^5.1.7
         version: 5.1.7
-      tsx:
-        specifier: ^4.19.1
-        version: 4.19.1
       ws:
         specifier: ^8.18.0
         version: 8.18.0
@@ -113,6 +110,10 @@ importers:
       zod-to-json-schema:
         specifier: ^3.23.3
         version: 3.23.3(zod@3.23.8)
+    devDependencies:
+      tsx:
+        specifier: ^4.18.0
+        version: 4.19.1
 
   examples/oidc-auth:
     dependencies:
@@ -156,9 +157,6 @@ importers:
         specifier: ^3.23.2
         version: 3.23.3(zod@3.23.8)
     devDependencies:
-      '@sinclair/typebox':
-        specifier: ^0.33.15
-        version: 0.33.15
       tsx:
         specifier: ^4.18.0
         version: 4.19.1
@@ -1146,9 +1144,6 @@ packages:
 
   '@sinclair/typebox@0.27.8':
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
-
-  '@sinclair/typebox@0.33.15':
-    resolution: {integrity: sha512-R50kz7xohLjhwgmAiw+6qOAYkeFXsK8i1CbEQB1qJTiHMK5WywpvGIHJenE3n4t7dqj3bas+H1cD5dTZIfrAEw==}
 
   '@sindresorhus/is@5.6.0':
     resolution: {integrity: sha512-TV7t8GKYaJWsn00tFDqBw8+Uqmr8A0fRU1tvTQhyZzGv0sJCGRQL3JGMI3ucuKo3XIZdUP+Lx7/gh2t3lewy7g==}
@@ -4848,8 +4843,6 @@ snapshots:
     optional: true
 
   '@sinclair/typebox@0.27.8': {}
-
-  '@sinclair/typebox@0.33.15': {}
 
   '@sindresorhus/is@5.6.0': {}
 
