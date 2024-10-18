@@ -7,11 +7,17 @@ import {
   processDiscoveryResponse,
   validateAuthResponse,
   skipStateCheck,
-  isOAuth2Error,
   authorizationCodeGrantRequest,
-  processAuthorizationCodeOpenIDResponse,
+  processAuthorizationCodeResponse,
 } from "oauth4webapi";
-import { FRONTEND_CLIENT, HOSTNAME, ISSUER, PORT, TRPC_PATH } from "./config";
+import {
+  FRONTEND_CLIENT,
+  FRONTEND_CLIENT_AUTH,
+  HOSTNAME,
+  ISSUER,
+  PORT,
+  TRPC_PATH,
+} from "./config";
 
 try {
   const wsClient = createWSClient({
@@ -55,22 +61,17 @@ try {
       new URL(location.href),
       skipStateCheck,
     );
-    if (isOAuth2Error(params)) {
-      throw new Error(params.error);
-    }
 
     const result = await authorizationCodeGrantRequest(
       idp,
       FRONTEND_CLIENT,
+      FRONTEND_CLIENT_AUTH,
       params,
       location.origin,
       codeVerifier,
     ).then((response) =>
-      processAuthorizationCodeOpenIDResponse(idp, FRONTEND_CLIENT, response),
+      processAuthorizationCodeResponse(idp, FRONTEND_CLIENT, response),
     );
-    if (isOAuth2Error(result)) {
-      throw new Error(result.error);
-    }
 
     // Remove parameters
     history.replaceState(null, "", location.pathname);

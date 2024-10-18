@@ -2,17 +2,18 @@ import { createPart } from "@palakit/core";
 import {
   AuthorizationServer,
   Client,
+  ClientAuth,
   discoveryRequest,
   introspectionRequest,
   IntrospectionResponse,
-  isOAuth2Error,
   processDiscoveryResponse,
   processIntrospectionResponse,
 } from "oauth4webapi";
 
 export type IdentityProvider = {
-  client: Client;
   server: AuthorizationServer;
+  client: Client;
+  clientAuth: ClientAuth;
 };
 
 export const OpenIdConnectAuthenticator = createPart(
@@ -23,6 +24,7 @@ export const OpenIdConnectAuthenticator = createPart(
       discover: async ({
         issuer,
         client,
+        clientAuth,
       }: {
         /** URL for expected issuer. */
         issuer: URL;
@@ -32,11 +34,14 @@ export const OpenIdConnectAuthenticator = createPart(
          * authorization server.
          */
         client: Client;
+
+        /** Client authentication method. */
+        clientAuth: ClientAuth;
       }): Promise<IdentityProvider> => {
         const server = await discoveryRequest(issuer).then((response) =>
           processDiscoveryResponse(issuer, response),
         );
-        return { client, server };
+        return { server, client, clientAuth };
       },
 
       verifyAccessToken: async ({
@@ -51,13 +56,11 @@ export const OpenIdConnectAuthenticator = createPart(
         const introspection = await introspectionRequest(
           idp.server,
           idp.client,
+          idp.clientAuth,
           accessToken,
         ).then((response) =>
           processIntrospectionResponse(idp.server, idp.client, response),
         );
-        if (isOAuth2Error(introspection)) {
-          throw new Error(introspection.error);
-        }
         if (!introspection.active) {
           throw new Error("Invalid token");
         }

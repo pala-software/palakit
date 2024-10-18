@@ -1,4 +1,7 @@
-import type { Client } from "oauth4webapi";
+import type { OpenIdConnectIdentityProviderConfiguration } from "@palakit/oidc-idp";
+import { ClientSecretPost, None } from "oauth4webapi";
+
+type Client = OpenIdConnectIdentityProviderConfiguration["clients"][number];
 
 export const PORT = 3000;
 export const HOSTNAME = "localhost";
@@ -21,10 +24,16 @@ export const BACKEND_CLIENT = {
   grant_types: [],
 } satisfies Client;
 
+export const BACKEND_CLIENT_AUTH = ClientSecretPost(
+  BACKEND_CLIENT.client_secret,
+);
+
 export const FRONTEND_CLIENT = {
   client_id: "pala-frontend",
   redirect_uris: ["http://localhost:5173"],
   token_endpoint_auth_method: "none",
 } satisfies Client;
+
+export const FRONTEND_CLIENT_AUTH = None();
 
 export const CLIENTS = [BACKEND_CLIENT, FRONTEND_CLIENT] satisfies Client[];

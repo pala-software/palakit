@@ -13,6 +13,7 @@ import { KoaHttpServerFeature } from "@palakit/koa";
 import {
   ACCOUNTS,
   BACKEND_CLIENT,
+  BACKEND_CLIENT_AUTH,
   CLIENTS,
   HOSTNAME,
   ISSUER,
@@ -79,6 +80,7 @@ const MyApi = createPart(
         idpOptions = await auth.discover({
           issuer: ISSUER,
           client: BACKEND_CLIENT,
+          clientAuth: BACKEND_CLIENT_AUTH,
         });
       }),
       publicEndpoint,
