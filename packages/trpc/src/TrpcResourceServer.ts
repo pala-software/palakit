@@ -1,3 +1,4 @@
+import Router from "@koa/router";
 import {
   MutationOperation,
   Observable,
@@ -10,7 +11,13 @@ import {
   isQueryOperation,
   isSubscriptionOperation,
 } from "@palakit/api";
-import { createConfiguration, createFeature, createPart } from "@palakit/core";
+import {
+  Logger,
+  createConfiguration,
+  createFeature,
+  createPart,
+} from "@palakit/core";
+import { KoaHttpServer } from "@palakit/koa";
 import { AnyRouter, initTRPC } from "@trpc/server";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { observable } from "@trpc/server/observable";
@@ -18,8 +25,6 @@ import { toJSONSchema } from "@typeschema/main";
 import { writeFile } from "fs/promises";
 import { JSONSchema, compile } from "json-schema-to-typescript";
 import { WebSocketServer } from "ws";
-import { KoaHttpServer } from "@palakit/koa";
-import Router from "@koa/router";
 
 export type TrpcResourceServerConfiguration = {
   /** URL path where to mount tRPC server. */
@@ -36,10 +41,11 @@ export const TrpcResourceServerConfiguration =
 
 export const TrpcResourceServer = createPart(
   "TrpcServer",
-  [TrpcResourceServerConfiguration, ResourceServer, KoaHttpServer],
-  ([config, server, http]) => {
+  [TrpcResourceServerConfiguration, ResourceServer, KoaHttpServer, Logger],
+  ([config, server, http, lg]) => {
     const t = initTRPC.create();
     const endpoints: ResourceEndpoint[] = [];
+    const logger = lg.createLogger("TrpcServer");
 
     const executeOperation = async ({
       operation,
@@ -50,6 +56,7 @@ export const TrpcResourceServer = createPart(
     }): Promise<unknown> => {
       const { response } = await operation.handler({ input });
       if (response.type === "error") {
+        logger.error(response.data);
         throw response.data;
       } else {
         return response.data;
@@ -94,9 +101,8 @@ export const TrpcResourceServer = createPart(
                 try {
                   await validate(value);
                   next(value);
-                  // TODO: Log error in server log.
-                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 } catch (err) {
+                  logger.error(err);
                   error("Output validation failed");
                 }
               },
@@ -111,7 +117,9 @@ export const TrpcResourceServer = createPart(
       if (isMutationOperation(operation)) return createMutation(operation);
       if (isSubscriptionOperation(operation))
         return createSubscription(operation);
-      throw new Error("Invalid operation type encountered");
+      const e = new Error("Invalid operation type encountered");
+      logger.error(e);
+      throw e;
     };
 
     const createTypeName = (parts: string[]) => {
@@ -123,9 +131,11 @@ export const TrpcResourceServer = createPart(
         )
         .join("");
       if (typeName.length < 1) {
-        throw new Error(
+        const e = new Error(
           `Type name ${parts.join(",")} is converted to empty string which is not valid TypeScript type name`,
         );
+        logger.error(e);
+        throw e;
       }
       return typeName;
     };
@@ -183,9 +193,11 @@ export const TrpcResourceServer = createPart(
 
         generateClient: async () => {
           if (!config.clientPath) {
-            throw new Error(
+            const e = new Error(
               "Cannot generate client, because option 'clientPath' was not provided.",
             );
+            logger.error(e);
+            throw e;
           }
 
           const generatedTypes: string[] = [];
@@ -245,7 +257,9 @@ export const TrpcResourceServer = createPart(
 
               const { type } = operation;
               if (!["query", "mutation", "subscription"].includes(type)) {
-                throw new Error("Invalid operation type encountered");
+                const e = new Error("Invalid operation type encountered");
+                logger.error(e);
+                throw e;
               }
 
               const jsonName = JSON.stringify(name);
