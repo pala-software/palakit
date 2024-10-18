@@ -1,12 +1,13 @@
-import { SequelizeDocumentStoreFeature } from "@palakit/sequelize";
-import { ResourceServer, ResourceEndpoint } from "@palakit/api";
-import { TrpcResourceServerFeature } from "@palakit/trpc";
+import { ResourceEndpoint, ResourceServer } from "@palakit/api";
 import { LocalRuntime, createPart, resolveApplication } from "@palakit/core";
-import { DocumentStore } from "@palakit/db";
 import { CrudHelper } from "@palakit/crud";
+import { DocumentStore } from "@palakit/db";
 import { KoaHttpServerFeature } from "@palakit/koa";
-import { HOSTNAME, PORT, TRPC_PATH, SECRET } from "./config";
+import { PinoLoggerFeature } from "@palakit/pino";
+import { SequelizeDocumentStoreFeature } from "@palakit/sequelize";
+import { TrpcResourceServerFeature } from "@palakit/trpc";
 import { toJSONSchema } from "@typeschema/main";
+import { HOSTNAME, PORT, SECRET, TRPC_PATH } from "./config";
 
 const requireSecret = <T extends ResourceEndpoint>({
   endpointName,
@@ -84,7 +85,7 @@ const MyCrudApi = createPart(
 
     return {
       serverStarted: server.start.after("MyCrudApi.serverStarted", () => {
-        console.log(`Server running is running on port ${PORT}!`);
+        console.log(`Server is running on port ${PORT}!`);
       }),
       dbConnected: db.connect.after("MyCrudApi.dbConnected", async () => {
         await collection.sync();
@@ -111,5 +112,26 @@ export const app = await resolveApplication({
     }),
     CrudHelper,
     MyCrudApi,
+    ...PinoLoggerFeature.configure({
+      base: null,
+      transport: {
+        targets: [
+          {
+            target: "pino-pretty",
+            options: {
+              colorize: true,
+              translateTime: true,
+            },
+          },
+          {
+            target: "pino/file",
+            options: {
+              destination: "logs/server.log",
+              mkdir: true,
+            },
+          },
+        ],
+      },
+    }),
   ],
 });
