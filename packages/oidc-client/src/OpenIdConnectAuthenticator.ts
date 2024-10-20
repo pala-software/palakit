@@ -2,17 +2,20 @@ import { createPart } from "@palakit/core";
 import {
   AuthorizationServer,
   Client,
+  ClientAuth,
   discoveryRequest,
+  DiscoveryRequestOptions,
   introspectionRequest,
+  IntrospectionRequestOptions,
   IntrospectionResponse,
-  isOAuth2Error,
   processDiscoveryResponse,
   processIntrospectionResponse,
 } from "oauth4webapi";
 
 export type IdentityProvider = {
-  client: Client;
   server: AuthorizationServer;
+  client: Client;
+  clientAuth: ClientAuth;
 };
 
 export const OpenIdConnectAuthenticator = createPart(
@@ -23,6 +26,8 @@ export const OpenIdConnectAuthenticator = createPart(
       discover: async ({
         issuer,
         client,
+        clientAuth,
+        requestOptions,
       }: {
         /** URL for expected issuer. */
         issuer: URL;
@@ -32,32 +37,39 @@ export const OpenIdConnectAuthenticator = createPart(
          * authorization server.
          */
         client: Client;
+
+        /** Client authentication method. */
+        clientAuth: ClientAuth;
+
+        requestOptions?: DiscoveryRequestOptions;
       }): Promise<IdentityProvider> => {
-        const server = await discoveryRequest(issuer).then((response) =>
-          processDiscoveryResponse(issuer, response),
+        const server = await discoveryRequest(issuer, requestOptions).then(
+          (response) => processDiscoveryResponse(issuer, response),
         );
-        return { client, server };
+        return { server, client, clientAuth };
       },
 
       verifyAccessToken: async ({
         idp,
         accessToken,
+        requestOptions,
       }: {
         idp: IdentityProvider;
 
         /** Access token from a client. */
         accessToken: string;
+
+        requestOptions?: IntrospectionRequestOptions;
       }): Promise<IntrospectionResponse> => {
         const introspection = await introspectionRequest(
           idp.server,
           idp.client,
+          idp.clientAuth,
           accessToken,
+          requestOptions,
         ).then((response) =>
           processIntrospectionResponse(idp.server, idp.client, response),
         );
-        if (isOAuth2Error(introspection)) {
-          throw new Error(introspection.error);
-        }
         if (!introspection.active) {
           throw new Error("Invalid token");
         }

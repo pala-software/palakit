@@ -13,12 +13,14 @@ import { KoaHttpServerFeature } from "@palakit/koa";
 import {
   ACCOUNTS,
   BACKEND_CLIENT,
+  BACKEND_CLIENT_AUTH,
   CLIENTS,
   HOSTNAME,
   ISSUER,
   PORT,
   TRPC_PATH,
 } from "./config";
+import { allowInsecureRequests } from "oauth4webapi";
 
 const MyApi = createPart(
   "MyApi",
@@ -52,6 +54,7 @@ const MyApi = createPart(
               const payload = await auth.verifyAccessToken({
                 idp: idpOptions,
                 accessToken: input.token,
+                requestOptions: { [allowInsecureRequests]: true },
               });
               console.log(payload);
               return { response: { type: "ok" } };
@@ -79,6 +82,8 @@ const MyApi = createPart(
         idpOptions = await auth.discover({
           issuer: ISSUER,
           client: BACKEND_CLIENT,
+          clientAuth: BACKEND_CLIENT_AUTH,
+          requestOptions: { [allowInsecureRequests]: true },
         });
       }),
       publicEndpoint,

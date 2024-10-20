@@ -5,6 +5,6 @@
   "main": "src/index.ts",
   "dependencies": {
     "@palakit/core": "workspace:*",
-    "oauth4webapi": "^2.12.0"
+    "oauth4webapi": "^3.1.1"
   }
 }

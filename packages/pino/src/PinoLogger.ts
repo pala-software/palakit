@@ -12,10 +12,9 @@ export type PinoLoggerConfiguration =
   | undefined;
 
 export const PinoLoggerConfiguration =
-  createConfiguration<PinoLoggerConfiguration>(
-    "PinoLoggerConfiguration",
-    undefined,
-  );
+  createConfiguration<PinoLoggerConfiguration>("PinoLoggerConfiguration", {
+    optional: true,
+  });
 
 export const PinoLogger = createPart(
   Logger,

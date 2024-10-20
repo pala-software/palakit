@@ -9,28 +9,26 @@
     "start-server": "tsx watch scripts/start-server.ts",
     "start": "pnpm run --filter . --parallel \"/^(generate|start)-(client|server)$/\""
   },
-  "devDependencies": {
-    "@types/ws": "^8.5.12",
-    "tsx": "^4.18.0"
-  },
   "dependencies": {
     "@palakit/api": "workspace:*",
     "@palakit/core": "workspace:*",
     "@palakit/crud": "workspace:*",
     "@palakit/db": "workspace:*",
-    "@palakit/pino": "workspace:*",
     "@palakit/koa": "workspace:*",
+    "@palakit/pino": "workspace:*",
     "@palakit/sequelize": "workspace:*",
     "@palakit/trpc": "workspace:*",
     "@trpc/client": "^10.45.2",
     "@types/ws": "^8.5.12",
-    "@typeschema/main": "^0.14.0",
+    "@typeschema/main": "^0.14.1",
     "@typeschema/zod": "^0.14.0",
-    "pino-pretty": "^11.2.2",
+    "pino-pretty": "^11.3.0",
     "sqlite3": "^5.1.7",
-    "tsx": "^4.19.1",
     "ws": "^8.18.0",
     "zod": "^3.23.8",
     "zod-to-json-schema": "^3.23.3"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.1"
   }
 }
