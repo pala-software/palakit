@@ -7,11 +7,18 @@ import {
   processDiscoveryResponse,
   validateAuthResponse,
   skipStateCheck,
-  isOAuth2Error,
   authorizationCodeGrantRequest,
-  processAuthorizationCodeOpenIDResponse,
+  processAuthorizationCodeResponse,
+  allowInsecureRequests,
 } from "oauth4webapi";
-import { FRONTEND_CLIENT, HOSTNAME, ISSUER, PORT, TRPC_PATH } from "./config";
+import {
+  FRONTEND_CLIENT,
+  FRONTEND_CLIENT_AUTH,
+  HOSTNAME,
+  ISSUER,
+  PORT,
+  TRPC_PATH,
+} from "./config";
 
 try {
   const wsClient = createWSClient({
@@ -21,9 +28,9 @@ try {
     links: [wsLink({ client: wsClient })],
   });
 
-  const idp = await discoveryRequest(ISSUER).then((response) =>
-    processDiscoveryResponse(ISSUER, response),
-  );
+  const idp = await discoveryRequest(ISSUER, {
+    [allowInsecureRequests]: true,
+  }).then((response) => processDiscoveryResponse(ISSUER, response));
   if (!idp.authorization_endpoint) {
     throw new Error("No authorization_endpoint");
   }
@@ -55,22 +62,20 @@ try {
       new URL(location.href),
       skipStateCheck,
     );
-    if (isOAuth2Error(params)) {
-      throw new Error(params.error);
-    }
 
     const result = await authorizationCodeGrantRequest(
       idp,
       FRONTEND_CLIENT,
+      FRONTEND_CLIENT_AUTH,
       params,
       location.origin,
       codeVerifier,
+      {
+        [allowInsecureRequests]: true,
+      },
     ).then((response) =>
-      processAuthorizationCodeOpenIDResponse(idp, FRONTEND_CLIENT, response),
+      processAuthorizationCodeResponse(idp, FRONTEND_CLIENT, response),
     );
-    if (isOAuth2Error(result)) {
-      throw new Error(result.error);
-    }
 
     // Remove parameters
     history.replaceState(null, "", location.pathname);
@@ -79,6 +84,7 @@ try {
     await client.protected.read.query({ token: result.access_token });
     document.body.textContent = "success";
   }
-} catch {
+} catch (error) {
   document.body.textContent = "error";
+  throw error;
 }

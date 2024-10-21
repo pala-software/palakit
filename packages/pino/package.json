@@ -1,9 +1,10 @@
 {
   "name": "@palakit/pino",
   "version": "0.1.0",
+  "type": "module",
   "main": "src/index.ts",
   "dependencies": {
     "@palakit/core": "workspace:*",
-    "pino": "^9.4.0"
+    "pino": "^9.5.0"
   }
 }

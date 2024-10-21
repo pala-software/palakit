@@ -6,6 +6,6 @@
   "dependencies": {
     "@palakit/core": "workspace:*",
     "@palakit/db": "workspace:*",
-    "sequelize": "^6.37.3"
+    "sequelize": "^6.37.4"
   }
 }

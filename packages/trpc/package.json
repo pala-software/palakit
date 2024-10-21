@@ -9,7 +9,7 @@
     "@palakit/core": "workspace:*",
     "@palakit/koa": "workspace:*",
     "@trpc/server": "^10.45.2",
-    "@typeschema/main": "^0.14.0",
+    "@typeschema/main": "^0.14.1",
     "json-schema-to-typescript": "^15.0.2",
     "ws": "^8.18.0"
   },

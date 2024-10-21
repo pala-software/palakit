@@ -2,6 +2,9 @@
   "name": "@palakit/db-test",
   "version": "0.1.0",
   "type": "module",
+  "scripts": {
+    "postinstall": "node ./node_modules/mongodb-memory-server/postinstall.js"
+  },
   "devDependencies": {
     "@palakit/core": "workspace:*",
     "@palakit/db": "workspace:*",
