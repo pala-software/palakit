@@ -79,12 +79,14 @@ const schemaFromField = async (field: Field): Promise<NullableJsonSchema> => {
       };
     case "float":
       return { type: "number", nullable: field.nullable };
-    case "blob":
-      // TODO: Support blobs
-      return { type: "null", nullable: field.nullable };
     case "date":
       // TODO: Support date
       return { type: "null", nullable: field.nullable };
+    case "blob":
+      // TODO: Support blobs
+      return { type: "null", nullable: field.nullable };
+    case "json":
+      return { nullable: field.nullable };
     case "reference":
       return {
         type: "string",
