@@ -1,5 +1,5 @@
 import { createPart } from "@palakit/core";
-import { Collection, DataType, DocumentStore } from "@palakit/db";
+import { Collection, DocumentStore } from "@palakit/db";
 import { AdapterFactory } from "oidc-provider";
 
 const models = [
@@ -34,47 +34,47 @@ export const OidcProviderDatabaseAdapter = createPart(
     const collections = new Map<
       string,
       Collection<{
-        grantId?: { dataType: DataType.STRING; nullable: false };
-        userCode?: { dataType: DataType.STRING; nullable: false };
-        uid?: { dataType: DataType.STRING; nullable: false };
-        data: { dataType: DataType.STRING; nullable: false };
-        expiresAt: { dataType: DataType.DATE; nullable: false };
-        consumedAt: { dataType: DataType.DATE; nullable: true };
+        grantId?: { dataType: "string"; nullable: false };
+        userCode?: { dataType: "string"; nullable: false };
+        uid?: { dataType: "string"; nullable: false };
+        data: { dataType: "string"; nullable: false };
+        expiresAt: { dataType: "date"; nullable: false };
+        consumedAt: { dataType: "date"; nullable: true };
       }>
     >();
     for (const name of models) {
       const collection = db
         .createCollection({ name: "oidc" + name })
-        .addField({ name: "data", dataType: DataType.STRING, nullable: false })
+        .addField({ name: "data", dataType: "string", nullable: false })
         .addField({
           name: "expiresAt",
-          dataType: DataType.DATE,
+          dataType: "date",
           nullable: false,
         })
         .addField({
           name: "consumedAt",
-          dataType: DataType.DATE,
+          dataType: "date",
           nullable: true,
         });
 
       if ((grantable as string[]).includes(name)) {
         collection.addField({
           name: "grantId",
-          dataType: DataType.STRING,
+          dataType: "string",
           nullable: false,
         });
       }
       if (name === "DeviceCode") {
         collection.addField({
           name: "userCode",
-          dataType: DataType.STRING,
+          dataType: "string",
           nullable: false,
         });
       }
       if (name === "Session") {
         collection.addField({
           name: "uid",
-          dataType: DataType.STRING,
+          dataType: "string",
           nullable: false,
         });
       }

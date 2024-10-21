@@ -1,4 +1,4 @@
-export { DataType, DocumentStore } from "./DocumentStore";
+export { DocumentStore } from "./DocumentStore";
 export type {
   BlobField,
   BooleanField,

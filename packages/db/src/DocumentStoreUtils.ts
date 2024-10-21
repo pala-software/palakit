@@ -1,5 +1,5 @@
 import { createPart, Resolved } from "@palakit/core";
-import { DataType, Field } from "./DocumentStore";
+import { Field } from "./DocumentStore";
 import { validate } from "@typeschema/main";
 
 export type DocumentStoreUtils = Resolved<typeof DocumentStoreUtils>;
@@ -7,7 +7,7 @@ export type DocumentStoreUtils = Resolved<typeof DocumentStoreUtils>;
 const maxInteger = (bits: number) => 2 ** (bits - 1) - 1;
 
 export const DocumentStoreUtils = createPart("DocumentStoreUtils", [], () => ({
-  validateField: async (
+  validateFieldSchema: async (
     field: Field & { name: string },
     input: unknown,
   ): Promise<void> => {
@@ -26,14 +26,18 @@ export const DocumentStoreUtils = createPart("DocumentStoreUtils", [], () => ({
         );
       }
     }
-
+  },
+  validateFieldType: async (
+    field: Field & { name: string },
+    input: unknown,
+  ): Promise<void> => {
     if ((field.nullable ?? true) && input === undefined) {
       // No input for nullable field. That's ok.
       return;
     }
 
     switch (field.dataType) {
-      case DataType.STRING:
+      case "string":
         if (typeof input !== "string") {
           throw new Error(`Field value for ${field.name} is not a string`);
         }
@@ -44,12 +48,12 @@ export const DocumentStoreUtils = createPart("DocumentStoreUtils", [], () => ({
           );
         }
         break;
-      case DataType.BOOLEAN:
+      case "boolean":
         if (typeof input !== "boolean") {
           throw new Error(`Field value for ${field.name} is not a boolean`);
         }
         break;
-      case DataType.INTEGER: {
+      case "integer": {
         if (typeof input !== "number" || Number.isNaN(input)) {
           throw new Error(`Field value for ${field.name} is not a number`);
         }
@@ -68,7 +72,7 @@ export const DocumentStoreUtils = createPart("DocumentStoreUtils", [], () => ({
         }
         break;
       }
-      case DataType.FLOAT:
+      case "float":
         if (typeof input !== "number") {
           throw new Error(`Field value for ${field.name} is not a number`);
         }
@@ -77,12 +81,12 @@ export const DocumentStoreUtils = createPart("DocumentStoreUtils", [], () => ({
         // of floating point numbers as they usually aren't used
         // absolute precision in mind.
         break;
-      case DataType.DATE:
+      case "date":
         if (!(input instanceof Date)) {
           throw new Error(`Field value for ${field.name} is not a Date`);
         }
         break;
-      case DataType.BLOB:
+      case "blob":
         if (!(input instanceof Buffer)) {
           throw new Error(`Field value for ${field.name} is not a Buffer`);
         }

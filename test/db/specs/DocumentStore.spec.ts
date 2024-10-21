@@ -1,4 +1,3 @@
-import { DataType } from "@palakit/db";
 import { describeDocumentStore } from "../utils/describeDocumentStore";
 
 describeDocumentStore((getDocumentStore) => {
@@ -28,17 +27,17 @@ describeDocumentStore((getDocumentStore) => {
         })
         .addField({
           name: "string",
-          dataType: DataType.STRING,
+          dataType: "string",
         })
         .addField({
           name: "integer",
-          dataType: DataType.INTEGER,
+          dataType: "integer",
         });
       expect(collection).toEqual({
         name: "test",
         fields: {
-          string: { dataType: DataType.STRING },
-          integer: { dataType: DataType.INTEGER },
+          string: { dataType: "string" },
+          integer: { dataType: "integer" },
         },
         addField: expect.any(Function),
         removeField: expect.any(Function),

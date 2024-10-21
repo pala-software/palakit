@@ -1,9 +1,9 @@
-import { Collection, DataType, DocumentHandle } from "@palakit/db";
+import { Collection, DocumentHandle } from "@palakit/db";
 import { describeDocumentStore } from "../utils/describeDocumentStore";
 
 describeDocumentStore((getDocumentStore) => {
   let collection: Collection<{
-    number: { dataType: DataType.INTEGER; nullable: false };
+    number: { dataType: "integer"; nullable: false };
   }>;
   let documentHandle: DocumentHandle<{ number: number }>;
   beforeEach(async () => {
@@ -12,7 +12,7 @@ describeDocumentStore((getDocumentStore) => {
       .createCollection({ name: "test" })
       .addField({
         name: "number",
-        dataType: DataType.INTEGER,
+        dataType: "integer",
         nullable: false,
       });
     await collection.sync();

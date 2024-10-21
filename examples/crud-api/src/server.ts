@@ -1,7 +1,7 @@
 import { ResourceEndpoint, ResourceServer } from "@palakit/api";
 import { LocalRuntime, createPart, resolveApplication } from "@palakit/core";
 import { CrudHelper } from "@palakit/crud";
-import { DataType, DocumentStore } from "@palakit/db";
+import { DocumentStore } from "@palakit/db";
 import { KoaHttpServerFeature } from "@palakit/koa";
 import { PinoLoggerFeature } from "@palakit/pino";
 import { SequelizeDocumentStoreFeature } from "@palakit/sequelize";
@@ -69,7 +69,7 @@ const MyCrudApi = createPart(
       })
       .addField({
         name: "name",
-        dataType: DataType.STRING,
+        dataType: "string",
         length: 255,
         nullable: false,
       });

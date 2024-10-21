@@ -7,7 +7,7 @@
     "check:types": "tsc --noEmit",
     "check": "pnpm run \"/^check:/\"",
     "prepare": "husky",
-    "test": "jest"
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules\" jest"
   },
   "devDependencies": {
     "@eslint/js": "^9.12.0",
