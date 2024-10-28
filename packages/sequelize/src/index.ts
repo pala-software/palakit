@@ -1,6 +1,1 @@
-export {
-  SequelizeConnection,
-  SequelizeDocumentStore,
-  SequelizeDocumentStoreConfiguration,
-  SequelizeDocumentStoreFeature,
-} from "./SequelizeDocumentStore";
+export * from "./SequelizeDocumentStore";

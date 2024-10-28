@@ -1,1 +1,1 @@
-export { createNatsEventBus } from "./NatsEventBus";
+export * from "./NatsEventBus";
