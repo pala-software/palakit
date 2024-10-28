@@ -1,8 +1,8 @@
 {
   "name": "@palakit/crud",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "type": "module",
-  "main": "src/index.ts",
+  "main": "./src/index.ts",
   "dependencies": {
     "@palakit/api": "workspace:*",
     "@palakit/core": "workspace:*",
@@ -15,6 +15,11 @@
     "json-schema-to-ts": "^3.1.1"
   },
   "devDependencies": {
-    "@types/json-schema": "^7.0.15"
-  }
+    "@types/json-schema": "^7.0.15",
+    "tsup": "^8.3.0"
+  },
+  "files": [
+    "dist/index.d.ts",
+    "dist/index.js"
+  ]
 }
