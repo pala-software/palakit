@@ -3,8 +3,11 @@ import {
   createConfiguration,
   createFeature,
   createPart,
+  Resolved,
 } from "@palakit/core";
 import Koa, { Middleware } from "koa";
+
+export type KoaMiddleware<State, Context> = Middleware<State, Context>;
 
 export type KoaHttpServerConfiguration = {
   port: number;
@@ -24,12 +27,14 @@ export const KoaHttpServer = createPart(
       start: app.start.on("KoaHttpServer.start", () => {
         koa.listen(config.port, config.hostname);
       }),
-      use: <State, Context>(middleware: Middleware<State, Context>) => {
+      use: <State, Context>(middleware: KoaMiddleware<State, Context>) => {
         koa.use(middleware);
       },
     };
   },
 );
+
+export type KoaHttpServer = Resolved<typeof KoaHttpServer>;
 
 export const KoaHttpServerFeature = createFeature(
   [KoaHttpServer],
