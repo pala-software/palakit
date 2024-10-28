@@ -29,6 +29,7 @@ check:
   stage: test
   script:
     - pnpm install
+    - echo "${CI_COMMIT_MESSAGE}" | pnpm exec commitlint
     - pnpm run check
     - pnpm run test
 
