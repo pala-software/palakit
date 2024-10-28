@@ -1,4 +1,5 @@
 {
+  "exclude": ["**/build", "**/dist"],
   "compilerOptions": {
     "strict": true,
     "target": "ESNext",
