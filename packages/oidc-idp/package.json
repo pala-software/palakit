@@ -1,8 +1,8 @@
 {
   "name": "@palakit/oidc-idp",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "type": "module",
-  "main": "src/index.ts",
+  "main": "./src/index.ts",
   "dependencies": {
     "@koa/router": "^13.1.0",
     "@palakit/core": "workspace:*",
@@ -17,6 +17,11 @@
     "@types/bcrypt": "^5.0.2",
     "@types/koa-mount": "^4.0.5",
     "@types/koa__router": "^12.0.4",
-    "@types/oidc-provider": "^8.5.2"
-  }
+    "@types/oidc-provider": "^8.5.2",
+    "tsup": "^8.3.0"
+  },
+  "files": [
+    "dist/index.d.ts",
+    "dist/index.js"
+  ]
 }

@@ -1,8 +1,8 @@
 {
   "name": "@palakit/core",
-  "version": "0.1.0",
-  "main": "src/index.ts",
+  "version": "0.0.0",
   "type": "module",
+  "main": "./src/index.ts",
   "dependencies": {
     "part-di": "^2.1.0"
   }

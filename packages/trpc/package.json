@@ -1,8 +1,8 @@
 {
   "name": "@palakit/trpc",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "type": "module",
-  "main": "src/index.ts",
+  "main": "./src/index.ts",
   "dependencies": {
     "@koa/router": "^13.1.0",
     "@palakit/api": "workspace:*",
@@ -15,6 +15,11 @@
   },
   "devDependencies": {
     "@types/koa__router": "^12.0.4",
-    "@types/ws": "^8.5.12"
-  }
+    "@types/ws": "^8.5.12",
+    "tsup": "^8.3.0"
+  },
+  "files": [
+    "dist/index.d.ts",
+    "dist/index.js"
+  ]
 }

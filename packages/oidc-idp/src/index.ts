@@ -1,5 +1,1 @@
-export {
-  OpenIdConnectIdentityProvider,
-  OpenIdConnectIdentityProviderConfiguration,
-  OpenIdConnectIdentityProviderFeature,
-} from "./OpenIdConnectIdentityProvider";
+export * from "./OpenIdConnectIdentityProvider";

@@ -1,2 +1,1 @@
-export { OpenIdConnectAuthenticator } from "./OpenIdConnectAuthenticator";
-export type { IdentityProvider } from "./OpenIdConnectAuthenticator";
+export * from "./OpenIdConnectAuthenticator";

@@ -1,3 +1,3 @@
-export { EventBus } from "./EventBus";
-export { EventRuntime } from "./EventRuntime";
-export { LocalEventBus } from "./LocalEventBus";
+export * from "./EventBus";
+export * from "./EventRuntime";
+export * from "./LocalEventBus";
